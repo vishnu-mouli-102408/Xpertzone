@@ -22,8 +22,7 @@
 		"source.fixAll.eslint": "always",
 		"source.addMissingImports.ts": "always",
 		"source.fixAll.ts": "always",
-		// "source.removeUnused.ts": "always",
-		"source.removeUnusedImports": "always"
+		"source.removeUnusedImports": "explicit"
 	},
 	"eslint.rules.customizations": [
 		{ "rule": "style/*", "severity": "off", "fixable": true },
