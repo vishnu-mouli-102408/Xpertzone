@@ -1,5 +1,4 @@
 
-
 echo "Running pre-commit hook... 🍺"
 
 # Run lint-staged (which will run ESLint and Prettier on staged files)
