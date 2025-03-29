@@ -35,7 +35,7 @@ export default function Home() {
           <li>
             Get by editing <code>apps/web/app/page.tsx</code>
           </li>
-          <li>Save and see your changes instantly.</li>
+          <li>Save and see your cha.</li>
         </ol>
 
         <div className={styles.ctas}>
@@ -64,7 +64,7 @@ export default function Home() {
           </a>
         </div>
         <Button appName="web" className={styles.secondary}>
-          Open alert
+          Open
         </Button>
       </main>
       <footer className={styles.footer}>
@@ -94,7 +94,7 @@ export default function Home() {
             width={16}
             height={16}
           />
-          Go to turbo.build →
+          Go to turbo →
         </a>
       </footer>
     </div>
