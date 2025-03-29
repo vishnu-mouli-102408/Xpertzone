@@ -30,7 +30,6 @@
 	"lint-staged": {
 		"(apps|packages)/**/*.{js,ts,jsx,tsx}": [
 			"eslint --fix",
-			"eslint",
 			"prettier --write",
 			"prettier --check"
 		]
