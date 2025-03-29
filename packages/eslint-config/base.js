@@ -49,6 +49,12 @@ export const config = [
     },
   },
   {
-    ignores: ["dist/**"],
+    ignores: [
+      "dist/**",
+      "node_modules",
+      "**/**/node_modules",
+      "**/**/.next",
+      "**/**/public",
+    ],
   },
 ];

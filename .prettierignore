@@ -1,0 +1,12 @@
+node_modules
+.next
+public
+**/**/node_modules
+**/**/.next
+**/**/public
+
+
+.gitignore
+.prettierignore
+.DS_Store
+
