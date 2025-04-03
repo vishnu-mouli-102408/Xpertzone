@@ -1,0 +1,182 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  EXPERT
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum CallType {
+  AUDIO
+  VIDEO
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum CallStatus {
+  ONGOING
+  COMPLETED
+  MISSED
+  CANCELED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum ScheduledCallStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+  COMPLETED
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  role       Role?
+  createdAt  DateTime @default(now())
+  firstName  String?
+  lastName   String?
+  updatedAt  DateTime @updatedAt
+  gender     String?
+  bio        String?
+  externalId String?  @unique
+  expertise  String?
+  profilePic String?
+  phone      String?
+  username   String?
+  certifications String?
+  yearsOfExperience String?
+  availability String?
+  hourlyRate String?
+  interests String?
+  preferences String?
+  skills String[] @default([]) 
+
+  userCalls       Call[] @relation("UserCalls")  // Calls initiated by user
+  expertCalls     Call[] @relation("ExpertCalls") // Calls received as an expert
+  scheduledCalls  ScheduledCall[] @relation("UserScheduledCalls") // Calls user has scheduled
+  expertSchedules ScheduledCall[] @relation("ExpertScheduledCalls") // Calls expert is booked for
+  sentMessages    Message[] @relation("SenderMessages")
+  receivedMessages Message[] @relation("ReceiverMessages")
+
+  reviewsGiven Review[] @relation(name: "UserReviews")
+  reviewsReceived Review[] @relation(name: "ExpertReviews")
+
+  @@index([email])
+  @@index([role], name: "idx_user_role") // Index for filtering by role
+  @@index([expertise], name: "idx_user_expertise") // Index for filtering by expertise
+  @@index([hourlyRate], name: "idx_user_hourly_rate") // Index for filtering by hourly rate
+  @@index([skills], name: "idx_user_skills") // Index for searching within skills array
+  @@index([firstName], name: "idx_user_first_name") // For name searches
+  @@index([lastName], name: "idx_user_last_name") // For name searches
+  @@index([username], name: "idx_user_username") // For username searches
+}
+
+model Call {
+  id         String   @id @default(uuid())
+  userId     String
+  expertId   String
+  callType   CallType
+  duration   Int // in seconds
+  status     CallStatus
+  startedAt  DateTime
+  endedAt    DateTime?
+
+  user   User @relation(fields: [userId], references: [id], name: "UserCalls", onDelete: Cascade)
+  expert User @relation(fields: [expertId], references: [id], name: "ExpertCalls", onDelete: Cascade)
+  
+  ScheduledCall ScheduledCall[]
+
+  @@index([userId])
+  @@index([expertId])
+}
+
+model Message {
+  id          String      @id @default(uuid())
+  senderId    String
+  receiverId  String
+  messageType MessageType
+  content     String? // Only for TEXT messages
+  mediaUrl    String? // For IMAGE or FILE messages
+  status      MessageStatus @default(SENT)
+  sentAt      DateTime @default(now())
+  deliveredAt DateTime?
+  readAt      DateTime?
+
+  sender   User @relation(fields: [senderId], references: [id], name: "SenderMessages", onDelete: Cascade)
+  receiver User @relation(fields: [receiverId], references: [id], name: "ReceiverMessages", onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+model ScheduledCall {
+  id          String   @id @default(uuid())
+  userId      String
+  expertId    String
+  callType    CallType
+  scheduledAt DateTime // When the call is scheduled
+  duration    Int? // Estimated duration in minutes
+  status      ScheduledCallStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user   User @relation(fields: [userId], references: [id], name: "UserScheduledCalls", onDelete: Cascade)
+  expert User @relation(fields: [expertId], references: [id], name: "ExpertScheduledCalls", onDelete: Cascade)
+  
+  actualCallId String? // Nullable since call may not have happened yet
+  actualCall   Call?   @relation(fields: [actualCallId], references: [id], onDelete: Cascade) // Links to completed call
+
+  @@index([userId])
+  @@index([expertId])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  
+  user       User     @relation(name: "UserReviews", fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  
+  expert     User     @relation(name: "ExpertReviews", fields: [expertId], references: [id], onDelete: Cascade)
+  expertId   String
+
+  rating     Int   
+  comment    String?  // Optional comment
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, expertId]) // Ensures a user can review an expert only once
+}

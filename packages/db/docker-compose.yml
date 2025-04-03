@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres
+    container_name: xpertzone
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supersecurepassword}
+      POSTGRES_DB: xpertzone
+      PGDATA: /data/postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - xpertzone:/data/postgres
+
+volumes:
+  xpertzone:
+
+  # docker exec -it xpertzone psql -U admin -d xpertzone
