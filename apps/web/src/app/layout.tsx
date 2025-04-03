@@ -4,6 +4,8 @@ import { cn } from "@repo/ui/lib/utils";
 
 import "@repo/ui/globals.css";
 
+import { Toaster } from "@repo/ui/components/sonner";
+
 import { Providers } from "../components";
 
 const poppins = Poppins({
@@ -66,6 +68,12 @@ export default function RootLayout({
       <body className={cn(poppins.className, "dark antialiased")}>
         <main className="relative flex flex-col">
           <Providers>{children}</Providers>
+          <Toaster
+            closeButton
+            position="bottom-center"
+            theme="dark"
+            richColors
+          />
         </main>
       </body>
     </html>
