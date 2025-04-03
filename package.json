@@ -1,39 +1,45 @@
 {
-	"name": "xpertzone",
-	"private": true,
-	"scripts": {
-		"build": "turbo run build",
-		"dev": "turbo run dev",
-		"lint": "turbo run lint",
-		"lint:fix": "turbo run lint:fix",
-		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
-		"format:check": "prettier --check \"**/*.{ts,tsx,md}\"",
-		"check-types": "turbo run check-types",
-		"prepare": "husky"
-	},
-	"devDependencies": {
-		"@commitlint/cli": "^19.8.0",
-		"@commitlint/config-conventional": "^19.8.0",
-		"husky": "^9.1.7",
-		"lint-staged": "^15.5.0",
-		"prettier": "^3.5.3",
-		"turbo": "^2.4.4",
-		"typescript": "5.8.2"
-	},
-	"packageManager": "pnpm@9.0.0",
-	"engines": {
-		"node": ">=18"
-	},
-	"husky": {
-		"hooks": {
-			"pre-commit": "lint-staged"
-		}
-	},
-	"lint-staged": {
-		"(apps|packages)/**/*.{js,ts,jsx,tsx}": [
-			"eslint --fix",
-			"prettier --write",
-			"prettier --check"
-		]
-	}
+  "name": "xpertzone",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types",
+    "prepare": "husky",
+    "dev:docker": "npm run prisma:docker && pnpm run dev",
+    "prisma:docker": "cd packages/db && npx prisma migrate dev --skip-seed && npx prisma db seed"
+  },
+  "prisma": {
+    "seed": "ts-node packages\\db\\prisma\\seed.ts"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0",
+    "prettier": "^3.5.3",
+    "ts-node": "^10.9.2",
+    "turbo": "^2.4.4",
+    "typescript": "5.8.2"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "(apps|packages)/**/*.{js,ts,jsx,tsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "prettier --check"
+    ]
+  }
 }
