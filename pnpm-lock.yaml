@@ -42,6 +42,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@repo/cache':
+        specifier: workspace:*
+        version: link:../../packages/cache
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
