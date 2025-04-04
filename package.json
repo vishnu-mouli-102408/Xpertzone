@@ -10,7 +10,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "prepare": "husky",
-    "dev:docker": "npm run prisma:docker && pnpm run dev",
+    "dev:docker": "pnpm run prisma:docker && pnpm run dev",
     "prisma:docker": "cd packages/db && npx prisma migrate dev --skip-seed && npx prisma db seed"
   },
   "prisma": {
