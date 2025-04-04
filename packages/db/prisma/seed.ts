@@ -1,4 +1,4 @@
-import db from "../src";
+import { db } from "../src";
 import { seedsData } from "./seed-data";
 
 async function main() {

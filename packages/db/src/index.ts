@@ -10,8 +10,16 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClientSingleton | undefined;
 };
 
-const db = globalForPrisma.prisma ?? prismaClientSingleton();
-
-export default db;
+export const db = globalForPrisma.prisma ?? prismaClientSingleton();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+
+export const createPool = () => {
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url: `${process.env.DATABASE_URL}&connection_limit=20`,
+      },
+    },
+  });
+};
