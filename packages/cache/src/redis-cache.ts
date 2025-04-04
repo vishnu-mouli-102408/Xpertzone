@@ -21,7 +21,7 @@ export class RedisCache implements ICache {
     type: string,
     args: string[],
     value: T,
-    expirySeconds: number
+    expirySeconds: number = parseInt(process.env.CACHE_EXPIRE || "1800", 10)
   ): Promise<void> {
     const key = this.generateKey(type, args);
     const serializedValue = JSON.stringify(value);
