@@ -23,3 +23,5 @@ export const createPool = () => {
     },
   });
 };
+
+export * as PrismaClient from "@prisma/client";

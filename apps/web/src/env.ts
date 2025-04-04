@@ -7,6 +7,10 @@ const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
+    DATABASE_URL: z
+      .string()
+      .url({ message: "Invalid database URL" })
+      .min(1, { message: "DATABASE_URL is required" }),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -42,6 +46,7 @@ const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
+    DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
