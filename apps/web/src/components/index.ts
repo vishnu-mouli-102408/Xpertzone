@@ -1,4 +1,5 @@
 import { AuroraHero } from "./aurora-hero";
+import FAQ from "./faqs";
 import FeaturesSection from "./features";
 import Footer from "./footer";
 import { Providers } from "./global/providers";
@@ -8,6 +9,7 @@ import Pricing from "./pricing";
 
 export {
   AuroraHero,
+  FAQ,
   FeaturesSection,
   Footer,
   LogoTicker,

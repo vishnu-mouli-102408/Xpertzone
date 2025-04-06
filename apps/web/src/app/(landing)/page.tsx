@@ -1,5 +1,6 @@
 import {
   AuroraHero,
+  FAQ,
   FeaturesSection,
   LogoTicker,
   Pricing,
@@ -12,6 +13,7 @@ const Page = () => {
       <LogoTicker />
       <FeaturesSection />
       <Pricing />
+      <FAQ />
     </>
   );
 };
