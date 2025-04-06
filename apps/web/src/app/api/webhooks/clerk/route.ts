@@ -9,7 +9,7 @@ import {
 } from "@/src/lib/http-status-codes";
 import { createUser, deleteUser } from "@/src/lib/user";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import { db, type PrismaClient } from "@repo/db";
+import { db, type Role } from "@repo/db";
 import { Webhook } from "svix";
 
 export async function GET() {
@@ -122,7 +122,7 @@ export async function POST(req: Request) {
       phone: phone_numbers?.[0]?.phone_number || null,
       username: username,
       profilePic: image_url,
-      role: (public_metadata?.role as PrismaClient.Role) || null,
+      role: (public_metadata?.role as Role) || null,
     });
 
     console.info("USER", user);

@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../generated/client";
 
 const prismaClientSingleton = () => {
   return new PrismaClient();
@@ -24,4 +24,4 @@ export const createPool = () => {
   });
 };
 
-export * as PrismaClient from "@prisma/client";
+export * from "../generated/client";
