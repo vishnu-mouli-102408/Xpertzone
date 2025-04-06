@@ -22,6 +22,7 @@
     "@repo/ui": "workspace:*",
     "@t3-oss/env-nextjs": "^0.12.0",
     "@tanstack/react-query": "^5.71.10",
+    "cloudinary": "^2.6.0",
     "hono": "^4.7.5",
     "lucide-react": "^0.487.0",
     "motion": "^12.6.3",
