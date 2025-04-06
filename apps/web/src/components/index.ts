@@ -1,4 +1,5 @@
 import { AuroraHero } from "./aurora-hero";
+import CTA from "./cta";
 import FAQ from "./faqs";
 import FeaturesSection from "./features";
 import Footer from "./footer";
@@ -9,6 +10,7 @@ import Pricing from "./pricing";
 
 export {
   AuroraHero,
+  CTA,
   FAQ,
   FeaturesSection,
   Footer,
