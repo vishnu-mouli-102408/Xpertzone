@@ -32,7 +32,7 @@ const Footer = () => {
           <div className="mb-8 rounded-2xl border border-[#C5B9F633] bg-[#FFFFFF0D] p-6 shadow-[inset_0px_0px_55.5px_0px_#C5B9F626] backdrop-blur-[34px] md:p-10">
             <div className="mb-6 flex w-full flex-col items-center justify-between gap-6 rounded-xl border border-[#FFFFFF1A] bg-[#FFFFFF0A] p-3 py-6 md:flex-row md:p-6">
               <AnimationContainer
-                className="flex flex-row items-center gap-2 transition-all duration-500 ease-in-out hover:scale-[1.1]"
+                className="flex flex-row items-center gap-2 transition-all duration-500 ease-in-out hover:scale-[1.02]"
                 animation="fadeRight"
                 delay={0.1}
               >
@@ -98,7 +98,7 @@ const Footer = () => {
                       >
                         <Link
                           href={item?.link}
-                          className={`flex hover:scale-[1.1] ${index === 0 ? "text-base font-semibold text-white hover:text-[#d9e0e5]" : "text-[14px] text-[#d3c3c3] hover:text-[#7F8487]"} flex-col gap-2`}
+                          className={`flex transition-all duration-200 ease-in-out hover:scale-[1.1] ${index === 0 ? "text-base font-semibold text-white hover:text-[#d9e0e5]" : "text-[14px] text-[#d3c3c3] hover:text-[#7F8487]"} flex-col gap-2`}
                         >
                           {item?.name}
                         </Link>
@@ -119,7 +119,7 @@ const Footer = () => {
                         key={item?.name}
                         animation="fadeRight"
                         delay={0.8 + index * 0.1}
-                        className={`flex transition-all duration-500 ease-in-out hover:scale-[1.1] ${index === 0 ? "text-base font-semibold text-white hover:text-[#d9e0e5]" : "text-[14px] text-[#d3c3c3] hover:text-[#7F8487]"} flex-col gap-2`}
+                        className={`flex transition-all duration-200 ease-in-out hover:scale-[1.1] ${index === 0 ? "text-base font-semibold text-white hover:text-[#d9e0e5]" : "text-[14px] text-[#d3c3c3] hover:text-[#7F8487]"} flex-col gap-2`}
                       >
                         <Link href={item?.link} className="flex flex-col gap-2">
                           {item?.name}

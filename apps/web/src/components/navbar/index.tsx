@@ -102,7 +102,7 @@ const Navbar = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="transitio ml-2 cursor-pointer bg-gradient-to-r from-[#ffffff]/80 via-[#ffffff]/70 to-[#ffffff]/90 bg-clip-text font-sans text-2xl font-extrabold text-transparent duration-300 ease-in-out hover:scale-[1.04]"
+                  className="transitio ml-2 cursor-pointer bg-gradient-to-r from-[#ffffff] via-[#ffffff]/80 to-[#ffffff] bg-clip-text font-sans text-2xl font-extrabold text-transparent duration-300 ease-in-out hover:scale-[1.04]"
                 >
                   Xpert Zone
                 </motion.span>
