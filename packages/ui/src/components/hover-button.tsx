@@ -10,7 +10,7 @@ interface HoverButtonProps
 }
 
 const HoverButton = forwardRef<HTMLButtonElement, HoverButtonProps>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, children, ...props }, _ref) => {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [isListening, setIsListening] = useState(false);
     const [circles, setCircles] = useState<

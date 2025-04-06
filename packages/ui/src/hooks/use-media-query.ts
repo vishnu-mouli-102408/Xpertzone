@@ -4,7 +4,6 @@ export const useMediaQuery = () => {
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop" | null>(
     null
   );
-
   const [dimensions, setDimensions] = useState<{
     width: number;
     height: number;
@@ -12,11 +11,14 @@ export const useMediaQuery = () => {
 
   useEffect(() => {
     const checkDevice = () => {
-      if (window.matchMedia("(max-width: 640px)").matches) {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      setDimensions({ width, height });
+
+      if (width <= 640) {
         setDevice("mobile");
-      } else if (
-        window.matchMedia("(min-width: 641px) and (max-width: 1024px)")
-      ) {
+      } else if (width >= 641 && width <= 1024) {
         setDevice("tablet");
       } else {
         setDevice("desktop");
@@ -34,8 +36,8 @@ export const useMediaQuery = () => {
 
   return {
     device,
-    width: dimensions?.width,
-    height: dimensions?.height,
+    width: dimensions?.width ?? window.innerWidth,
+    height: dimensions?.height ?? window.innerHeight,
     isMobile: device === "mobile",
     isTablet: device === "tablet",
     isDesktop: device === "desktop",

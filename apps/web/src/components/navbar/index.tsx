@@ -4,7 +4,6 @@ import { useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_LINKS } from "@/src/constants";
-import { useClickOutside } from "@/src/hooks";
 import { useClerk, UserButton, useUser } from "@clerk/nextjs";
 import AnimatedHamburgerButton from "@repo/ui/components/animated-hamburger-button";
 import AnimationContainer from "@repo/ui/components/animation-container";
@@ -12,6 +11,7 @@ import { Button } from "@repo/ui/components/button";
 import { HoverButton } from "@repo/ui/components/hover-button";
 import Icons from "@repo/ui/components/icons";
 import MaxWidthWrapper from "@repo/ui/components/max-width-wrapper";
+import { useClickOutside } from "@repo/ui/hooks/index";
 import { cn } from "@repo/ui/lib/utils";
 import {
   AnimatePresence,
@@ -102,9 +102,9 @@ const Navbar = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="transitio ml-2 cursor-pointer bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text font-sans text-2xl font-extrabold text-transparent duration-300 ease-in-out hover:scale-[1.04]"
+                  className="transitio ml-2 cursor-pointer bg-gradient-to-r from-[#ffffff]/80 via-[#ffffff]/70 to-[#ffffff]/90 bg-clip-text font-sans text-2xl font-extrabold text-transparent duration-300 ease-in-out hover:scale-[1.04]"
                 >
-                  Expert Link
+                  Xpert Zone
                 </motion.span>
               </Link>
             </div>
