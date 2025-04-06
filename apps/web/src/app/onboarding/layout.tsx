@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 
 export const metadata: Metadata = {
   title: "Onboarding Layout",
-  description: "This is the layout for the onboarding pages.",
+  description: "This is the layout for the Onboarding Page.",
   icons: [{ rel: "icon", url: "/favicon/favicon.ico" }],
 };
 
