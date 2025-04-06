@@ -27,7 +27,9 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "db:generate": {
-      "cache": false
+      "cache": true,
+      "inputs": ["packages/db/prisma/schema.prisma"],
+      "outputs": ["packages/db/prisma/generated/client/**"]
     },
     "db:push": {
       "cache": false
