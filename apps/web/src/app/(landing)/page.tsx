@@ -1,10 +1,11 @@
-import { AuroraHero, LogoTicker } from "@/src/components";
+import { AuroraHero, FeaturesSection, LogoTicker } from "@/src/components";
 
 const Page = () => {
   return (
     <>
       <AuroraHero />
       <LogoTicker />
+      <FeaturesSection />
     </>
   );
 };
