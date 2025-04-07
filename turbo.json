@@ -34,7 +34,7 @@
     "db:generate": {
       "cache": true,
       "inputs": ["packages/db/prisma/schema.prisma"],
-      "outputs": ["packages/db/prisma/generated/client/**"]
+      "outputs": ["packages/db/prisma/generated/**"]
     },
     "db:push": {
       "cache": false
