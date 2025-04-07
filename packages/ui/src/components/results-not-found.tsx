@@ -69,7 +69,7 @@ export default function ResultsNotFound({
         transition={{ delay: 0.3 }}
         className="mb-3 text-2xl font-bold text-gray-900 dark:text-white"
       >
-        {title || "No Results Found"}
+        {title ?? "No Results Found"}
       </motion.h2>
 
       <motion.p
@@ -78,7 +78,7 @@ export default function ResultsNotFound({
         transition={{ delay: 0.4 }}
         className="mb-8 text-gray-600 dark:text-gray-300"
       >
-        {description || "We couldn't find any results matching your query."}
+        {description ?? "We couldn't find any results matching your query."}
       </motion.p>
 
       <motion.div

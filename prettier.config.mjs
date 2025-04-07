@@ -1,2 +1,3 @@
-import { prettierConfig } from "./packages/eslint-config/prettier.js";
-export default prettierConfig;
+import config from "./packages/prettier-config/index.js";
+
+export default config;

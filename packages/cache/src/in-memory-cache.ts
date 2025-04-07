@@ -7,51 +7,51 @@ interface ICacheEntry<T> {
 
 export class InMemoryCache implements ICache {
   private inMemoryDb: Map<string, ICacheEntry<unknown>>;
-  private static instance: InMemoryCache;
+  private static instance: InMemoryCache | undefined = undefined;
 
   private constructor() {
     this.inMemoryDb = new Map<string, ICacheEntry<unknown>>();
   }
 
   static getInstance(): InMemoryCache {
-    if (!this.instance) {
-      this.instance = new InMemoryCache();
-    }
+    this.instance ??= new InMemoryCache();
     return this.instance;
   }
 
-  async set<T>(
+  set<T>(
     type: string,
     args: string[],
     value: T,
-    expirySeconds: number = parseInt(process.env.CACHE_EXPIRE || "1800", 10)
+    expirySeconds: number = parseInt(process.env.CACHE_EXPIRE ?? "1800", 10)
   ): Promise<void> {
     const key = this.generateKey(type, args);
     this.inMemoryDb.set(key, {
       value,
       expiry: Date.now() + expirySeconds * 1000,
     });
+    return Promise.resolve();
   }
 
-  async get<T>(type: string, args: string[]): Promise<T | null> {
+  get<T>(type: string, args: string[]): Promise<T | null> {
     const key = this.generateKey(type, args);
     const entry = this.inMemoryDb.get(key) as ICacheEntry<T> | undefined;
 
     if (!entry) {
-      return null;
+      return Promise.resolve(null);
     }
 
     if (Date.now() > entry.expiry) {
       this.inMemoryDb.delete(key);
-      return null;
+      return Promise.resolve(null);
     }
 
-    return entry.value;
+    return Promise.resolve(entry.value);
   }
 
   async evict(type: string, args: string[]): Promise<void> {
     const key = this.generateKey(type, args);
     this.inMemoryDb.delete(key);
+    return Promise.resolve();
   }
 
   private generateKey(type: string, args: string[]): string {

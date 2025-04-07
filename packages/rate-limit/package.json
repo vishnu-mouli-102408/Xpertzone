@@ -6,8 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "check-types": "tsc --noEmit"
   },
   "exports": {

@@ -22,14 +22,14 @@ export default clerkMiddleware(async (auth, req) => {
 
   if (
     isUserRoutes(req) &&
-    (await auth()).sessionClaims?.metadata?.role !== "user"
+    (await auth()).sessionClaims?.metadata.role !== "user"
   ) {
     const url = new URL("/", req.url);
     return NextResponse.redirect(url);
   }
   if (
     isExpertRoutes(req) &&
-    (await auth()).sessionClaims?.metadata?.role !== "expert"
+    (await auth()).sessionClaims?.metadata.role !== "expert"
   ) {
     const url = new URL("/", req.url);
     return NextResponse.redirect(url);
@@ -43,7 +43,7 @@ export default clerkMiddleware(async (auth, req) => {
 
   if (
     userId &&
-    !sessionClaims?.metadata?.onboardingComplete &&
+    !sessionClaims.metadata.onboardingComplete &&
     req.nextUrl.pathname !== "/onboarding"
   ) {
     const onboardingUrl = new URL("/onboarding", req.url);

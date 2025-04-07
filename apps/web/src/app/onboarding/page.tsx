@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 "use client";
 
 import { useState } from "react";
@@ -30,22 +31,22 @@ export default function OnboardingComponent() {
     setIsSubmitting(true);
     try {
       const res = setRole(
-        user?.id || "",
+        user?.id ?? "",
         (selectedRole?.toLowerCase() as Roles) || "user"
       );
       const response = await res;
       console.info("RESPONSE", response);
-      if (response?.success) {
+      if (response.success) {
         await user?.reload();
         toast.success("User Setup Done Successfully.", {
           duration: 3000,
           position: "bottom-center",
           closeButton: true,
         });
-        if (user?.publicMetadata?.role === "user") {
+        if (user?.publicMetadata.role === "user") {
           router.push("/user");
         }
-        if (user?.publicMetadata?.role === "expert") {
+        if (user?.publicMetadata.role === "expert") {
           router.push("/expert");
         }
       } else {
@@ -112,7 +113,7 @@ export default function OnboardingComponent() {
                   });
                   return;
                 }
-                handleSubmit();
+                void handleSubmit();
               }}
               className="group relative mt-6 h-12 w-max cursor-pointer overflow-hidden rounded-lg px-8 transition-all duration-500"
             >

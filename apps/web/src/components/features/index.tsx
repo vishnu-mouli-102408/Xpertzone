@@ -63,7 +63,6 @@ const features = [
 
 const FeatureCard = ({
   feature,
-  index,
 }: {
   feature: (typeof features)[0];
   index: number;
@@ -74,7 +73,7 @@ const FeatureCard = ({
 
   useEffect(() => {
     if (isInView) {
-      controls.start("visible");
+      void controls.start("visible");
     }
   }, [isInView, controls]);
 
@@ -156,7 +155,7 @@ const FeaturesSection = () => {
 
   useEffect(() => {
     if (isHeroInView) {
-      heroControls.start("visible");
+      void heroControls.start("visible");
     }
   }, [isHeroInView, heroControls]);
 
@@ -166,7 +165,7 @@ const FeaturesSection = () => {
 
   useEffect(() => {
     if (isConnectInView) {
-      connectControls.start("visible");
+      void connectControls.start("visible");
     }
   }, [isConnectInView, connectControls]);
 
@@ -223,7 +222,7 @@ const FeaturesSection = () => {
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 href={
-                  user?.publicMetadata?.role === "user" ? "/user" : "/expert"
+                  user?.publicMetadata.role === "user" ? "/user" : "/expert"
                 }
               >
                 <ButtonCta
@@ -425,14 +424,14 @@ const FeaturesSection = () => {
                   <div className="mb-6 space-y-4">
                     <div className="bg-dark-200 max-w-[80%] rounded-2xl rounded-tl-none border border-[#9b87f5]/10 p-3">
                       <p className="text-gray-300">
-                        Hi there! I've reviewed your financial portfolio and
-                        have some recommendations.
+                        Hi there! I&apos;ve reviewed your financial portfolio
+                        and have some recommendations.
                       </p>
                     </div>
                     <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-none border border-[#9b87f5]/20 bg-[#9b87f5]/20 p-3">
                       <p className="text-gray-300">
-                        That's great! I'd love to hear your thoughts on
-                        diversifying my investments.
+                        That&apos;s great! I&apos;d love to hear your thoughts
+                        on diversifying my investments.
                       </p>
                     </div>
                   </div>
@@ -480,7 +479,7 @@ const FeaturesSection = () => {
           </p>
 
           <Link
-            href={user?.publicMetadata?.role === "user" ? "/user" : "/expert"}
+            href={user?.publicMetadata.role === "user" ? "/user" : "/expert"}
           >
             <ButtonCta
               label="Get Started Today"

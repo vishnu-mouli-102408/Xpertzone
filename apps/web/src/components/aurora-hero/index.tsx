@@ -81,7 +81,7 @@ export const AuroraHero = () => {
             consultations.
           </motion.p>
           <Link
-            href={user?.publicMetadata?.role === "user" ? "/user" : "/expert"}
+            href={user?.publicMetadata.role === "user" ? "/user" : "/expert"}
           >
             <motion.button
               style={{

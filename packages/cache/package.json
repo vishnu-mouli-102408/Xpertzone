@@ -6,8 +6,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
     "check-types": "tsc --noEmit"
   },
   "exports": {

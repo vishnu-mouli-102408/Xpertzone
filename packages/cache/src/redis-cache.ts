@@ -4,16 +4,14 @@ import { ICache } from "./cache";
 
 export class RedisCache implements ICache {
   private client: Redis;
-  private static instance: RedisCache;
+  private static instance: RedisCache | undefined = undefined;
 
   private constructor(redisUrl: string) {
     this.client = new Redis(redisUrl);
   }
 
   static getInstance(redisUrl: string): RedisCache {
-    if (!this.instance) {
-      this.instance = new RedisCache(redisUrl);
-    }
+    this.instance ??= new RedisCache(redisUrl);
     return this.instance;
   }
 
@@ -21,7 +19,7 @@ export class RedisCache implements ICache {
     type: string,
     args: string[],
     value: T,
-    expirySeconds: number = parseInt(process.env.CACHE_EXPIRE || "1800", 10)
+    expirySeconds: number = parseInt(process.env.CACHE_EXPIRE ?? "1800", 10)
   ): Promise<void> {
     const key = this.generateKey(type, args);
     const serializedValue = JSON.stringify(value);

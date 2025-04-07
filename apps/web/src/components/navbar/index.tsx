@@ -139,9 +139,7 @@ const Navbar = () => {
                 <div className="flex flex-row gap-4">
                   <Link
                     href={
-                      user?.publicMetadata?.role === "user"
-                        ? "/user"
-                        : "/expert"
+                      user.publicMetadata.role === "user" ? "/user" : "/expert"
                     }
                     className="flex w-full justify-center"
                   >
@@ -241,7 +239,7 @@ const Navbar = () => {
                   <div className="flex flex-col gap-4 md:flex-row">
                     <Link
                       href={
-                        user?.publicMetadata?.role === "user"
+                        user.publicMetadata.role === "user"
                           ? "/user"
                           : "/expert"
                       }

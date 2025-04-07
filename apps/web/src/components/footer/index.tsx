@@ -9,16 +9,6 @@ import * as motion from "motion/react-client";
 
 import SocialButton from "./social-button";
 
-const words = [
-  { text: "Empower", className: "text-[#40ffaa]" },
-  { text: "Your", className: "text-[#4079ff]" },
-  { text: "Expertise", className: "text-[#40ffaa]" },
-  { text: ".", className: "text-[#4079ff]" },
-  { text: "Connect", className: "text-[#40ffaa]" },
-  { text: "Seamlessly", className: "text-[#4079ff]" },
-  { text: ".", className: "text-[#40ffaa]" },
-];
-
 const Footer = () => {
   return (
     <footer
@@ -89,18 +79,18 @@ const Footer = () => {
                   viewport={{ amount: 0.5 }}
                   className="flex flex-col gap-2 transition-all duration-500 ease-in-out"
                 >
-                  {HOME_ITEMS?.map((item, index) => {
+                  {HOME_ITEMS.map((item, index) => {
                     return (
                       <AnimationContainer
-                        key={item?.name}
+                        key={item.name}
                         animation="fadeRight"
                         delay={0.8 + index * 0.1}
                       >
                         <Link
-                          href={item?.link}
+                          href={item.link}
                           className={`flex transition-all duration-200 ease-in-out hover:scale-[1.1] ${index === 0 ? "text-base font-semibold text-white hover:text-[#d9e0e5]" : "text-[14px] text-[#d3c3c3] hover:text-[#7F8487]"} flex-col gap-2`}
                         >
-                          {item?.name}
+                          {item.name}
                         </Link>
                       </AnimationContainer>
                     );
@@ -113,16 +103,16 @@ const Footer = () => {
                   viewport={{ amount: 0.5 }}
                   className="flex flex-col gap-2 transition-all duration-500 ease-in-out"
                 >
-                  {PRODUCT_ITEMS?.map((item, index) => {
+                  {PRODUCT_ITEMS.map((item, index) => {
                     return (
                       <AnimationContainer
-                        key={item?.name}
+                        key={item.name}
                         animation="fadeRight"
                         delay={0.8 + index * 0.1}
                         className={`flex transition-all duration-200 ease-in-out hover:scale-[1.1] ${index === 0 ? "text-base font-semibold text-white hover:text-[#d9e0e5]" : "text-[14px] text-[#d3c3c3] hover:text-[#7F8487]"} flex-col gap-2`}
                       >
-                        <Link href={item?.link} className="flex flex-col gap-2">
-                          {item?.name}
+                        <Link href={item.link} className="flex flex-col gap-2">
+                          {item.name}
                         </Link>
                       </AnimationContainer>
                     );

@@ -6,8 +6,8 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\" --cache",
-    "format:check": "prettier --check \"**/*.{ts,tsx,md}\" --cache",
+    "format": "turbo run format",
+    "format:check": "turbo run format:check",
     "check-types": "turbo run check-types",
     "prepare": "husky",
     "dev:docker": "pnpm run prisma:docker && pnpm run dev",
@@ -34,13 +34,6 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
-  },
-  "lint-staged": {
-    "(apps|packages)/**/*.{js,ts,jsx,tsx}": [
-      "eslint --fix",
-      "prettier --write --cache",
-      "prettier --check --cache"
-    ]
   },
   "dependencies": {
     "ioredis": "^5.6.0",

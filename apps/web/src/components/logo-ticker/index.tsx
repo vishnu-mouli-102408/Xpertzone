@@ -31,16 +31,18 @@ const LogoTicker = () => {
               }}
               className="flex flex-none gap-14"
             >
-              {[...Array(20)].map((_, index) => (
-                <div
-                  key={index}
-                  className="text-muted-foreground flex h-16 items-center justify-center"
-                >
-                  {companies?.[index % companies?.length]?.({
-                    className: "w-auto h-6",
-                  })}
-                </div>
-              ))}
+              {Array.from({ length: 20 }, (_, index) => index).map(
+                (_, index) => (
+                  <div
+                    key={index}
+                    className="text-muted-foreground flex h-16 items-center justify-center"
+                  >
+                    {companies[index % companies.length]?.({
+                      className: "w-auto h-6",
+                    })}
+                  </div>
+                )
+              )}
             </motion.div>
           </div>
         </motion.div>

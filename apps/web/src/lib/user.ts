@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 "use server";
 
 import { clerkClient } from "@clerk/nextjs/server";
@@ -21,7 +22,7 @@ export async function setRole(id: string, role: Roles) {
       }),
       db.user.update({
         where: { externalId: id },
-        data: { role: role?.toUpperCase() as Role },
+        data: { role: role.toUpperCase() as Role },
       }),
     ]);
 

@@ -14,18 +14,18 @@ const HoverButton = forwardRef<HTMLButtonElement, HoverButtonProps>(
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [isListening, setIsListening] = useState(false);
     const [circles, setCircles] = useState<
-      Array<{
+      {
         id: number;
         x: number;
         y: number;
         color: string;
         fadeState: "in" | "out" | null;
-      }>
+      }[]
     >([]);
     const lastAddedRef = useRef(0);
 
     const createCircle = useCallback((x: number, y: number) => {
-      const buttonWidth = buttonRef.current?.offsetWidth || 0;
+      const buttonWidth = buttonRef.current?.offsetWidth ?? 0;
       const xPos = x / buttonWidth;
       const color = `linear-gradient(to right, var(--circle-start) ${xPos * 100}%, var(--circle-end) ${
         xPos * 100

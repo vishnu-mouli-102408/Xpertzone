@@ -11,8 +11,10 @@
     "./hooks/*": "./src/hooks/*.ts"
   },
   "scripts": {
-    "lint": "eslint . --max-warnings 0",
-    "lint:fix": "eslint . --max-warnings 0 --fix",
+    "lint": "eslint src --max-warnings 0",
+    "lint:fix": "eslint src --max-warnings 0 --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
     "generate:component": "turbo gen react-component",
     "check-types": "tsc --noEmit"
   },

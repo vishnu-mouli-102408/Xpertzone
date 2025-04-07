@@ -9,7 +9,9 @@
     "db:generate": "prisma generate dev --skip-generate",
     "db:push": "prisma db push",
     "db:deploy": "prisma migrate deploy",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

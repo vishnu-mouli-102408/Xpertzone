@@ -9,6 +9,8 @@
     "start": "next start",
     "lint": "eslint --ext .ts,.js,.tsx,.jsx . --max-warnings 0",
     "lint:fix": "eslint --ext .ts,.js,.tsx,.jsx . --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

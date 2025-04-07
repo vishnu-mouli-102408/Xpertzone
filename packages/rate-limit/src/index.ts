@@ -10,7 +10,7 @@ class RateLimiter {
   async isAllowed(
     identifier: string,
     limit: number,
-    windowSeconds: number = 60
+    windowSeconds = 60
   ): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
     const key = `rate-limit:${identifier}:${Math.floor(Date.now() / 1000 / windowSeconds)}`;
 
@@ -32,5 +32,5 @@ class RateLimiter {
 }
 
 // ✅ Export a **singleton**
-const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+const redisUrl = process.env.REDIS_URL ?? "redis://localhost:6379";
 export const rateLimiter = new RateLimiter(redisUrl);

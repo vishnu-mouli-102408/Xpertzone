@@ -71,6 +71,7 @@ export async function POST(req: Request) {
 
   console.info("BEFORE BODY");
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const payload = await req.json();
   const body = JSON.stringify(payload);
 
@@ -115,19 +116,19 @@ export async function POST(req: Request) {
     } = evt.data;
 
     const user = await createUser({
-      email: email_addresses?.[0]?.email_address || "",
+      email: email_addresses[0]?.email_address ?? "",
       externalId: id,
       firstName: first_name,
       lastName: last_name,
-      phone: phone_numbers?.[0]?.phone_number || null,
+      phone: phone_numbers[0]?.phone_number ?? null,
       username: username,
       profilePic: image_url,
-      role: (public_metadata?.role as Role) || null,
+      role: public_metadata.role as Role,
     });
 
     console.info("USER", user);
 
-    if (user?.success) {
+    if (user.success) {
       console.info("User created successfully");
       return NextResponse.json({
         message: "User created",
@@ -145,7 +146,7 @@ export async function POST(req: Request) {
     const user = await deleteUser(id);
     console.info("DELETE USER", user);
 
-    if (user?.success) {
+    if (user.success) {
       console.info("User deleted successfully");
       return NextResponse.json({
         message: "User deleted",

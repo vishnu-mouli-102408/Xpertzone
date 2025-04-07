@@ -73,7 +73,7 @@ const CTA = () => {
             </motion.p>
 
             <Link
-              href={user?.publicMetadata?.role === "user" ? "/user" : "/expert"}
+              href={user?.publicMetadata.role === "user" ? "/user" : "/expert"}
               className="mt-8"
             >
               <HoverButton className="rounded-lg">

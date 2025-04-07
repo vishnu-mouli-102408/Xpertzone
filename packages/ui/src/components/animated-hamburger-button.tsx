@@ -17,7 +17,7 @@ const AnimatedHamburgerButton = ({ active, setActive }: Props) => {
         initial={false}
         animate={active ? "open" : "closed"}
         onClick={(e) => {
-          e?.stopPropagation();
+          e.stopPropagation();
           setActive((prev: boolean) => !prev);
         }}
         className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 bg-white/0 transition-colors hover:bg-white/20"

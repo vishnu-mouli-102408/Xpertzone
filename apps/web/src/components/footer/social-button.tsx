@@ -19,7 +19,7 @@ const SocialButton = ({
       <Link
         target="_blank"
         rel="noopener noreferrer"
-        href={href || "#"}
+        href={href ?? "#"}
         className={buttonClassName}
       >
         {icon}

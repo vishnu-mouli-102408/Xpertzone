@@ -18,6 +18,7 @@ export class Cache implements ICache {
   }
 
   static getInstance(): Cache {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!this.instance) {
       this.instance = new Cache();
     }
