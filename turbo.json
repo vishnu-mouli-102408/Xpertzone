@@ -33,8 +33,7 @@
     },
     "db:generate": {
       "cache": true,
-      "inputs": ["packages/db/prisma/schema.prisma"],
-      "outputs": ["packages/db/prisma/generated/**"]
+      "inputs": ["packages/db/prisma/schema.prisma"]
     },
     "db:push": {
       "cache": false
