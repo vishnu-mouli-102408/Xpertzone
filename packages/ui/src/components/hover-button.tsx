@@ -92,7 +92,7 @@ const HoverButton = forwardRef<HTMLButtonElement, HoverButtonProps>(
         ref={buttonRef}
         className={cn(
           "relative isolate rounded-3xl px-8 py-3",
-          "text-foreground text-base font-medium leading-6",
+          "text-foreground text-base leading-6 font-medium",
           "bg-[rgba(43,55,80,0.1)] backdrop-blur-lg",
           "cursor-pointer overflow-hidden",
           "before:absolute before:inset-0 before:content-['']",
@@ -103,7 +103,7 @@ const HoverButton = forwardRef<HTMLButtonElement, HoverButtonProps>(
           "active:before:scale-[0.975]",
           "hover:before:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.3),inset_0_0_16px_0_rgba(255,255,255,0.2),inset_0_-3px_12px_0_rgba(255,255,255,0.25),0_2px_5px_0_rgba(255,255,255,0.4),0_6px_14px_0_rgba(255,255,255,0.35)]",
           "active:scale-[0.98] active:brightness-100",
-          "hover:scale-[1.02] hover:bg-opacity-40 hover:brightness-125",
+          "hover:bg-opacity-40 hover:scale-[1.02] hover:brightness-125",
           "transition-all duration-300 ease-out",
           className
         )}

@@ -21,14 +21,15 @@
     "@commitlint/config-conventional": "^19.8.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.0",
-    "prettier": "^3.5.3",
+    "eslint": "catalog:",
     "ts-node": "^10.9.2",
     "turbo": "^2.4.4",
-    "typescript": "5.8.2"
+    "typescript": "catalog:"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.6.3",
   "engines": {
-    "node": ">=18"
+    "node": ">=18",
+    "pnpm": ">=9.6.0"
   },
   "husky": {
     "hooks": {
@@ -37,6 +38,6 @@
   },
   "dependencies": {
     "ioredis": "^5.6.0",
-    "zod": "^3.24.2"
+    "zod": "catalog:"
   }
 }
