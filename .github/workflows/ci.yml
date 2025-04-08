@@ -55,7 +55,7 @@ jobs:
 
       - name: Copy env
         shell: bash
-        run: cp .env.example .env
+        run: cp apps/web/.env.example apps/web/.env
 
       - name: Generate database client
         run: pnpm dlx turbo db:generate --force
