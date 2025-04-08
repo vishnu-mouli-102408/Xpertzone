@@ -54,7 +54,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate database client
-        run: pnpm dlx turbo db:generate
+        run: pnpm dlx turbo db:generate --force
 
       # Setup Turborepo cache
       - name: Setup Turborepo cache
