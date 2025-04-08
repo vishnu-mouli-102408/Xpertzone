@@ -4,8 +4,8 @@ echo "Running pre-commit hook... 🍺"
 # Run lint-staged (which will run ESLint and Prettier on staged files)
 npm run lint:fix
 npm run lint
-npm run format:check
 npm run format
+npm run format:check
 pnpm run build
 
 if [ $? -ne 0 ]; then

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Button } from "@repo/ui/components/button";
 
+export const dynamic = "force-dynamic";
+
 const NotFound = () => {
   return (
     <main className="relative flex flex-col items-center justify-center px-4">
