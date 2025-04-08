@@ -46,6 +46,7 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "eslint": "catalog:",
+    "prettier": "catalog:",
 	"@ianvs/prettier-plugin-sort-imports": "^4.4.1",
 	"prettier-plugin-tailwindcss": "^0.6.11",
     "eslint-config-next": "15.2.4",
