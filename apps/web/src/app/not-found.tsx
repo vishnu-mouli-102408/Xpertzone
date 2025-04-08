@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { Button } from "@repo/ui/components/button";
-
-export const dynamic = "force-dynamic";
+import Link from "next/link";
 
 const NotFound = () => {
   return (

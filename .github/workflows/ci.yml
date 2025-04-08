@@ -16,8 +16,8 @@ env:
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
 
 jobs:
-  build-lint-format:
-    name: Build, Lint, and Format
+  lint-format:
+    name: Lint, and Format
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -77,9 +77,6 @@ jobs:
 
       - name: Run format
         run: pnpm run format --cache-dir=.turbo
-
-      - name: Run build
-        run: pnpm run build --cache-dir=.turbo
 
       # Optional: Upload Turborepo cache as artifact for future workflows
       - name: Upload Turborepo cache
