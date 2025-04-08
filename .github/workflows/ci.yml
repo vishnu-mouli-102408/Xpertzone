@@ -14,7 +14,6 @@ concurrency:
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-  TURBO_REMOTE_ONLY: true
 
 jobs:
   build-lint-format:
@@ -53,6 +52,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate database client
+        run: pnpm run db:generate
 
       # Setup Turborepo cache
       - name: Setup Turborepo cache
