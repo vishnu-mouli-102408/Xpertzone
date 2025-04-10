@@ -97,6 +97,9 @@ importers:
       '@number-flow/react':
         specifier: ^0.5.9
         version: 0.5.9(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@repo/api':
+        specifier: workspace:*
+        version: link:../../packages/api
       '@repo/cache':
         specifier: workspace:*
         version: link:../../packages/cache
@@ -163,6 +166,9 @@ importers:
       svix:
         specifier: ^1.63.1
         version: 1.63.1
+      zod:
+        specifier: 'catalog:'
+        version: 3.24.2
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -173,6 +179,9 @@ importers:
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@repo/prettier-config':
+        specifier: workspace:*
+        version: link:../../packages/prettier-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config

@@ -2,6 +2,13 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
 const env = createEnv({
+  shared: {
+    NODE_ENV: z
+      .enum(["development", "production", "test"])
+      .default("development"),
+    VERCEL_URL: z.string().min(1).optional(),
+    PORT: z.coerce.number().default(3000).optional(),
+  },
   /**
    * Specify your server-side environment variables schema here. This way you can ensure the app
    * isn't built with invalid env vars.
@@ -11,12 +18,7 @@ const env = createEnv({
       .string()
       .url({ message: "Invalid database URL" })
       .min(1, { message: "DATABASE_URL is required" }),
-    NODE_ENV: z
-      .enum(["development", "test", "production"])
-      .default("development"),
-    PORT: z.coerce.number().default(3000).optional(),
     CLERK_SECRET_KEY: z.string().min(1),
-    VERCEL_URL: z.string().min(1),
     SIGNING_SECRET: z.string().min(1),
     CLOUDINARY_CLOUD_NAME: z.string().min(1),
     CLOUDINARY_API_KEY: z.string().min(1),
@@ -70,6 +72,7 @@ const env = createEnv({
     UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   },
+
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
    * useful for Docker builds.
