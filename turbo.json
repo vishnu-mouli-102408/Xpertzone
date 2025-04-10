@@ -51,15 +51,19 @@
       "cache": false
     },
     "lint": {
+      "outputs": [".cache/.eslintcache"],
       "dependsOn": ["^lint"]
     },
     "lint:fix": {
+      "outputs": [".cache/.eslintcache"],
       "dependsOn": ["^lint:fix"]
     },
     "format": {
+      "outputs": [".cache/.prettiercache"],
       "dependsOn": ["^format"]
     },
     "format:check": {
+      "outputs": [".cache/.prettiercache"],
       "dependsOn": ["^format:check"]
     },
     "check-types": {

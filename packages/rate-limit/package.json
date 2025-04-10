@@ -8,6 +8,8 @@
     "build": "tsc",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
     "check-types": "tsc --noEmit"
   },
   "exports": {
@@ -21,9 +23,9 @@
     "@repo/typescript-config": "workspace:*",
     "@repo/prettier-config": "workspace:*",
     "@types/node": "^22.14.0",
-	"@ianvs/prettier-plugin-sort-imports": "^4.4.1",
-	"prettier-plugin-tailwindcss": "^0.6.11",
-	"prettier": "catalog:"
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "prettier": "catalog:"
   },
   "prettier": "@repo/prettier-config"
 }
