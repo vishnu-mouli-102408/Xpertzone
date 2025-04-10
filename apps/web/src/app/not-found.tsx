@@ -1,5 +1,5 @@
-import { Button } from "@repo/ui/components/button";
 import Link from "next/link";
+import { Button } from "@repo/ui/components/button";
 
 const NotFound = () => {
   return (

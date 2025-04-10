@@ -1,0 +1,41 @@
+{
+  "name": "@repo/api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
+    "check-types": "tsc --noEmit",
+    "dev": "tsc --watch --preserveWatchOutput"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@trpc/server": "catalog:",
+    "@repo/db": "workspace:*",
+    "superjson": "2.2.2",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "@repo/prettier-config": "workspace:*",
+    "@types/node": "^22.14.0",
+    "prettier": "catalog:"
+  },
+  "prettier": "@repo/prettier-config"
+}

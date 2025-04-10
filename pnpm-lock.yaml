@@ -9,6 +9,15 @@ catalogs:
     '@tanstack/react-query':
       specifier: ^5.71.10
       version: 5.71.10
+    '@trpc/client':
+      specifier: ^11.0.0
+      version: 11.0.4
+    '@trpc/server':
+      specifier: ^11.0.0
+      version: 11.0.4
+    '@trpc/tanstack-react-query':
+      specifier: ^11.0.0
+      version: 11.0.4
     eslint:
       specifier: ^9.23.0
       version: 9.23.0
@@ -106,6 +115,15 @@ importers:
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.71.10(react@19.0.0)
+      '@trpc/client':
+        specifier: 'catalog:'
+        version: 11.0.4(@trpc/server@11.0.4(typescript@5.8.2))(typescript@5.8.2)
+      '@trpc/server':
+        specifier: 'catalog:'
+        version: 11.0.4(typescript@5.8.2)
+      '@trpc/tanstack-react-query':
+        specifier: 'catalog:'
+        version: 11.0.4(@tanstack/react-query@5.71.10(react@19.0.0))(@trpc/client@11.0.4(@trpc/server@11.0.4(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.4(typescript@5.8.2))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.8.2)
       cloudinary:
         specifier: ^2.6.0
         version: 2.6.0
@@ -182,6 +200,43 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.8.2
+
+  packages/api:
+    dependencies:
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../db
+      '@trpc/server':
+        specifier: 'catalog:'
+        version: 11.0.4(typescript@5.8.2)
+      superjson:
+        specifier: 2.2.2
+        version: 2.2.2
+      zod:
+        specifier: 'catalog:'
+        version: 3.24.2
+    devDependencies:
+      '@ianvs/prettier-plugin-sort-imports':
+        specifier: ^4.4.1
+        version: 4.4.1(prettier@3.5.3)
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@repo/prettier-config':
+        specifier: workspace:*
+        version: link:../prettier-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: ^22.14.0
+        version: 22.14.0
+      prettier:
+        specifier: 'catalog:'
+        version: 3.5.3
+      prettier-plugin-tailwindcss:
+        specifier: ^0.6.11
+        version: 0.6.11(@ianvs/prettier-plugin-sort-imports@4.4.1(prettier@3.5.3))(prettier@3.5.3)
 
   packages/cache:
     devDependencies:
@@ -1310,6 +1365,27 @@ packages:
 
   '@tootallnate/quickjs-emscripten@0.23.0':
     resolution: {integrity: sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA==}
+
+  '@trpc/client@11.0.4':
+    resolution: {integrity: sha512-2xIXqRNc8wH3zgcGp1yZ8P2ZL15BoFWq2RS8S3ldjvxsdJfnoYmcvCNzySw8nIrWbKiXl9prdw+bGIUOdG/omw==}
+    peerDependencies:
+      '@trpc/server': 11.0.4
+      typescript: '>=5.7.2'
+
+  '@trpc/server@11.0.4':
+    resolution: {integrity: sha512-beDEGEw+slNiYxLUpZ8HKU1mnZBoP/VLMtrKh2ABKl7VC0PQV9XcDMVjB0GcSW15nTSiOnGDGyFDeudp4dH2qw==}
+    peerDependencies:
+      typescript: '>=5.7.2'
+
+  '@trpc/tanstack-react-query@11.0.4':
+    resolution: {integrity: sha512-8mCoJ0gfEaMfFDelnB1a6oWRjUP1uwJAOh3FHm6dGPtnycMpFj/yjg10/yE3Xgfoc3l4cL7WjugZRyrSi2XKig==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.67.1
+      '@trpc/client': 11.0.4
+      '@trpc/server': 11.0.4
+      react: '>=18.2.0'
+      react-dom: '>=18.2.0'
+      typescript: '>=5.7.2'
 
   '@tsconfig/node10@1.0.11':
     resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
@@ -4876,6 +4952,24 @@ snapshots:
       react: 19.0.0
 
   '@tootallnate/quickjs-emscripten@0.23.0': {}
+
+  '@trpc/client@11.0.4(@trpc/server@11.0.4(typescript@5.8.2))(typescript@5.8.2)':
+    dependencies:
+      '@trpc/server': 11.0.4(typescript@5.8.2)
+      typescript: 5.8.2
+
+  '@trpc/server@11.0.4(typescript@5.8.2)':
+    dependencies:
+      typescript: 5.8.2
+
+  '@trpc/tanstack-react-query@11.0.4(@tanstack/react-query@5.71.10(react@19.0.0))(@trpc/client@11.0.4(@trpc/server@11.0.4(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.4(typescript@5.8.2))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.8.2)':
+    dependencies:
+      '@tanstack/react-query': 5.71.10(react@19.0.0)
+      '@trpc/client': 11.0.4(@trpc/server@11.0.4(typescript@5.8.2))(typescript@5.8.2)
+      '@trpc/server': 11.0.4(typescript@5.8.2)
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
+      typescript: 5.8.2
 
   '@tsconfig/node10@1.0.11': {}
 
