@@ -7,6 +7,7 @@
  * The pieces you will need to use are documented accordingly near the end
  */
 import { db, type User } from "@repo/db";
+import { rateLimiter } from "@repo/rate-limit";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
@@ -95,6 +96,28 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
   return result;
 });
 
+const rateLimitingMiddleware = t.middleware(async ({ next, ctx }) => {
+  const userId =
+    ctx.user?.id ??
+    ctx.headers.get("x-forwarded-for") ??
+    ctx.headers.get("x-real-ip");
+
+  if (!userId) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "No userId found" });
+  }
+
+  const { allowed, resetIn } = await rateLimiter.isAllowed(userId, 100, 60);
+
+  if (!allowed) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: `Rate limit exceeded. Try again in ${resetIn} seconds`,
+    });
+  }
+
+  return await next();
+});
+
 /**
  * Public (unauthed) procedure
  *
@@ -102,7 +125,9 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * tRPC API. It does not guarantee that a user querying is authorized, but you
  * can still access user session data if they are logged in
  */
-export const publicProcedure = t.procedure.use(timingMiddleware);
+export const publicProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(rateLimitingMiddleware);
 
 /**
  * Protected (authenticated) procedure
@@ -112,16 +137,14 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure
-  .use(timingMiddleware)
-  .use(({ ctx, next }) => {
-    if (!ctx.user) {
-      throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
-    }
-    return next({
-      ctx: {
-        // infers that `ctx.session.user` is non-nullable
-        user: ctx.user,
-      },
-    });
+export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
+  if (!ctx.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+  }
+  return next({
+    ctx: {
+      // infers that `ctx.user` is non-nullable
+      user: ctx.user,
+    },
   });
+});

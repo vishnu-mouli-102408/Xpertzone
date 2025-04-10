@@ -17,7 +17,7 @@ env:
 
 jobs:
   lint-format:
-    name: Lint, and Format
+    name: Lint and Format
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

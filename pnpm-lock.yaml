@@ -218,6 +218,9 @@ importers:
       '@repo/db':
         specifier: workspace:*
         version: link:../db
+      '@repo/rate-limit':
+        specifier: workspace:*
+        version: link:../rate-limit
       '@trpc/server':
         specifier: 'catalog:'
         version: 11.0.4(typescript@5.8.2)
