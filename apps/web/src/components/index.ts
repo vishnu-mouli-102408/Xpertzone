@@ -7,6 +7,7 @@ import { Providers } from "./global/providers";
 import LogoTicker from "./logo-ticker";
 import Navbar from "./navbar";
 import Pricing from "./pricing";
+import { SidebarProvider } from "./sidebar/sidebar-context";
 
 export {
   AuroraHero,
@@ -18,4 +19,5 @@ export {
   Navbar,
   Pricing,
   Providers,
+  SidebarProvider,
 };
