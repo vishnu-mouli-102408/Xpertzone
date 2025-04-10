@@ -15,11 +15,10 @@ function Slider({
 }: React.ComponentProps<typeof SliderPrimitive.Root>) {
   const _values: number[] | undefined = useMemo(
     () =>
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       Array.isArray(value)
-        ? (value as number[])
+        ? value
         : Array.isArray(defaultValue)
-          ? (defaultValue as number[])
+          ? defaultValue
           : [min, max],
     [value, defaultValue, min, max]
   );
@@ -27,13 +26,13 @@ function Slider({
   return (
     <SliderPrimitive.Root
       data-slot="slider"
-      defaultValue={defaultValue as number[]}
-      value={value as number[]}
-      min={min as number}
-      max={max as number}
+      defaultValue={defaultValue}
+      value={value}
+      min={min}
+      max={max}
       className={cn(
         "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
-        className as string
+        className
       )}
       {...props}
     >
