@@ -73,10 +73,10 @@ jobs:
 
       # Run all tasks through Turborepo using pnpm run
       - name: Run lint
-        run: pnpm run lint --cache-dir=.turbo
+        run: pnpm run lint --cache-file=.turbo
 
       - name: Run format
-        run: pnpm run format --cache-dir=.turbo
+        run: pnpm run format --cache-file=.turbo
 
       # Optional: Upload Turborepo cache as artifact for future workflows
       - name: Upload Turborepo cache
