@@ -19,14 +19,14 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
+    "eslint": "catalog:",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.0",
-    "eslint": "catalog:",
     "ts-node": "^10.9.2",
     "turbo": "^2.4.4",
     "typescript": "catalog:"
   },
-  "packageManager": "pnpm@10.6.3",
+  "packageManager": "pnpm@10.8.0",
   "engines": {
     "node": ">=18",
     "pnpm": ">=9.6.0"
