@@ -215,6 +215,9 @@ importers:
 
   packages/api:
     dependencies:
+      '@repo/common':
+        specifier: workspace:*
+        version: link:../common
       '@repo/db':
         specifier: workspace:*
         version: link:../db

@@ -25,6 +25,7 @@
   "dependencies": {
     "@trpc/server": "catalog:",
     "@repo/db": "workspace:*",
+    "@repo/common": "workspace:*",
     "@repo/rate-limit": "workspace:*",
     "superjson": "2.2.2",
     "zod": "catalog:"

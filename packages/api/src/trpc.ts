@@ -6,6 +6,7 @@
  * tl;dr - this is where all the tRPC server stuff is created and plugged in.
  * The pieces you will need to use are documented accordingly near the end
  */
+import { logger } from "@repo/common";
 import { db, type User } from "@repo/db";
 import { rateLimiter } from "@repo/rate-limit";
 import { initTRPC, TRPCError } from "@trpc/server";
@@ -102,11 +103,18 @@ const rateLimitingMiddleware = t.middleware(async ({ next, ctx }) => {
     ctx.headers.get("x-forwarded-for") ??
     ctx.headers.get("x-real-ip");
 
+  logger.info({ userId }, "Rate limiting middleware | userId");
+
   if (!userId) {
     throw new TRPCError({ code: "FORBIDDEN", message: "No userId found" });
   }
 
   const { allowed, resetIn } = await rateLimiter.isAllowed(userId, 100, 60);
+
+  logger.info(
+    { allowed, resetIn },
+    "Rate limiting middleware | allowed, ResetIn"
+  );
 
   if (!allowed) {
     throw new TRPCError({
