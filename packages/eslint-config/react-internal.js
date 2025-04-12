@@ -33,6 +33,7 @@ export default [
       // React scope no longer necessary with new JSX transform.
       "react/react-in-jsx-scope": "off",
       "react/jsx-uses-react": "off",
+      "react/prop-types": "off",
     },
   },
 ];

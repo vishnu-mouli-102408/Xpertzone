@@ -68,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className, navItems }) => {
                       exit={{ opacity: 0, x: -20 }}
                       className="transitio ml-2 cursor-pointer bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-lg font-semibold text-transparent duration-300 ease-in-out hover:scale-[1.04]"
                     >
-                      Expert Link
+                      Xpert Zone
                     </motion.span>
                   </Link>
                 </motion.div>
