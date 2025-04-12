@@ -218,6 +218,9 @@ importers:
 
   packages/api:
     dependencies:
+      '@repo/cache':
+        specifier: workspace:*
+        version: link:../cache
       '@repo/common':
         specifier: workspace:*
         version: link:../common

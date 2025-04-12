@@ -1,3 +1,4 @@
+import { cache } from "@repo/cache";
 import { INTERNAL_SERVER_ERROR, logger, NOT_FOUND, OK } from "@repo/common";
 import { db } from "@repo/db";
 import type { TRPCRouterRecord } from "@trpc/server";
@@ -67,6 +68,8 @@ export const authRouter = {
           },
           data: input,
         });
+
+        await cache.evict("search-results", []);
 
         logger.info({ updatedUser }, "User updated successfully");
         return {
