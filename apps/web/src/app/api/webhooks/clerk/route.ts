@@ -1,14 +1,9 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import env from "@/src/env";
-import {
-  CREATED,
-  INTERNAL_SERVER_ERROR,
-  NOT_FOUND,
-  OK,
-} from "@/src/lib/http-status-codes";
 import { createUser, deleteUser } from "@/src/lib/user";
 import { WebhookEvent } from "@clerk/nextjs/server";
+import { CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "@repo/common";
 import { db, type Role } from "@repo/db";
 import { Webhook } from "svix";
 

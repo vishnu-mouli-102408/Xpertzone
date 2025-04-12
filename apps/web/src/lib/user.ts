@@ -2,15 +2,10 @@
 "use server";
 
 import { clerkClient } from "@clerk/nextjs/server";
+import { ACCEPTED, CREATED, INTERNAL_SERVER_ERROR, OK } from "@repo/common";
 import { db, type Role, type User } from "@repo/db";
 
 import type { Roles } from "../types/global";
-import {
-  ACCEPTED,
-  CREATED,
-  INTERNAL_SERVER_ERROR,
-  OK,
-} from "./http-status-codes";
 
 export async function setRole(id: string, role: Roles) {
   const client = await clerkClient();

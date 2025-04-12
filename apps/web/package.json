@@ -19,6 +19,7 @@
     "@clerk/themes": "^2.2.27",
     "@number-flow/react": "^0.5.9",
     "@repo/api": "workspace:*",
+    "@repo/common": "workspace:*",
     "@repo/cache": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/rate-limit": "workspace:*",

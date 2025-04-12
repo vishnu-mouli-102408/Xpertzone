@@ -20,10 +20,6 @@ const env = createEnv({
       .min(1, { message: "DATABASE_URL is required" }),
     CLERK_SECRET_KEY: z.string().min(1),
     SIGNING_SECRET: z.string().min(1),
-    CLOUDINARY_CLOUD_NAME: z.string().min(1),
-    CLOUDINARY_API_KEY: z.string().min(1),
-    CLOUDINARY_API_SECRET: z.string().min(1),
-    CLOUDINARY_URL: z.string().min(1),
     UPSTASH_REDIS_REST_URL: z.string().min(1),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
   },
@@ -54,10 +50,6 @@ const env = createEnv({
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     VERCEL_URL: process.env.VERCEL_URL,
     SIGNING_SECRET: process.env.SIGNING_SECRET,
-    CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
-    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
-    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
-    CLOUDINARY_URL: process.env.CLOUDINARY_URL,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL:
