@@ -9,6 +9,7 @@ import Navbar from "./navbar";
 import Pricing from "./pricing";
 import SearchModal from "./search/search-modal";
 import { SidebarProvider } from "./sidebar/sidebar-context";
+import UserOverview from "./user/user-overview";
 
 export {
   AuroraHero,
@@ -22,4 +23,5 @@ export {
   Providers,
   SearchModal,
   SidebarProvider,
+  UserOverview,
 };

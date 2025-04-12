@@ -99,8 +99,8 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 
 const rateLimitingMiddleware = t.middleware(async ({ next, ctx }) => {
   const userId =
-    ctx.user?.id ??
     ctx.headers.get("x-forwarded-for") ??
+    ctx.user?.id ??
     ctx.headers.get("x-real-ip");
 
   logger.info({ userId }, "Rate limiting middleware | userId");
