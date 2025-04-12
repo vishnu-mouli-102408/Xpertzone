@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
   cloudinary,
   INTERNAL_SERVER_ERROR,
@@ -35,7 +33,7 @@ export const accountRouter = {
                 if (error) {
                   reject(
                     new Error(
-                      error instanceof Error ? error.message : String(error)
+                      error.message || "Error uploading file to Cloudinary"
                     )
                   );
                 } else {

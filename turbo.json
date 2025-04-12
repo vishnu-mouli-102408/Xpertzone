@@ -17,7 +17,10 @@
     "NEXT_PUBLIC_CLERK_SIGN_UP_URL",
     "REDIS_URL",
     "DATABASE_URL",
-    "PORT"
+    "PORT",
+    "CLOUDINARY_CLOUD_NAME",
+    "CLOUDINARY_API_KEY",
+    "CLOUDINARY_API_SECRET"
   ],
   "globalPassThroughEnv": ["NODE_ENV", "CACHE_EXPIRE", "VERCEL_URL"],
   "tasks": {
