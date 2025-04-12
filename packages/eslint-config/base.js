@@ -96,6 +96,7 @@ export default tseslint.config(
       "import/consistent-type-specifier-style": "off",
       "@typescript-eslint/consistent-type-definitions": "off",
       "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
     },
   },
   {

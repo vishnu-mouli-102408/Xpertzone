@@ -318,7 +318,7 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
                           <span
                             key={i}
                             className={
-                              i < Math.floor(expert.averageRating || 0)
+                              i < Math.floor(expert.averageRating)
                                 ? "text-amber-400"
                                 : "text-gray-600"
                             }
@@ -328,7 +328,7 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
                         ))}
                       </div>
                       <span className="ml-1 text-xs text-gray-500">
-                        ({expert.reviewCount || 0})
+                        ({expert.reviewCount})
                       </span>
                     </div>
                   </div>
