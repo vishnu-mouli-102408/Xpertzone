@@ -8,6 +8,7 @@ import LogoTicker from "./logo-ticker";
 import Navbar from "./navbar";
 import Pricing from "./pricing";
 import SearchModal from "./search/search-modal";
+import Settings from "./settings";
 import { SidebarProvider } from "./sidebar/sidebar-context";
 import UserOverview from "./user/user-overview";
 
@@ -22,6 +23,7 @@ export {
   Pricing,
   Providers,
   SearchModal,
+  Settings,
   SidebarProvider,
   UserOverview,
 };

@@ -40,6 +40,10 @@ const env = createEnv({
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1),
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1),
     NEXT_PUBLIC_REDIS_URL: z.string().min(1),
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().min(1),
+    NEXT_PUBLIC_CLOUDINARY_API_KEY: z.string().min(1),
+    NEXT_PUBLIC_CLOUDINARY_API_SECRET: z.string().min(1),
+    NEXT_PUBLIC_CLOUDINARY_URL: z.string().min(1),
   },
 
   /**
@@ -50,6 +54,12 @@ const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     NEXT_PUBLIC_REDIS_URL: process.env.NEXT_PUBLIC_REDIS_URL,
     NEXT_PUBLIC_CACHE_EXPIRE: process.env.NEXT_PUBLIC_CACHE_EXPIRE,
+    NEXT_PUBLIC_CLOUDINARY_API_KEY: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
+    NEXT_PUBLIC_CLOUDINARY_API_SECRET:
+      process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET,
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME:
+      process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    NEXT_PUBLIC_CLOUDINARY_URL: process.env.NEXT_PUBLIC_CLOUDINARY_URL,
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
