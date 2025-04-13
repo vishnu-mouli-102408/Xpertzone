@@ -10,11 +10,13 @@ import Pricing from "./pricing";
 import SearchModal from "./search/search-modal";
 import Settings from "./settings";
 import { SidebarProvider } from "./sidebar/sidebar-context";
+import ExploreExperts from "./user/explore-experts";
 import UserOverview from "./user/user-overview";
 
 export {
   AuroraHero,
   CTA,
+  ExploreExperts,
   FAQ,
   FeaturesSection,
   Footer,

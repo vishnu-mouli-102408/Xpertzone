@@ -395,6 +395,7 @@ export const userRouter = {
       z
         .object({
           page: z.number().int().optional(),
+          cursor: z.string().optional(),
           limit: z.number().int().optional(),
           search: z.string().optional(),
         })
@@ -402,10 +403,9 @@ export const userRouter = {
     )
     .query(async ({ input }) => {
       try {
-        const { page = 1, limit = 10, search = "" } = input ?? {};
-        const offset = ((page || 1) - 1) * (limit || 10);
+        const { limit = 10, search = "", cursor } = input ?? {};
 
-        logger.info({ page, limit, search }, "Query parameters");
+        logger.info({ limit, search, cursor }, "Query parameters");
 
         let whereCondition = {};
         if (search.trim() !== "") {
@@ -423,9 +423,12 @@ export const userRouter = {
         const [total, experts] = await Promise.all([
           db.user.count({ where: { ...whereCondition, role: "EXPERT" } }),
           db.user.findMany({
-            where: { ...whereCondition, role: "EXPERT" },
-            skip: offset,
-            take: limit || 10,
+            where: {
+              ...whereCondition,
+              role: "EXPERT",
+            },
+            cursor: cursor ? { id: cursor } : undefined,
+            take: limit + 1,
             orderBy: { createdAt: "desc" },
             include: {
               reviewsReceived: true,
@@ -433,7 +436,17 @@ export const userRouter = {
           }),
         ]);
 
-        const expertsWithAvgRating = experts.map((expert) => {
+        // logger.info(experts, "Experts Data");
+
+        const hasNextPage = experts.length > limit;
+        const nextCursor =
+          hasNextPage && experts.length > 0
+            ? experts[experts.length - 1]?.id
+            : null;
+
+        const expertsToReturn = hasNextPage ? experts.slice(0, -1) : experts;
+
+        const expertsWithAvgRating = expertsToReturn.map((expert) => {
           const totalRatings = expert.reviewsReceived.reduce(
             (sum, review) => sum + review.rating,
             0
@@ -455,13 +468,13 @@ export const userRouter = {
           data: {
             totalExperts: total,
             experts: expertsWithAvgRating,
-            currentPage: page,
+            nextCursor,
             totalPages: Math.ceil(total / (limit || 10)),
           },
           code: OK,
         };
       } catch (error) {
-        logger.error({ error }, "Error fetching experts");
+        logger.error(error, "Error fetching experts");
         return {
           message: "Internal server error",
           success: false,
@@ -497,7 +510,7 @@ export const userRouter = {
           },
         });
 
-        logger.info({ expert }, "Expert Data");
+        logger.info(expert, "Expert Data");
 
         if (!expert) {
           return {
@@ -530,7 +543,7 @@ export const userRouter = {
           },
         });
 
-        logger.info({ expertReviews }, "Expert Reviews");
+        logger.info(expertReviews, "Expert Reviews");
 
         // Only run aggregate query if there are reviews
         let rating = 0;
@@ -540,7 +553,7 @@ export const userRouter = {
             _avg: { rating: true },
           });
           rating = averageRating._avg.rating ?? 0;
-          logger.info({ averageRating }, "Average");
+          logger.info(averageRating, "Average");
         }
 
         return {
@@ -554,7 +567,7 @@ export const userRouter = {
           code: OK,
         };
       } catch (error) {
-        logger.error({ error }, "Error fetching expert by ID");
+        logger.error(error, "Error fetching expert by ID");
         return {
           message: "Internal server error",
           success: false,
@@ -684,7 +697,7 @@ export const userRouter = {
           "search-results",
           []
         );
-        logger.info({ cachedResults }, "Cached Results");
+        logger.info(cachedResults, "Cached Results");
         if (cachedResults) {
           logger.info(
             { source: "memory-cache" },
@@ -821,7 +834,7 @@ export const userRouter = {
           code: OK,
         };
       } catch (error) {
-        logger.error({ error }, "Error fetching experts");
+        logger.error(error, "Error fetching experts");
         return {
           message: "Internal server error",
           success: false,
