@@ -26,7 +26,7 @@ const ExploreExperts = () => {
     useInfiniteQuery(
       trpc.user.getAllExperts.infiniteQueryOptions(
         {
-          limit: 6,
+          limit: 10,
         },
         {
           getNextPageParam: (lastPage) => {
