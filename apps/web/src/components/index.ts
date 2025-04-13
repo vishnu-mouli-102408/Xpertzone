@@ -1,6 +1,7 @@
 import { AuroraHero } from "./aurora-hero";
 import Billing from "./billing";
 import CTA from "./cta";
+import ExpertOverview from "./expert/expert-overview";
 import FAQ from "./faqs";
 import FeaturesSection from "./features";
 import Footer from "./footer";
@@ -19,6 +20,7 @@ export {
   AuroraHero,
   Billing,
   CTA,
+  ExpertOverview,
   ExpertProfile,
   ExploreExperts,
   FAQ,
