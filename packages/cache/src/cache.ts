@@ -9,4 +9,6 @@ export interface ICache {
   get<T>(type: string, args: string[]): Promise<T | null>;
 
   evict(type: string, args: string[]): Promise<void>;
+
+  evictAllByPrefix(prefix: string): Promise<void>;
 }

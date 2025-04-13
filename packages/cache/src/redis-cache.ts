@@ -46,6 +46,13 @@ export class RedisCache implements ICache {
     await this.client.del(key);
   }
 
+  async evictAllByPrefix(prefix: string): Promise<void> {
+    const keys = await this.client.keys(`${prefix}:*`);
+    if (keys.length > 0) {
+      await this.client.del(...keys);
+    }
+  }
+
   private generateKey(type: string, args: string[]): string {
     return `${type}:${args.join(":")}`;
   }

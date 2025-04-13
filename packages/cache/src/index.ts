@@ -20,7 +20,6 @@ export class Cache implements ICache {
   }
 
   static getInstance(): Cache {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!this.instance) {
       this.instance = new Cache();
     }
@@ -42,6 +41,10 @@ export class Cache implements ICache {
 
   async evict(type: string, args: string[]): Promise<void> {
     return this.delegate.evict(type, args);
+  }
+
+  async evictAllByPrefix(prefix: string): Promise<void> {
+    return this.delegate.evictAllByPrefix(prefix);
   }
 }
 

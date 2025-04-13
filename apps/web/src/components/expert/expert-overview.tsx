@@ -42,7 +42,9 @@ const ExpertOverview = () => {
   const trpc = useTRPC();
 
   const { data, isPending } = useQuery(
-    trpc.expert.getExpertAnalytics.queryOptions()
+    trpc.expert.getExpertAnalytics.queryOptions({
+      filter: { type: filter },
+    })
   );
 
   const recentCalls = data?.data?.recentCalls?.map((item) => ({

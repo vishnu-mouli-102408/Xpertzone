@@ -69,7 +69,7 @@ export const authRouter = {
           data: input,
         });
 
-        await cache.evict("search-results", []);
+        await cache.evictAllByPrefix("search-results");
 
         logger.info({ updatedUser }, "User updated successfully");
         return {

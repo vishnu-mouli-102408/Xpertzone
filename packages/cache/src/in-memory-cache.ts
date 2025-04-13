@@ -57,6 +57,16 @@ export class InMemoryCache implements ICache {
     return Promise.resolve();
   }
 
+  async evictAllByPrefix(prefix: string): Promise<void> {
+    const prefixWithColon = `${prefix}:`;
+    for (const key of this.inMemoryDb.keys()) {
+      if (key.startsWith(prefixWithColon)) {
+        this.inMemoryDb.delete(key);
+      }
+    }
+    return Promise.resolve();
+  }
+
   private generateKey(type: string, args: string[]): string {
     return `${type}:${JSON.stringify(args)}`;
   }

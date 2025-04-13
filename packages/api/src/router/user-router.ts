@@ -659,7 +659,7 @@ export const userRouter = {
         },
       });
 
-      await cache.evict("search-results", []);
+      await cache.evictAllByPrefix("search-results");
 
       return {
         message: "Review submitted successfully",
@@ -689,20 +689,14 @@ export const userRouter = {
 
         logger.info({ input }, "Search Experts Input");
 
-        const cacheKey = `expert-search:${JSON.stringify(input)}`;
-        logger.info({ cacheKey }, "Cache Key");
-
         // Try to get from  cache first (faster)
         const cachedResults = await cache.get<SearchExpertsResult>(
           "search-results",
-          []
+          [JSON.stringify(input)]
         );
         logger.info(cachedResults, "Cached Results");
         if (cachedResults) {
-          logger.info(
-            { source: "memory-cache" },
-            "Cache hit from in-memory cache"
-          );
+          logger.info(cachedResults, "Cache hit, returning cached results");
           return {
             message: "Experts fetched successfully",
             success: true,
@@ -823,9 +817,10 @@ export const userRouter = {
         };
 
         logger.info({ totalCount }, "Search Experts Result Found");
+        logger.info(experts, "Search Experts Result Found");
 
         // Store in memory cache
-        await cache.set("search-results", [], result);
+        await cache.set("search-results", [JSON.stringify(input)], result);
 
         return {
           success: true,

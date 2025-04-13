@@ -33,7 +33,9 @@ const UserOverview = () => {
   const trpc = useTRPC();
 
   const { data, isPending } = useQuery(
-    trpc.user.getUserAnalytics.queryOptions()
+    trpc.user.getUserAnalytics.queryOptions({
+      filter: { type: filter },
+    })
   );
 
   const recentCalls = data?.data?.recentCalls.map((item) => ({
