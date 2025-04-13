@@ -22,7 +22,10 @@ export class InMemoryCache implements ICache {
     type: string,
     args: string[],
     value: T,
-    expirySeconds: number = parseInt(process.env.CACHE_EXPIRE ?? "1800", 10)
+    expirySeconds: number = parseInt(
+      process.env.NEXT_PUBLIC_CACHE_EXPIRE ?? "1800",
+      10
+    )
   ): Promise<void> {
     const key = this.generateKey(type, args);
     this.inMemoryDb.set(key, {

@@ -20,12 +20,12 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
-	"@ianvs/prettier-plugin-sort-imports": "^4.4.1",
-	"prettier-plugin-tailwindcss": "^0.6.11",
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
     "@repo/prettier-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.14.0",
-    "prettier": "catalog:"
+    "prettier": "catalog:",
+    "prettier-plugin-tailwindcss": "^0.6.11"
   },
   "prettier": "@repo/prettier-config"
 }

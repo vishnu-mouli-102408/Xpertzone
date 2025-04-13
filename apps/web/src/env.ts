@@ -9,6 +9,7 @@ const env = createEnv({
     VERCEL_URL: z.string().min(1).optional(),
     PORT: z.coerce.number().default(3000).optional(),
   },
+
   /**
    * Specify your server-side environment variables schema here. This way you can ensure the app
    * isn't built with invalid env vars.
@@ -34,9 +35,11 @@ const env = createEnv({
     NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: z.string().min(1),
     NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL: z.string().min(1),
     NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL: z.string().min(1),
+    NEXT_PUBLIC_CACHE_EXPIRE: z.coerce.number().default(1800),
     NEXT_PUBLIC_APP_URL: z.string(),
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1),
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1),
+    NEXT_PUBLIC_REDIS_URL: z.string().min(1),
   },
 
   /**
@@ -45,6 +48,8 @@ const env = createEnv({
    */
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
+    NEXT_PUBLIC_REDIS_URL: process.env.NEXT_PUBLIC_REDIS_URL,
+    NEXT_PUBLIC_CACHE_EXPIRE: process.env.NEXT_PUBLIC_CACHE_EXPIRE,
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,

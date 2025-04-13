@@ -15,14 +15,16 @@
     "NEXT_PUBLIC_APP_URL",
     "NEXT_PUBLIC_CLERK_SIGN_IN_URL",
     "NEXT_PUBLIC_CLERK_SIGN_UP_URL",
+    "NEXT_PUBLIC_REDIS_URL",
     "REDIS_URL",
     "DATABASE_URL",
     "PORT",
+    "NEXT_PUBLIC_CACHE_EXPIRE",
     "CLOUDINARY_CLOUD_NAME",
     "CLOUDINARY_API_KEY",
     "CLOUDINARY_API_SECRET"
   ],
-  "globalPassThroughEnv": ["NODE_ENV", "CACHE_EXPIRE", "VERCEL_URL"],
+  "globalPassThroughEnv": ["NODE_ENV", "CI", "npm_lifecycle_event"],
   "tasks": {
     "build": {
       "dependsOn": ["^build", "^db:generate"],
