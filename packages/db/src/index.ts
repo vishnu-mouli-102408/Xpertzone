@@ -1,27 +1,21 @@
 import { PrismaClient } from "../generated/client";
 
-const prismaClientSingleton = () => {
-  return new PrismaClient();
-};
 
-type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClientSingleton | undefined;
-};
-
-export const db = globalForPrisma.prisma ?? prismaClientSingleton();
+export const db =
+  globalForPrisma.prisma ?? new PrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
 
-export const createPool = () => {
-  return new PrismaClient({
-    datasources: {
-      db: {
-        url: `${process.env.DATABASE_URL}&connection_limit=20`,
-      },
-    },
-  });
-};
+// export const createPool = () => {
+//   return new PrismaClient({
+//     datasources: {
+//       db: {
+//         url: `${process.env.DATABASE_URL}&connection_limit=20`,
+//       },
+//     },
+//   });
+// };
 
 export * from "../generated/client";
