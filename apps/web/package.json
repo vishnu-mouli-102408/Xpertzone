@@ -19,6 +19,7 @@
     "@clerk/themes": "^2.2.27",
     "@hookform/resolvers": "^5.0.1",
     "@number-flow/react": "^0.5.9",
+    "@prisma/nextjs-monorepo-workaround-plugin": "^6.6.0",
     "@repo/api": "workspace:*",
     "@repo/cache": "workspace:*",
     "@repo/common": "workspace:*",

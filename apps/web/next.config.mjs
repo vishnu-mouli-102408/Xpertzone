@@ -1,8 +1,18 @@
-import type { NextConfig } from "next";
+import { PrismaPlugin } from "@prisma/nextjs-monorepo-workaround-plugin";
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   /* config options here */
   transpilePackages: ["@repo/ui"],
+  webpack: (config, { isServer }) => {
+    // This is a workaround to avoid this Prisma issue on Vercel
+    // https://github.com/prisma/prisma/discussions/19499
+    if (isServer) {
+      config.plugins = [...config.plugins, new PrismaPlugin()];
+    }
+
+    return config;
+  },
   productionBrowserSourceMaps: false,
   images: {
     remotePatterns: [
