@@ -15,7 +15,6 @@
     "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
 	"prebuild": "npm run db:generate",
-	"postinstall": "prisma generate",
     "predev": "npm run db:generate"
   },
   "prisma": {

@@ -11,8 +11,7 @@
     "check-types": "turbo run check-types",
     "prepare": "husky",
     "dev:docker": "pnpm run prisma:docker && pnpm run dev",
-    "prisma:docker": "cd packages/db && npx prisma migrate dev --skip-seed && npx prisma db seed",
-    "postinstall": "cd packages/db && pnpm run db:generate"
+    "prisma:docker": "cd packages/db && npx prisma migrate dev --skip-seed && npx prisma db seed"
   },
   "prisma": {
     "seed": "ts-node packages\\db\\prisma\\seed.ts"
