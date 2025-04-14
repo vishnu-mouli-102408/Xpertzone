@@ -41,8 +41,7 @@
       "persistent": true
     },
     "db:generate": {
-      "cache": true,
-      "inputs": ["packages/db/prisma/schema.prisma"]
+      "cache": false
     },
     "db:push": {
       "cache": false
