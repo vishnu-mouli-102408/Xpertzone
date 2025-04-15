@@ -1,16 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { PRICING_PLANS } from "@/src/constants";
+import { useUser } from "@clerk/nextjs";
 import NumberFlow from "@number-flow/react";
 import AnimationContainer from "@repo/ui/components/animation-container";
 import MaxWidthWrapper from "@repo/ui/components/max-width-wrapper";
 import SectionBadge from "@repo/ui/components/section-badge";
 import { cn } from "@repo/ui/lib/utils";
 import { Check, X } from "lucide-react";
+import { toast } from "sonner";
 
 const Pricing = () => {
   const [isYearly, setIsYearly] = useState<boolean>(false);
+  const router = useRouter();
+  const { user, isSignedIn } = useUser();
 
   return (
     <section
@@ -152,6 +157,21 @@ const Pricing = () => {
 
                 <AnimationContainer animation="fadeUp" delay={1 + index * 0.2}>
                   <button
+                    onClick={() => {
+                      if (isSignedIn) {
+                        router.push(
+                          `${user?.publicMetadata?.role === "user" ? "/user/" : "/expert"}/billing`
+                        );
+                      } else {
+                        toast.info("Please sign in to continue", {
+                          description:
+                            "You need to be signed in to access the billing page.",
+                          closeButton: true,
+                          duration: 5000,
+                          position: "bottom-center",
+                        });
+                      }
+                    }}
                     className={`w-full cursor-pointer rounded-xl p-2 transition-all duration-300 ease-in-out hover:scale-[1.02] ${plan.popular ? "border border-[#FFFFFF26] bg-[#FFFFFF0D] shadow-[inset_0px_0px_20px_0px_#FFFFFF33] hover:border hover:border-[#FFFFFF66] hover:bg-[#FFFFFF1A] hover:shadow-[inset_0px_0px_30px_0px_#FFFFFF4D]" : "border border-[#FFFFFF26] shadow-[inset_0px_0px_20px_0px_#FFFFFF33] hover:border hover:border-[#FFFFFF26] hover:bg-[#FFFFFF0D] hover:shadow-[inset_0px_0px_20px_0px_#FFFFFF33]"}`}
                   >
                     Get Started
