@@ -1,6 +1,9 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ExpertProfile } from "@/src/components";
+import { HydrateClient, prefetch, trpc } from "@/src/trpc/server";
 import { db } from "@repo/db";
+import { Spinner } from "@repo/ui/components/spinner";
 
 export const metadata: Metadata = {
   title: "Expert Profile",
@@ -22,11 +25,17 @@ export async function generateStaticParams() {
   return paths;
 }
 
-const Page = () => {
+const Page = async ({ params }: { params: Promise<{ expertId: string }> }) => {
+  const { expertId } = await params;
+  prefetch(trpc.user.getExpertById.queryOptions({ expertId }));
   return (
-    <div className="mx-auto min-h-[calc(100vh-64px)] w-full bg-black/50 p-6">
-      <ExpertProfile />
-    </div>
+    <HydrateClient>
+      <div className="mx-auto min-h-[calc(100vh-64px)] w-full bg-black/50 p-6">
+        <Suspense fallback={<Spinner variant="circle" />}>
+          <ExpertProfile expertId={expertId} />
+        </Suspense>
+      </div>
+    </HydrateClient>
   );
 };
 

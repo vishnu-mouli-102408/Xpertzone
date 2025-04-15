@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useTRPC } from "@/src/trpc/react";
 import { Button } from "@repo/ui/components/button";
 import { HoverButton } from "@repo/ui/components/hover-button";
 import { LoadingSpinner } from "@repo/ui/components/loading-spinner";
 import { Separator } from "@repo/ui/components/seperator";
 import { Skeleton } from "@repo/ui/components/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   BadgeCheck,
   Calendar,
@@ -47,8 +47,11 @@ const Modal = dynamic(
   }
 );
 
-const ExpertProfile = () => {
-  const { expertId } = useParams<{ expertId: string }>();
+interface ExpertProfileProps {
+  expertId: string;
+}
+
+const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
   const trpc = useTRPC();
 
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
@@ -58,7 +61,7 @@ const ExpertProfile = () => {
 
   const router = useRouter();
 
-  const { data, isPending } = useQuery(
+  const { data, isPending } = useSuspenseQuery(
     trpc.user.getExpertById.queryOptions({
       expertId,
     })
