@@ -1,9 +1,8 @@
 import { cache } from "react";
 import { headers } from "next/headers";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import type { AppRouter } from "@repo/api";
 import { appRouter, createTRPCContext } from "@repo/api";
-import { db } from "@repo/db";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
@@ -18,18 +17,18 @@ const createContext = cache(async () => {
   const heads = new Headers(await headers());
   heads.set("x-trpc-source", "rsc");
 
-  const auth = await currentUser();
+  const userAuth = await auth();
 
-  if (!auth) {
+  const { userId } = userAuth;
+
+  if (!userAuth || !userId) {
     throw new Error("Unauthenticated. No auth found");
   }
 
-  const user = await db.user.findUnique({
-    where: { externalId: auth.id },
-  });
-
   return createTRPCContext({
-    user,
+    user: {
+      externalId: userId,
+    },
     headers: heads,
   });
 });

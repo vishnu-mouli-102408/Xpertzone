@@ -1,8 +1,7 @@
 import type { NextRequest } from "next/server";
 import env from "@/src/env";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { appRouter, createTRPCContext } from "@repo/api";
-import { db } from "@repo/db";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 /**
@@ -29,17 +28,17 @@ export const OPTIONS = () => {
  * handling a HTTP request (e.g. when you make requests from Client Components).
  */
 const createContext = async (req: NextRequest) => {
-  const auth = await currentUser();
+  const userAuth = await auth();
 
-  if (!auth) {
+  const { userId } = userAuth;
+
+  if (!userAuth || !userId) {
     throw new Error("Unauthenticated. No auth found");
   }
-
-  const user = await db.user.findUnique({
-    where: { externalId: auth.id },
-  });
   return createTRPCContext({
-    user,
+    user: {
+      externalId: userId,
+    },
     headers: req.headers,
   });
 };

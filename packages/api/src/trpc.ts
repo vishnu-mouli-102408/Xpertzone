@@ -7,7 +7,7 @@
  * The pieces you will need to use are documented accordingly near the end
  */
 import { logger } from "@repo/common";
-import { db, type User } from "@repo/db";
+import { db } from "@repo/db";
 import { rateLimiter } from "@repo/rate-limit";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
@@ -26,9 +26,17 @@ import { ZodError } from "zod";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = (opts: {
-  user: User | null;
+  user: {
+    externalId: string;
+  };
   headers: Headers;
-}): { db: typeof db; headers: Headers; user: User | null } => {
+}): {
+  db: typeof db;
+  headers: Headers;
+  user: {
+    externalId: string;
+  };
+} => {
   return {
     db,
     ...opts,
@@ -100,7 +108,7 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 const rateLimitingMiddleware = t.middleware(async ({ next, ctx }) => {
   const userId =
     ctx.headers.get("x-forwarded-for") ??
-    ctx.user?.id ??
+    ctx.user?.externalId ??
     ctx.headers.get("x-real-ip");
 
   logger.info({ userId }, "Rate limiting middleware | userId");
@@ -145,14 +153,17 @@ export const publicProcedure = t.procedure
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
-  if (!ctx.user) {
+export const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
+  const user = await db.user.findUnique({
+    where: { externalId: ctx.user.externalId },
+  });
+
+  if (!user) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
   }
   return next({
     ctx: {
-      // infers that `ctx.user` is non-nullable
-      user: ctx.user,
+      user: user,
     },
   });
 });
