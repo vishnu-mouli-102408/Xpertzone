@@ -98,7 +98,7 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
             onClick={() => {
               router.back();
             }}
-            className="mb-4 flex w-max cursor-pointer items-center gap-2 hover:text-slate-300"
+            className="mb-6 flex w-max cursor-pointer items-center gap-2 hover:text-slate-300"
           >
             <ArrowLeft className="transition-colors duration-100" />
             <div className="transition-colors duration-100">Back</div>

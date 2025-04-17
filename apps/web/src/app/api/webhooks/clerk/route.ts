@@ -3,33 +3,9 @@ import { NextResponse } from "next/server";
 import env from "@/src/env";
 import { createUser, deleteUser } from "@/src/lib/user";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import { CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "@repo/common";
-import { db, type Role } from "@repo/db";
+import { CREATED, NOT_FOUND, OK } from "@repo/common";
+import { type Role } from "@repo/db";
 import { Webhook } from "svix";
-
-export async function GET() {
-  try {
-    const user = await db.user.create({
-      data: {
-        email: "example@gmail.com",
-        externalId: "12345",
-      },
-    });
-    console.info("USER", user);
-    return NextResponse.json({
-      message: "Webhook route",
-      data: user,
-      code: OK,
-    });
-  } catch (error) {
-    console.info("ERROR", error);
-    return NextResponse.json({
-      message: "Internal Server Error",
-      error,
-      code: INTERNAL_SERVER_ERROR,
-    });
-  }
-}
 
 export async function POST(req: Request) {
   console.info("INSIDE POST WEBHOOK");
