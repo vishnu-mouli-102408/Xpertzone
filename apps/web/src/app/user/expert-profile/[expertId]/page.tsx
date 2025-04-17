@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ExpertProfile } from "@/src/components";
 import { HydrateClient, prefetch, trpc } from "@/src/trpc/server";
-import { db } from "@repo/db";
 import { Skeleton } from "@repo/ui/components/skeleton";
 
 export const metadata: Metadata = {
@@ -10,20 +9,6 @@ export const metadata: Metadata = {
   description: "This is the layout for the expert profile page.",
   icons: [{ rel: "icon", url: "/favicon/favicon.ico" }],
 };
-
-export const revalidate = 43200;
-
-export async function generateStaticParams() {
-  const response = await db.user.findMany({
-    where: {
-      role: "EXPERT",
-    },
-  });
-  const paths = response.map((expert) => ({
-    expertId: expert.id,
-  }));
-  return paths;
-}
 
 const Page = async ({ params }: { params: Promise<{ expertId: string }> }) => {
   const { expertId } = await params;
