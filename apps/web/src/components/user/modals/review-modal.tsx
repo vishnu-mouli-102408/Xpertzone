@@ -41,7 +41,10 @@ const reviewSchema = z.object({
     .int()
     .min(1, { message: "Select rating is Mandatory" })
     .max(5),
-  reviewText: z.string().max(500),
+  reviewText: z
+    .string()
+    .min(1, { message: "Review Text is Required" })
+    .max(500),
 });
 
 type ReviewFormData = z.infer<typeof reviewSchema>;
@@ -62,7 +65,7 @@ const ReviewModal = ({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
       rating: 0,
-      reviewText: "",
+      reviewText: undefined,
     },
   });
 
@@ -124,7 +127,7 @@ const ReviewModal = ({
   );
 
   const modalVariants = {
-    hidden: { scale: 0.9, opacity: 0, y: 20 },
+    hidden: { scale: 0.9, opacity: 0, y: 10 },
     visible: {
       scale: 1,
       opacity: 1,
@@ -139,10 +142,13 @@ const ReviewModal = ({
     exit: {
       scale: 0.9,
       opacity: 0,
-      y: 20,
+      y: 10,
       transition: { duration: 0.2 },
     },
   };
+
+  //   console.log("ERRORS", errors);
+  //   console.log("FORM DATA", watch());
 
   return (
     <Modal
@@ -214,6 +220,10 @@ const ReviewModal = ({
                 maxLength: {
                   value: 500,
                   message: "Review cannot exceed 500 characters",
+                },
+                required: {
+                  value: true,
+                  message: "Review is required",
                 },
               })}
             />
