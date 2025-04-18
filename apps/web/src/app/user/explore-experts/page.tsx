@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const Page = () => {
-  prefetch(trpc.user.getAllExperts.infiniteQueryOptions());
+  prefetch(trpc.user.getAllExperts.infiniteQueryOptions({ limit: 10 }));
   return (
     <HydrateClient>
       <div className="mx-auto min-h-[calc(100vh-64px)] w-full bg-black/50 p-6">
