@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/ui/components/select";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Calendar, Clock, Phone, TrendingUp, Users, Video } from "lucide-react";
 import { motion } from "motion/react";
@@ -25,14 +25,14 @@ import {
 } from "recharts";
 
 import { User } from "../animations/user";
-import OverviewSkeleton from "./overview-skeleton";
 
 type Filter = "7days" | "30days" | "90days" | "thisyear";
+
 const UserOverview = () => {
   const [filter, setFilter] = useState<Filter>("7days");
   const trpc = useTRPC();
 
-  const { data, isPending } = useQuery(
+  const { data } = useSuspenseQuery(
     trpc.user.getUserAnalytics.queryOptions({
       filter: { type: filter },
     })
@@ -97,10 +97,6 @@ const UserOverview = () => {
       color: "bg-[#f43f5e33]",
     },
   ];
-
-  if (isPending) {
-    return <OverviewSkeleton />;
-  }
 
   return (
     <motion.div
