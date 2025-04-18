@@ -16,7 +16,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 function Page() {
-  prefetch(trpc.user.getUserAnalytics.queryOptions({}));
+  prefetch(
+    trpc.user.getUserAnalytics.queryOptions({ filter: { type: "7days" } })
+  );
 
   return (
     <HydrateClient>
