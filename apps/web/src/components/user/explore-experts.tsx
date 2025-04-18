@@ -6,7 +6,7 @@ import { fadeInUp, staggerContainer } from "@/src/lib/framer-animations";
 import { useTRPC } from "@/src/trpc/react";
 import type { User } from "@repo/db";
 import { Button } from "@repo/ui/components/button";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { Share2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -23,7 +23,7 @@ const ExploreExperts = () => {
   const [selectedProfile, setSelectedProfile] = useState<User | null>(null);
 
   const { data, status, error, fetchNextPage, isFetchingNextPage } =
-    useInfiniteQuery(
+    useSuspenseInfiniteQuery(
       trpc.user.getAllExperts.infiniteQueryOptions(
         {
           limit: 10,
@@ -62,18 +62,19 @@ const ExploreExperts = () => {
   console.log("ERROR", error);
   console.log("IS FETCHING NEXT PAGE", isFetchingNextPage);
 
-  if (status === "pending") {
-    return (
-      <motion.div
-        variants={fadeInUp}
-        className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-      >
-        {[...Array(6)].map((_, index) => (
-          <SkeletonExpertCard key={index} />
-        ))}
-      </motion.div>
-    );
-  } else if (
+  //   if (status === "pending") {
+  //     return (
+  //       <motion.div
+  //         variants={fadeInUp}
+  //         className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+  //       >
+  //         {[...Array(6)].map((_, index) => (
+  //           <SkeletonExpertCard key={index} />
+  //         ))}
+  //       </motion.div>
+  //     );
+  //   } else
+  if (
     status === "error" ||
     data.pages.length === 0 ||
     data.pages[0]?.data?.experts.length === 0
