@@ -86,6 +86,7 @@ export async function POST(req: Request) {
     } = evt.data;
 
     const user = await createUser({
+      quotaLimit: 50,
       email: email_addresses[0]?.email_address ?? "",
       externalId: id,
       firstName: first_name,

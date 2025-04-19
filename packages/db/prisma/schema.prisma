@@ -88,6 +88,7 @@ model User {
   skills String[] @default([]) 
   customerId String? // For payment processing
   plan       Plan? @default(FREE)
+  quotaLimit Int? // For quota management
 
   userCalls       Call[] @relation("UserCalls")  // Calls initiated by user
   expertCalls     Call[] @relation("ExpertCalls") // Calls received as an expert
@@ -107,6 +108,21 @@ model User {
   @@index([firstName], name: "idx_user_first_name") // For name searches
   @@index([lastName], name: "idx_user_last_name") // For name searches
   @@index([username], name: "idx_user_username") // For username searches
+  Quota Quota[]
+}
+
+
+model Quota{
+  id         String   @id @default(uuid())
+  userId     String
+  count	  Int
+  year	  Int
+  month	  Int
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Call {

@@ -185,7 +185,7 @@ export const seedsData = [
     skills: ["Curriculum Development", "E-learning", "Instructional Design"],
   },
   {
-    externalId: "EX-005",
+    externalId: "EX-0010",
     email: "olivia.martinez@example.com",
     role: Role.EXPERT,
     firstName: "Olivia",
@@ -205,7 +205,7 @@ export const seedsData = [
     skills: ["AWS", "Azure", "Terraform", "Kubernetes"],
   },
   {
-    externalId: "EX-006",
+    externalId: "EX-0011",
     email: "liam.robinson@example.com",
     role: Role.EXPERT,
     firstName: "Liam",
@@ -225,7 +225,7 @@ export const seedsData = [
     skills: ["React", "Node.js", "GraphQL", "TypeScript"],
   },
   {
-    externalId: "EX-007",
+    externalId: "EX-0012",
     email: "ava.patel@example.com",
     role: Role.EXPERT,
     firstName: "Ava",
@@ -250,7 +250,7 @@ export const seedsData = [
     ],
   },
   {
-    externalId: "EX-008",
+    externalId: "EX-0013",
     email: "noah.anderson@example.com",
     role: Role.EXPERT,
     firstName: "Noah",
@@ -270,7 +270,7 @@ export const seedsData = [
     skills: ["Ethical Hacking", "Network Security", "Cryptography", "SIEM"],
   },
   {
-    externalId: "EX-009",
+    externalId: "EX-0014",
     email: "mia.hernandez@example.com",
     role: Role.EXPERT,
     firstName: "Mia",
@@ -278,7 +278,7 @@ export const seedsData = [
     gender: "Female",
     bio: "Blockchain Developer with a passion for DeFi, NFTs, and decentralized applications.",
     expertise: "Blockchain Development",
-    profilePic: "https://images.unsplash.com/photo-1560807707-8cc77767d783",
+    profilePic: "https://images.unsplash.com/photo-1520813792240-56fc4a3765a7",
     phone: "+18885556677",
     username: "miahernandez",
     certifications: "Ethereum Developer, Hyperledger Fabric Certified",
@@ -290,7 +290,7 @@ export const seedsData = [
     skills: ["Solidity", "Ethereum", "Web3.js", "Smart Contracts"],
   },
   {
-    externalId: "EX-010",
+    externalId: "EX-0015",
     email: "dani.kia@gmail.com",
     role: Role.EXPERT,
     firstName: "Dani",
@@ -298,7 +298,7 @@ export const seedsData = [
     gender: "Non-binary",
     bio: "Experienced in product management and agile methodologies, with a focus on user-centered design.",
     expertise: "Product Management",
-    profilePic: "https://images.unsplash.com/photo-1593642532973-d31b6e4a2c3d",
+    profilePic: "https://images.unsplash.com/photo-1527980965255-d3b416303d12",
     phone: "+1234567890",
     username: "danikia",
     certifications:

@@ -67,6 +67,7 @@ export async function createUser(
   try {
     const user = await db.user.create({
       data: {
+        quotaLimit: userPayload.quotaLimit,
         email: userPayload.email,
         externalId: userPayload.externalId,
         firstName: userPayload.firstName,
