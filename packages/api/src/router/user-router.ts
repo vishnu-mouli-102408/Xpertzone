@@ -838,4 +838,40 @@ export const userRouter = {
         };
       }
     }),
+
+  // Upsert User Quota
+  upsertUserQuota: protectedProcedure.mutation(async ({ ctx }) => {
+    try {
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
+      const { user } = ctx;
+
+      const data = await db.quota.upsert({
+        where: { userId: user.id, month: currentMonth, year: currentYear },
+        update: { count: { increment: 1 } },
+        create: {
+          userId: user.id,
+          month: currentMonth,
+          year: currentYear,
+          count: 1,
+        },
+      });
+
+      return {
+        message: "User quota upserted successfully",
+        success: true,
+        data: data,
+        code: OK,
+      };
+    } catch (error) {
+      logger.error(error, "Error upserting user quota");
+      return {
+        message: "Internal server error",
+        success: false,
+        data: null,
+        code: INTERNAL_SERVER_ERROR,
+      };
+    }
+  }),
 };
