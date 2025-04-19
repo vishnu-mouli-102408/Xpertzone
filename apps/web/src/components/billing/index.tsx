@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import env from "@/src/env";
 import { useDbUser } from "@/src/hooks";
 import { useTRPC } from "@/src/trpc/react";
 import AnimationContainer from "@repo/ui/components/animation-container";
@@ -85,6 +86,19 @@ const Billing = ({
       },
     })
   );
+
+  const handleManageSubscription = () => {
+    const url = env.NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL ?? "";
+    if (url) {
+      router.push(`${url}?prefilled_email=${data?.data?.email}`);
+    } else {
+      toast.error("Failed to redirect to Stripe customer portal.", {
+        duration: 3000,
+        description: "Please try again later.",
+        position: "bottom-center",
+      });
+    }
+  };
 
   if (isUserDataFetching) {
     return (
@@ -188,7 +202,12 @@ const Billing = ({
           </div>
           {data?.data?.plan === "PRO" && (
             <div className="flex justify-end rounded-b-lg border-t border-t-white/10 bg-[#18181B] p-4">
-              <Button className="cursor-pointer">Manage Subscription</Button>
+              <Button
+                onClick={handleManageSubscription}
+                className="cursor-pointer"
+              >
+                Manage Subscription
+              </Button>
             </div>
           )}
         </main>

@@ -45,6 +45,7 @@ const env = createEnv({
     NEXT_PUBLIC_STRIPE_SECRET_KEY: z.string().min(1),
     NEXT_PUBLIC_PRO_PLAN_PRICE_ID: z.string().min(1),
     NEXT_PUBLIC_ENTERPRISE_PLAN_PRICE_ID: z.string().min(1),
+    NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL: z.string().min(1),
   },
 
   /**
@@ -81,6 +82,8 @@ const env = createEnv({
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
     NEXT_PUBLIC_STRIPE_SECRET_KEY: process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY,
+    NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL:
+      process.env.NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL,
   },
 
   /**

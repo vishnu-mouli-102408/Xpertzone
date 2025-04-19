@@ -87,7 +87,7 @@ const PaymentCancelModal = ({
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-transparent bg-opacity-10 p-4 backdrop-blur"
       variants={backdropVariants}
       initial="hidden"
       animate={isVisible ? "visible" : "exit"}
