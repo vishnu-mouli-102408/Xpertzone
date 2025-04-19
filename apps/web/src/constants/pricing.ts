@@ -6,10 +6,12 @@ export type PlanFeature = {
 export type Plan = {
   name: string;
   description: string;
-  price: {
-    monthly: number;
-    yearly: number;
-  };
+  price:
+    | {
+        monthly: number;
+        yearly: number;
+      }
+    | "custom";
   features: PlanFeature[];
   popular?: boolean;
 };
@@ -23,7 +25,7 @@ export const PRICING_PLANS: Plan[] = [
       yearly: 0,
     },
     features: [
-      { text: "Book 5 Expert Calls per Month", included: true },
+      { text: "Book 50 Expert Calls per Month", included: true },
       { text: "Chat with Experts", included: true },
       { text: "Analytics", included: true },
       { text: "Email Support", included: true },
@@ -40,7 +42,7 @@ export const PRICING_PLANS: Plan[] = [
     },
     popular: true,
     features: [
-      { text: "Book 15 Expert Calls per Month", included: true },
+      { text: "Book 150 Expert Calls per Month", included: true },
       { text: "Unlimited Chat with Experts", included: true },
       { text: "Analytics", included: true },
       { text: "Priority Booking", included: true },
@@ -50,11 +52,8 @@ export const PRICING_PLANS: Plan[] = [
   },
   {
     name: "Enterprise",
-    description: "For businesses and coaching platforms",
-    price: {
-      monthly: 49,
-      yearly: 499,
-    },
+    description: "For businesses and large teams",
+    price: "custom",
     features: [
       { text: "Unlimited Expert Calls", included: true },
       { text: "Priority Booking", included: true },

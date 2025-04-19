@@ -108,19 +108,30 @@ const Pricing = () => {
                   animation="fadeUp"
                   delay={0.8 + index * 0.2}
                 >
-                  <div className="mb-8 flex items-baseline gap-2">
-                    <span className="text-4xl font-medium">$</span>
-                    <span className="text-5xl font-medium">
-                      <NumberFlow
-                        value={
-                          isYearly ? plan.price.yearly : plan.price.monthly
-                        }
-                      />
-                    </span>
-                    <span className="text-muted-foreground">
-                      /{isYearly ? "year" : "month"}
-                    </span>
-                  </div>
+                  {plan.price === "custom" ? (
+                    <div className="mb-6 flex flex-col items-start gap-2">
+                      <span className="text-foreground text-3xl font-bold">
+                        Custom Pricing
+                      </span>
+                      <span className="text-muted-foreground text-sm">
+                        Contact us for more details
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="mb-8 flex items-baseline gap-2">
+                      <span className="text-4xl font-medium">$</span>
+                      <span className="text-4xl font-medium">
+                        <NumberFlow
+                          value={
+                            isYearly ? plan.price.yearly : plan.price.monthly
+                          }
+                        />
+                      </span>
+                      <span className="text-muted-foreground">
+                        /{isYearly ? "year" : "month"}
+                      </span>
+                    </div>
+                  )}
                 </AnimationContainer>
 
                 <div className="flex-1">
@@ -158,7 +169,9 @@ const Pricing = () => {
                 <AnimationContainer animation="fadeUp" delay={1 + index * 0.2}>
                   <button
                     onClick={() => {
-                      if (isSignedIn) {
+                      if (plan.price === "custom") {
+                        window.location.href = "mailto:vishnumouli0@gmail.com";
+                      } else if (isSignedIn) {
                         router.push(
                           `${user?.publicMetadata?.role === "user" ? "/user/" : "/expert"}/billing`
                         );
@@ -174,7 +187,7 @@ const Pricing = () => {
                     }}
                     className={`w-full cursor-pointer rounded-xl p-2 transition-all duration-300 ease-in-out hover:scale-[1.02] ${plan.popular ? "border border-[#FFFFFF26] bg-[#FFFFFF0D] shadow-[inset_0px_0px_20px_0px_#FFFFFF33] hover:border hover:border-[#FFFFFF66] hover:bg-[#FFFFFF1A] hover:shadow-[inset_0px_0px_30px_0px_#FFFFFF4D]" : "border border-[#FFFFFF26] shadow-[inset_0px_0px_20px_0px_#FFFFFF33] hover:border hover:border-[#FFFFFF26] hover:bg-[#FFFFFF0D] hover:shadow-[inset_0px_0px_20px_0px_#FFFFFF33]"}`}
                   >
-                    Get Started
+                    {plan.price === "custom" ? "Contact Us" : "Get Started"}
                   </button>
                 </AnimationContainer>
               </div>
