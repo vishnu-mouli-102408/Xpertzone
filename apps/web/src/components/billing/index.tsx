@@ -8,7 +8,7 @@ import { useTRPC } from "@/src/trpc/react";
 import AnimationContainer from "@repo/ui/components/animation-container";
 import { Button } from "@repo/ui/components/button";
 import { Spinner } from "@repo/ui/components/spinner";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Check, LoaderCircle } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
@@ -36,7 +36,7 @@ const Billing = ({
   const [isOpenPaymentCanceledModal, setIsOpenPaymentCanceledModal] =
     useState(false);
 
-  const queryClient = useQueryClient();
+  //   const queryClient = useQueryClient();
 
   const router = useRouter();
 
@@ -300,13 +300,13 @@ const Billing = ({
           <PaymentSuccessModal
             isOpen={isOpenPaymentSuccessModal}
             onClose={() => setIsOpenPaymentSuccessModal(false)}
-            onClosePaymentSuccessModal={async () => {
+            onClosePaymentSuccessModal={() => {
               const url = new URL(window.location.href);
               url.searchParams.delete("success");
               window.history.replaceState({}, "", url);
-              await queryClient.invalidateQueries(
-                trpc.auth.getUserDetails.pathFilter()
-              );
+              //   await queryClient.invalidateQueries(
+              //     trpc.auth.getUserDetails.pathFilter()
+              //   );
             }}
           />
         )}
