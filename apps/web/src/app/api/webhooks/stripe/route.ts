@@ -70,6 +70,70 @@ export async function POST(req: Request) {
         status: 400,
       });
     }
+  } else if (event.type === "customer.subscription.deleted") {
+    const session = event.data.object;
+    const customerId = session.customer;
+
+    if (!customerId) {
+      console.error("No customer ID found in session metadata");
+      return new Response("No customer ID found", { status: 400 });
+    }
+
+    if (session.cancel_at_period_end) {
+      const updatedUser = await db.user.update({
+        where: {
+          customerId: customerId as string,
+        },
+        data: {
+          plan: "FREE",
+        },
+      });
+
+      if (!updatedUser) {
+        console.error("Failed to update user in database");
+        return new Response("Failed to update user in database", {
+          status: 500,
+        });
+      }
+    } else {
+      console.log(
+        "Subscription not cancelled: cancel_at_period_end is false",
+        session.id
+      );
+
+      return new Response("Subscription not cancelled", {
+        status: 400,
+      });
+    }
+
+    console.log("Subscription deleted:", session.id);
+  } else if (event.type === "invoice.payment_failed") {
+    const session = event.data.object;
+    const customerId = session.customer;
+
+    if (!customerId) {
+      console.error("No customer ID found in session metadata");
+      return new Response("No customer ID found", { status: 400 });
+    }
+
+    const updatedUser = await db.user.update({
+      where: {
+        customerId: customerId as string,
+      },
+      data: {
+        plan: "FREE",
+        quotaLimit: 50,
+      },
+    });
+
+    if (!updatedUser) {
+      console.error("Failed to update user in database");
+      return new Response("Failed to update user in database", {
+        status: 500,
+      });
+    }
+
+    console.log("Invoice payment failed:", session.id);
   }
 
   return new Response("Webhook handled successfully", {

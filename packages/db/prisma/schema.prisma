@@ -86,7 +86,7 @@ model User {
   interests String?
   preferences String?
   skills String[] @default([]) 
-  customerId String? // For payment processing
+  customerId String?  @unique // For payment processing
   plan       Plan? @default(FREE)
   quotaLimit Int? // For quota management
 
