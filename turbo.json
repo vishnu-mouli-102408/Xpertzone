@@ -23,6 +23,7 @@
     "CLERK_SECRET_KEY",
     "SIGNING_SECRET",
     "TURBO_TOKEN",
+    "STRIPE_WEBHOOK_SECRET",
     "TURBO_TEAM"
   ],
   "globalPassThroughEnv": ["NODE_ENV", "CI", "npm_lifecycle_event"],

@@ -874,4 +874,43 @@ export const userRouter = {
       };
     }
   }),
+
+  getUserQuota: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
+      const { user } = ctx;
+
+      let data = await db.quota.findFirst({
+        where: { userId: user.id, month: currentMonth, year: currentYear },
+      });
+
+      data ??= await db.quota.create({
+        data: {
+          userId: user.id,
+          month: currentMonth,
+          year: currentYear,
+          count: 0,
+        },
+      });
+
+      logger.info(data, "User Quota Data");
+
+      return {
+        message: "User quota fetched successfully",
+        success: true,
+        data: data,
+        code: OK,
+      };
+    } catch (error) {
+      logger.error(error, "Error fetching user quota");
+      return {
+        message: "Internal server error",
+        success: false,
+        data: null,
+        code: INTERNAL_SERVER_ERROR,
+      };
+    }
+  }),
 };

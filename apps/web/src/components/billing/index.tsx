@@ -8,7 +8,7 @@ import { useTRPC } from "@/src/trpc/react";
 import AnimationContainer from "@repo/ui/components/animation-container";
 import { Button } from "@repo/ui/components/button";
 import { Spinner } from "@repo/ui/components/spinner";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Check, LoaderCircle } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
@@ -44,6 +44,8 @@ const Billing = ({
 
   //   console.log("SUCCESS PARAM", successParam);
   //   console.log("CANCELED PARAM", canceledParam);
+
+  const { data: UserQuota } = useQuery(trpc.user.getUserQuota.queryOptions());
 
   useEffect(() => {
     if (successParam) {
@@ -162,11 +164,18 @@ const Billing = ({
               <div className="flex w-full items-center justify-between gap-6">
                 <div className="flex items-center">
                   <div className="mr-2 w-5">
-                    <CircleProgress progress={2 / 5} />
+                    <CircleProgress
+                      progress={
+                        (UserQuota?.data?.count ?? 0) /
+                        (data?.data?.quotaLimit ?? 50)
+                      }
+                    />
                   </div>
                   <div className="text-foreground text-sm">Monthly Usage</div>
                 </div>
-                <div className="text-sm tabular-nums">2 / 5</div>
+                <div className="text-sm tabular-nums">
+                  {UserQuota?.data?.count ?? 0} /{data?.data?.quotaLimit ?? 50}
+                </div>
               </div>
               <div className="flex w-full items-center justify-between gap-6">
                 <div className="flex items-center">

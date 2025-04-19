@@ -46,3 +46,5 @@ export const createCheckoutSession = async ({
 
   return session;
 };
+
+export { Stripe };

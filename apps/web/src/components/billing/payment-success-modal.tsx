@@ -132,8 +132,17 @@ const PaymentSuccessModal = ({
             initial="hidden"
             animate="visible"
           >
-            Thank you for your payment! Your transaction was successful. You can
-            now enjoy all the benefits of your subscription.
+            Thank you for your payment! Your transaction was successful.
+          </motion.p>
+
+          <motion.p
+            className="mb-4 text-center text-sm text-gray-300"
+            variants={textVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            Your account has been upgraded to the Pro Plan. Changes will be
+            reflected in your account shortly.
           </motion.p>
 
           <motion.button
