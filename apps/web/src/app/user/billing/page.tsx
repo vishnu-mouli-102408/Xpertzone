@@ -7,10 +7,20 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/favicon/favicon.ico" }],
 };
 
-const BillingPage = () => {
+const BillingPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) => {
+  const resolvedSearchParams = await searchParams;
+
+  // Access searchParams after resolving the promise
+  const success = resolvedSearchParams?.success === "true";
+  const canceled = resolvedSearchParams?.canceled === "true";
+
   return (
     <div className="flex min-h-[calc(100vh-64px)] flex-col bg-gradient-to-b from-zinc-900 to-black">
-      <Billing />
+      <Billing canceledParam={canceled} successParam={success} />
     </div>
   );
 };

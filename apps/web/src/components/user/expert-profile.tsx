@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useTRPC } from "@/src/trpc/react";
 import { Button } from "@repo/ui/components/button";
 import { HoverButton } from "@repo/ui/components/hover-button";
-import { LoadingSpinner } from "@repo/ui/components/loading-spinner";
+import { Modal } from "@repo/ui/components/modal";
 import { Separator } from "@repo/ui/components/seperator";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
@@ -33,19 +32,6 @@ import {
 import AllReviewsModal from "./modals/read-reviews-modal";
 import ReviewModal from "./modals/review-modal";
 import ShareProfileModal from "./modals/share-profile-modal";
-
-// import { Modal } from "../ui/modal";
-const Modal = dynamic(
-  () => import("@repo/ui/components/modal").then((mod) => mod.Modal),
-  {
-    ssr: false,
-    loading: () => (
-      <div>
-        <LoadingSpinner />
-      </div>
-    ),
-  }
-);
 
 interface ExpertProfileProps {
   expertId: string;

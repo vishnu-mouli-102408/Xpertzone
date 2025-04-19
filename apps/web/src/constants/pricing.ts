@@ -16,11 +16,11 @@ export type Plan = {
 
 export const PRICING_PLANS: Plan[] = [
   {
-    name: "Starter",
+    name: "Free",
     description: "Best for individuals seeking expert advice",
     price: {
-      monthly: 10,
-      yearly: 99,
+      monthly: 0,
+      yearly: 0,
     },
     features: [
       { text: "Book 5 Expert Calls per Month", included: true },

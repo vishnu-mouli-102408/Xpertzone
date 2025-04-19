@@ -1,12 +1,86 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTRPC } from "@/src/trpc/react";
 import AnimationContainer from "@repo/ui/components/animation-container";
 import { Button } from "@repo/ui/components/button";
-import { Check } from "lucide-react";
-import * as motion from "motion/react-client";
+import { useMutation } from "@tanstack/react-query";
+import { Check, LoaderCircle } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { toast } from "sonner";
 
 import { CircleProgress } from "../global/circular-progress";
+import ConfirmBillingModal from "./confirm-billing-modal";
+import PaymentCancelModal from "./payment-cancel-modal";
+import PaymentSuccessModal from "./payment-success-modal";
 
-const Billing = () => {
-  //   const user = await currentUser();
+interface BillingProps {
+  successParam?: boolean;
+  canceledParam?: boolean;
+}
+
+const Billing = ({
+  canceledParam = false,
+  successParam = false,
+}: BillingProps) => {
+  const [isConfirmBillingModalOpen, setIsConfirmBillingModalOpen] =
+    useState(false);
+  const [isUpgradeLoading, setIsUpgradeLoading] = useState(false);
+  const [isOpenPaymentSuccessModal, setIsOpenPaymentSuccessModal] =
+    useState(false);
+
+  const [isOpenPaymentCanceledModal, setIsOpenPaymentCanceledModal] =
+    useState(false);
+
+  const router = useRouter();
+
+  const trpc = useTRPC();
+
+  //   console.log("SUCCESS PARAM", successParam);
+  //   console.log("CANCELED PARAM", canceledParam);
+
+  useEffect(() => {
+    if (successParam) {
+      setIsOpenPaymentSuccessModal(true);
+    }
+  }, [successParam]);
+
+  useEffect(() => {
+    if (canceledParam) {
+      setIsOpenPaymentCanceledModal(true);
+    }
+  }, [canceledParam]);
+
+  const handleUpgradePlan = () => {
+    setIsUpgradeLoading(true);
+    try {
+      handleCheckout({ plan: "PRO" });
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to initiate plan change process. Please try again later."
+      );
+    }
+  };
+
+  const { mutate: handleCheckout, isPending } = useMutation(
+    trpc.payment.createCheckoutSession.mutationOptions({
+      onSuccess: ({ url }) => {
+        setIsUpgradeLoading(false);
+        if (url) router.push(url);
+      },
+      onError: (error) => {
+        setIsUpgradeLoading(false);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to initiate plan change process. Please try again later."
+        );
+      },
+    })
+  );
 
   return (
     <div className="px-6 py-12 sm:px-8 md:px-12">
@@ -103,7 +177,7 @@ const Billing = () => {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <h4 className="text-md font-medium text-white">
-                  $10 per month
+                  $20 per month
                 </h4>
               </div>
               <p className="mt-2 text-xs text-gray-300/80">
@@ -130,12 +204,67 @@ const Billing = () => {
             </div>
           </div>
           <div className="flex justify-end rounded-b-lg border-t border-t-white/10 bg-[#18181B] p-4">
-            <Button className="cursor-pointer" disabled={false}>
-              Upgrade plan
+            <Button
+              onClick={() => {
+                setIsConfirmBillingModalOpen(true);
+              }}
+              disabled={isUpgradeLoading || isPending}
+              className="cursor-pointer"
+            >
+              {isUpgradeLoading || isPending ? (
+                <>
+                  <LoaderCircle className="h-3 w-3 animate-spin" />
+                  Processing
+                </>
+              ) : (
+                "Upgrade Plan"
+              )}
             </Button>
           </div>
         </main>
       </AnimationContainer>
+
+      <AnimatePresence>
+        {isConfirmBillingModalOpen && (
+          <ConfirmBillingModal
+            onConfirm={() => {
+              setIsConfirmBillingModalOpen(false);
+              handleUpgradePlan();
+            }}
+            isLoading={isUpgradeLoading}
+            isConfirmBillingModalOpen={isConfirmBillingModalOpen}
+            setIsConfirmBillingModalOpen={setIsConfirmBillingModalOpen}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isOpenPaymentSuccessModal && (
+          <PaymentSuccessModal
+            isOpen={isOpenPaymentSuccessModal}
+            onClose={() => setIsOpenPaymentSuccessModal(false)}
+            onClosePaymentSuccessModal={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("success");
+              window.history.replaceState({}, "", url);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isOpenPaymentCanceledModal && (
+          <PaymentCancelModal
+            isOpen={isOpenPaymentCanceledModal}
+            onClose={() => setIsOpenPaymentCanceledModal(false)}
+            onClosePaymentCancelModal={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("canceled");
+              window.history.replaceState({}, "", url);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

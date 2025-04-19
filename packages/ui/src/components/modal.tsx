@@ -1,6 +1,7 @@
 "use client";
 
 import { Dispatch, ReactNode, SetStateAction } from "react";
+import { DialogOverlay } from "@radix-ui/react-dialog";
 import { Drawer } from "vaul";
 
 import { useMediaQuery } from "../hooks";
@@ -81,6 +82,7 @@ export const Modal = ({
         }
       }}
     >
+      <DialogOverlay className="bg-opacity-10 fixed inset-0 z-40 bg-transparent backdrop-blur" />
       <DialogTitle className="sr-only">Dialog</DialogTitle>
       <DialogContent className={className}>{children}</DialogContent>
     </Dialog>

@@ -86,6 +86,8 @@ model User {
   interests String?
   preferences String?
   skills String[] @default([]) 
+  customerId String? // For payment processing
+  plan       Plan? @default(FREE)
 
   userCalls       Call[] @relation("UserCalls")  // Calls initiated by user
   expertCalls     Call[] @relation("ExpertCalls") // Calls received as an expert

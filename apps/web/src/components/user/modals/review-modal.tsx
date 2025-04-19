@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import dynamic from "next/dynamic";
 import { useTRPC } from "@/src/trpc/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@repo/ui/components/button";
-import { LoadingSpinner } from "@repo/ui/components/loading-spinner";
+import { Modal } from "@repo/ui/components/modal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -14,19 +13,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import ReviewSuccessModal from "./review-success-modal";
-
-// import { Modal } from "../ui/modal";
-const Modal = dynamic(
-  () => import("@repo/ui/components/modal").then((mod) => mod.Modal),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-screen items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    ),
-  }
-);
 
 interface ReviewModalProps {
   isWriteReviewOpen: boolean;

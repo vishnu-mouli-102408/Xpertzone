@@ -60,6 +60,8 @@ export async function createUser(
     | "interests"
     | "preferences"
     | "skills"
+    | "plan"
+    | "customerId"
   >
 ) {
   try {

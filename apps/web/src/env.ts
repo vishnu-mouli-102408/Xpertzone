@@ -42,6 +42,9 @@ const env = createEnv({
     NEXT_PUBLIC_CLOUDINARY_API_KEY: z.string().min(1),
     NEXT_PUBLIC_CLOUDINARY_API_SECRET: z.string().min(1),
     NEXT_PUBLIC_CLOUDINARY_URL: z.string().min(1),
+    NEXT_PUBLIC_STRIPE_SECRET_KEY: z.string().min(1),
+    NEXT_PUBLIC_PRO_PLAN_PRICE_ID: z.string().min(1),
+    NEXT_PUBLIC_ENTERPRISE_PLAN_PRICE_ID: z.string().min(1),
   },
 
   /**
@@ -49,6 +52,9 @@ const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
+    NEXT_PUBLIC_ENTERPRISE_PLAN_PRICE_ID:
+      process.env.NEXT_PUBLIC_ENTERPRISE_PLAN_PRICE_ID,
+    NEXT_PUBLIC_PRO_PLAN_PRICE_ID: process.env.NEXT_PUBLIC_PRO_PLAN_PRICE_ID,
     DATABASE_URL: process.env.DATABASE_URL,
     NEXT_PUBLIC_REDIS_URL: process.env.NEXT_PUBLIC_REDIS_URL,
     NEXT_PUBLIC_CACHE_EXPIRE: process.env.NEXT_PUBLIC_CACHE_EXPIRE,
@@ -74,6 +80,7 @@ const env = createEnv({
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
+    NEXT_PUBLIC_STRIPE_SECRET_KEY: process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY,
   },
 
   /**
