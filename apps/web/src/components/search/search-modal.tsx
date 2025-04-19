@@ -351,7 +351,7 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
             </kbd>{" "}
             to close
           </div>
-          <div>{searchResults?.data?.totalCount ?? 0} results</div>
+          <div>{searchResults?.data?.experts?.length ?? 0} results</div>
         </div>
       </motion.div>
     </motion.div>
