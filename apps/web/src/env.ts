@@ -22,6 +22,7 @@ const env = createEnv({
     CLERK_SECRET_KEY: z.string().min(1),
     SIGNING_SECRET: z.string().min(1),
     STRIPE_WEBHOOK_SECRET: z.string().min(1),
+    RESEND_API_KEY: z.string().min(1),
   },
 
   /**
@@ -54,6 +55,7 @@ const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     NEXT_PUBLIC_ENTERPRISE_PLAN_PRICE_ID:
       process.env.NEXT_PUBLIC_ENTERPRISE_PLAN_PRICE_ID,

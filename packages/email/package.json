@@ -1,12 +1,21 @@
 {
-  "name": "email",
+  "name": "@repo/email",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "exports": {
+	".": "./src/resend/index.ts",
+	"./templates/*":"./src/templates/*.tsx"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf .turbo node_modules",
-    "dev": "email dev --dir ./src/templates -p 3333"
+    "dev": "email dev --dir ./src/templates -p 3333",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
+    "check-types": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -14,14 +23,20 @@
   "type": "commonjs",
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
+	"@repo/prettier-config": "workspace:*",
+    "@types/node": "^22.14.1",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "react-email": "4.0.7"
+    "react-email": "4.0.7",
+	"prettier": "catalog:",
+	"@ianvs/prettier-plugin-sort-imports": "^4.4.1",
+	"prettier-plugin-tailwindcss": "^0.6.11"
   },
   "dependencies": {
     "@react-email/components": "0.0.36",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "resend": "^4.3.0"
-  }
+  },
+  "prettier": "@repo/prettier-config"
 }
