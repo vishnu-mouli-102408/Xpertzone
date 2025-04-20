@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "exports": {
-	".": "./src/resend/index.ts",
-	"./templates/*":"./src/templates/*.tsx"
+    ".": "./src/resend/index.ts",
+    "./templates/*": "./src/templates/*.tsx"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -20,17 +20,17 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-	"@repo/prettier-config": "workspace:*",
+    "@repo/prettier-config": "workspace:*",
     "@types/node": "^22.14.1",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "react-email": "4.0.7",
-	"prettier": "catalog:",
-	"@ianvs/prettier-plugin-sort-imports": "^4.4.1",
-	"prettier-plugin-tailwindcss": "^0.6.11"
+    "prettier": "catalog:",
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
+    "prettier-plugin-tailwindcss": "^0.6.11"
   },
   "dependencies": {
     "@react-email/components": "0.0.36",
