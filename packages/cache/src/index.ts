@@ -2,10 +2,8 @@ import { ICache } from "./cache";
 import { InMemoryCache } from "./in-memory-cache";
 import { RedisCache } from "./redis-cache";
 
-const redisUrl: string =
-  process.env.NEXT_PUBLIC_REDIS_URL ?? "redis://localhost:6379";
-const cacheExpireSeconds: number =
-  Number(process.env.NEXT_PUBLIC_CACHE_EXPIRE) || 1800;
+const redisUrl: string = process.env.REDIS_URL ?? "redis://localhost:6379";
+const cacheExpireSeconds: number = Number(process.env.CACHE_EXPIRE) || 1800;
 
 export class Cache implements ICache {
   private static instance: Cache;

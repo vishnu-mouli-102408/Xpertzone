@@ -23,6 +23,8 @@ const env = createEnv({
     SIGNING_SECRET: z.string().min(1),
     STRIPE_WEBHOOK_SECRET: z.string().min(1),
     RESEND_API_KEY: z.string().min(1),
+    CACHE_EXPIRE: z.coerce.number().default(1800),
+    REDIS_URL: z.string().min(1),
   },
 
   /**
@@ -35,11 +37,9 @@ const env = createEnv({
     NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: z.string().min(1),
     NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL: z.string().min(1),
     NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL: z.string().min(1),
-    NEXT_PUBLIC_CACHE_EXPIRE: z.coerce.number().default(1800),
     NEXT_PUBLIC_APP_URL: z.string(),
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1),
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1),
-    NEXT_PUBLIC_REDIS_URL: z.string().min(1),
     NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().min(1),
     NEXT_PUBLIC_CLOUDINARY_API_KEY: z.string().min(1),
     NEXT_PUBLIC_CLOUDINARY_API_SECRET: z.string().min(1),
@@ -61,8 +61,8 @@ const env = createEnv({
       process.env.NEXT_PUBLIC_ENTERPRISE_PLAN_PRICE_ID,
     NEXT_PUBLIC_PRO_PLAN_PRICE_ID: process.env.NEXT_PUBLIC_PRO_PLAN_PRICE_ID,
     DATABASE_URL: process.env.DATABASE_URL,
-    NEXT_PUBLIC_REDIS_URL: process.env.NEXT_PUBLIC_REDIS_URL,
-    NEXT_PUBLIC_CACHE_EXPIRE: process.env.NEXT_PUBLIC_CACHE_EXPIRE,
+    REDIS_URL: process.env.REDIS_URL,
+    CACHE_EXPIRE: process.env.CACHE_EXPIRE,
     NEXT_PUBLIC_CLOUDINARY_API_KEY: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
     NEXT_PUBLIC_CLOUDINARY_API_SECRET:
       process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET,
