@@ -20,7 +20,7 @@ export const sendMail = async (opts: ResendEmailOptions) => {
 
   return await resend.emails.send({
     to: email,
-    from: "noreply@vishnumouli.me",
+    from: "Xpert Zone <noreply@vishnumouli.me>",
     bcc: bcc,
     subject,
     text,

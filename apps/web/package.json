@@ -23,6 +23,7 @@
     "@repo/api": "workspace:*",
     "@repo/cache": "workspace:*",
     "@repo/common": "workspace:*",
+    "@repo/email": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/rate-limit": "workspace:*",
     "@repo/ui": "workspace:*",

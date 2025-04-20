@@ -3,7 +3,13 @@ import { NextResponse } from "next/server";
 import env from "@/src/env";
 import { createUser, deleteUser } from "@/src/lib/user";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import { CREATED, NOT_FOUND, OK } from "@repo/common";
+import {
+  CREATED,
+  EMAIL_QUEUE_NAME,
+  getRedisClient,
+  NOT_FOUND,
+  OK,
+} from "@repo/common";
 import { type Role } from "@repo/db";
 import { Webhook } from "svix";
 
@@ -11,6 +17,8 @@ export async function POST(req: Request) {
   console.info("INSIDE POST WEBHOOK");
 
   const SIGNING_SECRET = env.SIGNING_SECRET;
+
+  const redis = getRedisClient();
 
   if (!SIGNING_SECRET) {
     throw new Error(
@@ -101,6 +109,21 @@ export async function POST(req: Request) {
 
     if (user.success) {
       console.info("User created successfully");
+
+      try {
+        await redis.lpush(
+          EMAIL_QUEUE_NAME,
+          JSON.stringify({
+            email: email_addresses[0]?.email_address ?? "",
+            name: `${first_name} ${last_name}`,
+            subject: "Welcome to the Xpert Zone",
+            type: "welcome",
+          })
+        );
+      } catch (error) {
+        console.log("Error Sending Email", error);
+      }
+
       return NextResponse.json({
         message: "User created",
         success: true,

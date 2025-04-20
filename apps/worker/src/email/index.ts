@@ -1,4 +1,6 @@
 import { EMAIL_QUEUE_NAME, logger } from "@repo/common";
+import { sendMail } from "@repo/email";
+import WelcomeEmail from "@repo/email/templates/welcome";
 import { Redis } from "ioredis";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -21,9 +23,16 @@ export async function startEmailWorker(redis: Redis) {
 
         while (retryCount < maxRetries && !success) {
           try {
-            // await sendEmail(job);
-            success = true;
-            logger.info("[EmailWorker] Job processed successfully");
+            const { email, name, subject, type } = job;
+            if (type === "welcome") {
+              await sendMail({
+                email,
+                subject,
+                react: WelcomeEmail({ name }),
+              });
+              success = true;
+              logger.info("[EmailWorker] Job processed successfully");
+            }
           } catch (err) {
             retryCount++;
             const backoffTime = Math.pow(2, retryCount) * 1000;

@@ -115,6 +115,9 @@ importers:
       '@repo/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@repo/email':
+        specifier: workspace:*
+        version: link:../../packages/email
       '@repo/rate-limit':
         specifier: workspace:*
         version: link:../../packages/rate-limit
@@ -236,6 +239,9 @@ importers:
       '@repo/common':
         specifier: workspace:*
         version: link:../../packages/common
+      '@repo/email':
+        specifier: workspace:*
+        version: link:../../packages/email
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
