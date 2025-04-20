@@ -1,0 +1,35 @@
+{
+  "name": "worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "tsc -b && node dist/index.js",
+    "dev": "nodemon src/index.ts",
+    "lint": "eslint --ext .ts,.js,.tsx,.jsx . --max-warnings 0",
+    "lint:fix": "eslint --ext .ts,.js,.tsx,.jsx . --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
+    "check-types": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@repo/common": "workspace:*",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/prettier-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20",
+    "prettier": "catalog:",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "typescript": "catalog:"
+  },
+  "prettier": "@repo/prettier-config"
+}

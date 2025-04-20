@@ -1,0 +1,46 @@
+import { EMAIL_QUEUE_NAME, logger } from "@repo/common";
+import { Redis } from "ioredis";
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const maxRetries = 5;
+
+export async function startEmailWorker(redis: Redis) {
+  logger.info("[EmailWorker] Started");
+
+  while (true) {
+    try {
+      const result = await redis.brpop(EMAIL_QUEUE_NAME, 0); // Wait for job
+
+      if (result) {
+        const [_queue, message] = result;
+        const job = JSON.parse(message);
+        logger.info(job, "[EmailWorker] Got job:");
+
+        let retryCount = 0;
+        let success = false;
+
+        while (retryCount < maxRetries && !success) {
+          try {
+            // await sendEmail(job);
+            success = true;
+            logger.info("[EmailWorker] Job processed successfully");
+          } catch (err) {
+            retryCount++;
+            const backoffTime = Math.pow(2, retryCount) * 1000;
+            logger.error(err, `[EmailWorker] Retry attempt ${retryCount}`);
+            await delay(backoffTime);
+          }
+        }
+
+        if (!success) {
+          logger.error(
+            "[EmailWorker] Max retries reached. Moving on to next job."
+          );
+        }
+      }
+    } catch (err) {
+      logger.error(err, "[EmailWorker] Redis or processing error");
+      await delay(3000); // prevent tight loop on redis failure
+    }
+  }
+}
