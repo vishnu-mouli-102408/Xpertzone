@@ -1,13 +1,24 @@
 import type { Plan } from "@repo/db";
 import Stripe from "stripe";
 
-export const stripe = new Stripe(
-  process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY ?? "",
-  {
-    apiVersion: "2025-03-31.basil",
-    typescript: true,
+import { logger } from "./logger";
+
+let stripe: Stripe | null = null;
+
+export const getStripe = () => {
+  if (!process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY) {
+    logger.error(
+      "[Stripe] STRIPE_SECRET_KEY is not set. Please set it in your environment variables."
+    );
+    throw new Error("STRIPE_SECRET_KEY not set");
   }
-);
+
+  stripe ??= new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY, {
+    apiVersion: "2025-03-31.basil",
+  });
+
+  return stripe;
+};
 
 export const createCheckoutSession = async ({
   userId,
@@ -18,6 +29,7 @@ export const createCheckoutSession = async ({
   plan: Plan;
   customerId: string;
 }) => {
+  const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],

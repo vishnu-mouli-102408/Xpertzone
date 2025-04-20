@@ -1,4 +1,4 @@
-import { createCheckoutSession, stripe } from "@repo/common";
+import { createCheckoutSession, getStripe } from "@repo/common";
 import z from "zod";
 
 import { protectedProcedure } from "../trpc";
@@ -13,6 +13,7 @@ export const paymentRouter = {
     .mutation(async ({ input, ctx }) => {
       const { plan } = input;
       const { user } = ctx;
+      const stripe = getStripe();
 
       const existingCustomerData = await stripe.customers.list({
         email: user.email,

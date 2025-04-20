@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import env from "@/src/env";
-import { stripe, type Stripe } from "@repo/common";
+import { getStripe, type Stripe } from "@repo/common";
 import { db } from "@repo/db";
 
 export async function POST(req: Request) {
@@ -9,6 +9,8 @@ export async function POST(req: Request) {
   const signature = (await headers()).get("stripe-signature") ?? "";
 
   let event: Stripe.Event;
+
+  const stripe = getStripe();
 
   try {
     console.log("Attempting to construct webhook event");
