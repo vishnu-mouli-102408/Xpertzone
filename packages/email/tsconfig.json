@@ -1,0 +1,14 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "include": ["src"],
+  "exclude": ["dist", "build", "node_modules", ".react-email"],
+  "compilerOptions": {
+    "composite": false,
+    "rootDir": "src",
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "strictNullChecks": true
+  }
+}
