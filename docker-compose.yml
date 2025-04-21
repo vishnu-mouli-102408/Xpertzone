@@ -36,8 +36,6 @@ services:
       dockerfile: apps/worker/Dockerfile
     container_name: worker-xpertzone
     working_dir: /app/apps/worker
-    ports:
-      - "3001:3001"
     restart: always
     env_file:
       - apps/worker/.env
