@@ -1,8 +1,8 @@
 node_modules/
 build/
-dist/
 out/
-npm-debug.log
-README.md
-.next
+dist/
 .git
+.vscode
+Makefile
+README.md

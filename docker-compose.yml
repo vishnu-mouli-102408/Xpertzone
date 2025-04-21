@@ -30,6 +30,23 @@ services:
             - dist/
         - action: rebuild
           path: package.json
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: worker-xpertzone
+    working_dir: /app/apps/worker
+    ports:
+      - "3001:3001"
+    restart: always
+    env_file:
+      - apps/worker/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["pnpm", "run", "start"]
 
   db:
     image: postgres:alpine

@@ -2,7 +2,7 @@ FROM node:lts-alpine AS pruner
 WORKDIR /app
 RUN npm install -g turbo
 COPY . .
-RUN turbo prune --scope=web --docker
+RUN turbo prune --scope=worker --docker
 
 FROM node:lts-alpine AS installer
 WORKDIR /app
@@ -25,27 +25,10 @@ RUN npm install -g pnpm
 RUN pnpm run build
 
 
-# Development Stage
-FROM node:lts-alpine AS development
+FROM node:lts-alpine
 WORKDIR /app
-ENV NODE_ENV=development
-RUN npm install -g pnpm
-COPY --from=installer /app/ .
-WORKDIR /app/apps/web
-EXPOSE 3000
-CMD ["pnpm", "dev"]
-
-# Production Stage
-FROM node:lts-alpine AS production
-WORKDIR /app
-ENV NODE_ENV=production
 RUN npm install -g pnpm
 COPY --from=builder /app/ .
-WORKDIR /app/apps/web
-EXPOSE 3000
+WORKDIR /app/apps/worker
+EXPOSE 3001
 CMD ["pnpm", "start"]
-
-
-
-
-# docker run --rm -it --entrypoint sh image_name
