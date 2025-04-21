@@ -21,18 +21,19 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
     "@repo/prettier-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.14.1",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "react-email": "4.0.7",
     "prettier": "catalog:",
-    "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
-    "prettier-plugin-tailwindcss": "^0.6.11"
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "react-email": "4.0.7"
   },
   "dependencies": {
     "@react-email/components": "0.0.36",
+    "dotenv": "^16.4.7",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "resend": "^4.3.0"

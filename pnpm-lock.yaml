@@ -411,6 +411,9 @@ importers:
       '@react-email/components':
         specifier: 0.0.36
         version: 0.0.36(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
       react:
         specifier: catalog:react19
         version: 19.0.0

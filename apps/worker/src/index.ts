@@ -8,6 +8,7 @@ dotenv.config();
 const redisClient = getRedisClient();
 
 // console.log("Redis URL:", process.env.REDIS_URL);
+// console.log("RESEND KEY:", process.env.RESEND_API_KEY);
 
 async function loopHandler() {
   if (!redisClient) {

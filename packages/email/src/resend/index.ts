@@ -1,6 +1,9 @@
+import dotenv from "dotenv";
 import { Resend } from "resend";
 
 import type { ResendEmailOptions } from "./types";
+
+dotenv.config();
 
 export const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
