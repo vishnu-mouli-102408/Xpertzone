@@ -20,11 +20,11 @@ async function loopHandler() {
 }
 
 redisClient.on("error", (err) => {
-  logger.error(err, "Redis Client Error");
+  logger.error(err, "❌ Redis Client Error");
 });
 
 redisClient.on("connect", () => {
-  logger.info("Redis Client Connected");
+  logger.info("🔌 Redis Client Connected");
 });
 
 redisClient.on("ready", () => {
