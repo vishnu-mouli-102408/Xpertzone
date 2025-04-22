@@ -13,7 +13,7 @@ export function handleConnection(ws: WebSocket) {
     if (userId) {
       inMemoryStore.removeConnection(userId);
     }
-    logger.info("🔒 WebSocket connection closed");
+    logger.info(`🔒 WebSocket connection closed for ${userId}`);
   });
 
   ws.send("Hello! You are connected to the WebSocket server.");
@@ -64,10 +64,56 @@ export function handleConnection(ws: WebSocket) {
         }
       }
 
-      //   if (message.type === "MESSAGE") {
-      //     // Handle MESSAGE message
-      //     const { from, to, content, contentType } = message.payload;
-      //   }
+      if (message.type === "MESSAGE") {
+        try {
+          const { content, contentType, receiverId, senderId, timestamp } =
+            message.payload;
+          const isReceiverOnline = inMemoryStore.hasConnection(receiverId);
+          if (isReceiverOnline) {
+            const receiverSocket = inMemoryStore.getConnection(receiverId);
+            if (receiverSocket) {
+              receiverSocket.send(
+                JSON.stringify({
+                  type: "MESSAGE",
+                  payload: {
+                    content,
+                    contentType,
+                    senderId,
+                    timestamp,
+                  },
+                })
+              );
+            } else {
+              logger.warn("Receiver Socket Might be Offline");
+              ws.send(
+                JSON.stringify({
+                  type: "ERROR",
+                  message: "Receiver Socket Might be Offline",
+                })
+              );
+            }
+          } else {
+            logger.warn("Receiver is not online");
+            ws.send(
+              JSON.stringify({
+                type: "ERROR",
+                message: "Receiver is not online",
+              })
+            );
+          }
+
+          // Store the message in the batch
+          inMemoryStore.addMessageToBatch(receiverId, message.payload);
+        } catch (error) {
+          logger.error(error, "❌ Error processing message");
+          ws.send(
+            JSON.stringify({
+              type: "ERROR",
+              message: "Error processing message",
+            })
+          );
+        }
+      }
     } catch (error) {
       logger.error(error, "❌ Error handling message");
 

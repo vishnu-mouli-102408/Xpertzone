@@ -1,13 +1,17 @@
 import { WebSocket } from "ws";
 
+import type { MessagePayloadType } from "../types/types";
+
 class InMemoryStore {
   private static instance: InMemoryStore;
   private connections: Map<string, WebSocket>;
   private onlineStatus: Map<string, boolean>;
+  private messageBatches: Map<string, MessagePayloadType[]>;
 
   private constructor() {
     this.connections = new Map();
     this.onlineStatus = new Map();
+    this.messageBatches = new Map();
   }
 
   // Singleton accessor
@@ -25,6 +29,9 @@ class InMemoryStore {
     }
     this.connections.set(userId, socket);
     this.setOnlineStatus(userId, true);
+    if (!this.messageBatches.has(userId)) {
+      this.messageBatches.set(userId, []);
+    }
   }
 
   public getConnection(userId: string): WebSocket | undefined {
@@ -56,6 +63,27 @@ class InMemoryStore {
     return Array.from(this.onlineStatus.entries())
       .filter(([_, status]) => status)
       .map(([userId]) => userId);
+  }
+
+  public addMessageToBatch(userId: string, message: MessagePayloadType): void {
+    const batch = this.messageBatches.get(userId);
+    if (batch) {
+      batch.push(message);
+    } else {
+      this.messageBatches.set(userId, [message]);
+    }
+  }
+
+  public getMessagesForUser(userId: string): MessagePayloadType[] | undefined {
+    return this.messageBatches.get(userId);
+  }
+
+  public clearMessagesForUser(userId: string): void {
+    this.messageBatches.delete(userId);
+  }
+
+  public getAllMessages(): Map<string, MessagePayloadType[]> {
+    return this.messageBatches;
   }
 }
 

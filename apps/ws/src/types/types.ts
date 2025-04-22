@@ -6,11 +6,14 @@ const InitPayload = z.object({
 });
 
 const MessagePayload = z.object({
-  from: z.string(),
-  to: z.string(),
-  content: z.string().min(1),
+  senderId: z.string().min(1, "senderId must be a non-empty string"),
+  receiverId: z.string().min(1, "receiverId must be a non-empty string"),
+  content: z.string().min(1, "content must be a non-empty string"),
   contentType: z.enum(["TEXT", "IMAGE", "VIDEO"]),
-  timestamp: z.string().optional(),
+  timestamp: z
+    .string()
+    .optional()
+    .default(() => new Date().toISOString()),
 });
 
 // Discriminated union based on 'type'
@@ -25,5 +28,12 @@ export const SocketMessageSchema = z.discriminatedUnion("type", [
   }),
   // Add more types like 'TYPING', 'PING', etc.
 ]);
+
+export type SocketMessageType = z.infer<typeof SocketMessageSchema>["type"];
+export type InitPayloadType = z.infer<typeof InitPayload>;
+export type MessagePayloadType = z.infer<typeof MessagePayload>;
+export type SocketMessagePayload = z.infer<
+  typeof SocketMessageSchema
+>["payload"];
 
 export type SocketMessage = z.infer<typeof SocketMessageSchema>;

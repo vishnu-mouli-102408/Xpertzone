@@ -76,15 +76,15 @@ if (cluster.isPrimary && process.env.NODE_ENV === "production" && WORKERS > 1) {
 
   // Graceful shutdown
   const shutdownGracefully = () => {
-    logger.info("Shutting down gracefully...");
+    logger.info(`Worker ${process.pid} is shutting down...`);
 
     // Close WebSocket server first to stop accepting new connections
     wss.close(() => {
-      logger.info("WebSocket server closed");
+      logger.info(`Worker ${process.pid} WebSocket server closed`);
 
       // Finally close the HTTP server
       httpServer.close(() => {
-        logger.info("🔒 HTTP server closed");
+        logger.info(`Worker ${process.pid} HTTP server closed`);
         process.exit(0);
       });
 
@@ -93,6 +93,10 @@ if (cluster.isPrimary && process.env.NODE_ENV === "production" && WORKERS > 1) {
         logger.warn("Forcing exit after timeout");
         process.exit(1);
       }, 10000);
+    });
+
+    wss.clients.forEach((client) => {
+      client.close();
     });
   };
 
