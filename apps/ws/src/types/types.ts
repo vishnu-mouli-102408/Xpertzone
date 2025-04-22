@@ -29,6 +29,20 @@ export const SocketMessageSchema = z.discriminatedUnion("type", [
   // Add more types like 'TYPING', 'PING', etc.
 ]);
 
+export enum OutGoingSocketMessageType {
+  MESSAGE = "MESSAGE",
+  ERROR = "ERROR",
+  INIT_ACK = "INIT_ACK",
+  TYPING = "TYPING",
+  PING = "PING",
+}
+
+export enum InComingSocketMessageType {
+  INIT = "INIT",
+  MESSAGE = "MESSAGE",
+  TYPING = "TYPING",
+}
+
 export type SocketMessageType = z.infer<typeof SocketMessageSchema>["type"];
 export type InitPayloadType = z.infer<typeof InitPayload>;
 export type MessagePayloadType = z.infer<typeof MessagePayload>;

@@ -2,7 +2,12 @@ import { logger } from "@repo/common";
 import { WebSocket } from "ws";
 
 import { inMemoryStore } from "./store/in-memory";
-import { SocketMessageSchema, type SocketMessage } from "./types/types";
+import {
+  InComingSocketMessageType,
+  OutGoingSocketMessageType,
+  SocketMessageSchema,
+  type SocketMessage,
+} from "./types/types";
 
 export function handleConnection(ws: WebSocket) {
   ws.on("error", (err) => {
@@ -16,7 +21,12 @@ export function handleConnection(ws: WebSocket) {
     logger.info(`🔒 WebSocket connection closed for ${userId}`);
   });
 
-  ws.send("Hello! You are connected to the WebSocket server.");
+  ws.send(
+    JSON.stringify({
+      type: OutGoingSocketMessageType.PING,
+      message: "Hello! You are connected to the WebSocket server.",
+    })
+  );
 
   // Handle incoming messages
   ws.on("message", (data) => {
@@ -40,7 +50,10 @@ export function handleConnection(ws: WebSocket) {
       } else {
         logger.error("Unexpected data format received");
         ws.send(
-          JSON.stringify({ type: "ERROR", message: "Invalid data format" })
+          JSON.stringify({
+            type: OutGoingSocketMessageType.ERROR,
+            message: "Invalid data format",
+          })
         );
         throw new Error("Unexpected data format received");
       }
@@ -48,7 +61,7 @@ export function handleConnection(ws: WebSocket) {
       const message: SocketMessage = SocketMessageSchema.parse(parsedData);
       logger.info(message, "📩 Received message");
 
-      if (message.type === "INIT") {
+      if (message.type === InComingSocketMessageType.INIT) {
         const { userId } = message.payload;
         if (userId) {
           ws.userId = userId;
@@ -57,14 +70,14 @@ export function handleConnection(ws: WebSocket) {
 
           ws.send(
             JSON.stringify({
-              type: "INIT_ACK",
+              type: OutGoingSocketMessageType.INIT_ACK,
               message: "Initialization successful",
             })
           );
         }
       }
 
-      if (message.type === "MESSAGE") {
+      if (message.type === InComingSocketMessageType.MESSAGE) {
         try {
           const { content, contentType, receiverId, senderId, timestamp } =
             message.payload;
@@ -74,7 +87,7 @@ export function handleConnection(ws: WebSocket) {
             if (receiverSocket) {
               receiverSocket.send(
                 JSON.stringify({
-                  type: "MESSAGE",
+                  type: OutGoingSocketMessageType.MESSAGE,
                   payload: {
                     content,
                     contentType,
@@ -87,7 +100,7 @@ export function handleConnection(ws: WebSocket) {
               logger.warn("Receiver Socket Might be Offline");
               ws.send(
                 JSON.stringify({
-                  type: "ERROR",
+                  type: OutGoingSocketMessageType.ERROR,
                   message: "Receiver Socket Might be Offline",
                 })
               );
@@ -96,7 +109,7 @@ export function handleConnection(ws: WebSocket) {
             logger.warn("Receiver is not online");
             ws.send(
               JSON.stringify({
-                type: "ERROR",
+                type: OutGoingSocketMessageType.ERROR,
                 message: "Receiver is not online",
               })
             );
@@ -108,7 +121,7 @@ export function handleConnection(ws: WebSocket) {
           logger.error(error, "❌ Error processing message");
           ws.send(
             JSON.stringify({
-              type: "ERROR",
+              type: OutGoingSocketMessageType.ERROR,
               message: "Error processing message",
             })
           );
@@ -118,7 +131,10 @@ export function handleConnection(ws: WebSocket) {
       logger.error(error, "❌ Error handling message");
 
       ws.send(
-        JSON.stringify({ type: "ERROR", message: "Invalid payload format" })
+        JSON.stringify({
+          type: OutGoingSocketMessageType.ERROR,
+          message: "Invalid payload format",
+        })
       );
     }
   });
