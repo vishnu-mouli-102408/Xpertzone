@@ -31,3 +31,9 @@ redisClient.on("ready", () => {
   logger.info("Redis Client Ready. Starting loop handler");
   void loopHandler();
 });
+
+process.on("SIGINT", () => {
+  logger.info("Shutting down gracefully...");
+  void redisClient.quit();
+  process.exit(0);
+});
