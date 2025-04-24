@@ -27,7 +27,14 @@
     "RESEND_API_KEY",
     "TURBO_TEAM"
   ],
-  "globalPassThroughEnv": ["NODE_ENV", "CI", "npm_lifecycle_event"],
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "CI",
+    "VERCEL",
+    "VERCEL_ENV",
+    "VERCEL_URL",
+    "npm_lifecycle_event"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build", "^db:generate"],
@@ -35,9 +42,9 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "dev": {
-      "dependsOn": ["^db:generate"],
+      "dependsOn": ["dev", "^db:generate"],
       "cache": false,
-      "persistent": true
+      "persistent": false
     },
     "db:generate": {
       "cache": false
