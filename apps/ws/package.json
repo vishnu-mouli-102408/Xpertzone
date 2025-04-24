@@ -7,12 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "start": "tsc -b && node dist/index.js",
-    "dev": "nodemon src/index.ts",
+    "dev": "pnpm env:run nodemon src/index.ts",
     "lint": "eslint --ext .ts,.js,.tsx,.jsx . --max-warnings 0",
     "lint:fix": "eslint --ext .ts,.js,.tsx,.jsx . --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "env:run": "dotenv --"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +31,7 @@
     "@repo/prettier-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^20",
+    "dotenv-cli": "catalog:",
     "@types/ws": "^8.18.1",
     "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "^0.6.11",

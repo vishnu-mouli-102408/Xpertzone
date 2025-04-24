@@ -4,14 +4,15 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3000",
-    "build": "next build",
-    "start": "next start",
+    "dev": "pnpm env:run next dev --turbopack --port 3000",
+    "build": "pnpm env:run next build",
+    "start": "pnpm env:run next start",
     "lint": "eslint --ext .ts,.js,.tsx,.jsx . --max-warnings 0",
     "lint:fix": "eslint --ext .ts,.js,.tsx,.jsx . --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "env:run": "dotenv --"
   },
   "dependencies": {
     "@clerk/backend": "^1.26.0",
@@ -59,6 +60,7 @@
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^20",
     "@types/react": "catalog:react19",
+    "dotenv-cli": "catalog:",
     "@types/react-dom": "catalog:react19",
     "eslint": "catalog:",
     "eslint-config-next": "15.2.4",

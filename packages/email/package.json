@@ -28,6 +28,7 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "prettier": "catalog:",
+    "dotenv-cli": "catalog:",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "react-email": "4.0.7"
   },

@@ -42,7 +42,7 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "dev": {
-      "dependsOn": ["dev", "^db:generate"],
+      "dependsOn": ["^dev", "^db:generate"],
       "cache": false,
       "persistent": false
     },

@@ -18,6 +18,9 @@ catalogs:
     '@trpc/tanstack-react-query':
       specifier: ^11.0.0
       version: 11.0.4
+    dotenv-cli:
+      specifier: ^8.0.0
+      version: 8.0.0
     eslint:
       specifier: ^9.23.0
       version: 9.23.0
@@ -218,6 +221,9 @@ importers:
       '@types/react-dom':
         specifier: catalog:react19
         version: 19.0.4(@types/react@19.1.0)
+      dotenv-cli:
+        specifier: 'catalog:'
+        version: 8.0.0
       eslint:
         specifier: 'catalog:'
         version: 9.23.0(jiti@2.4.2)
@@ -261,6 +267,9 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.17.30
+      dotenv-cli:
+        specifier: 'catalog:'
+        version: 8.0.0
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -313,6 +322,9 @@ importers:
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
+      dotenv-cli:
+        specifier: 'catalog:'
+        version: 8.0.0
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -383,6 +395,9 @@ importers:
       '@types/node':
         specifier: ^22.14.0
         version: 22.14.0
+      dotenv-cli:
+        specifier: 'catalog:'
+        version: 8.0.0
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -426,6 +441,9 @@ importers:
       '@types/node':
         specifier: ^22.14.0
         version: 22.14.0
+      dotenv-cli:
+        specifier: 'catalog:'
+        version: 8.0.0
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -451,6 +469,9 @@ importers:
       '@types/node':
         specifier: ^22.14.0
         version: 22.14.0
+      dotenv-cli:
+        specifier: 'catalog:'
+        version: 8.0.0
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -494,6 +515,9 @@ importers:
       '@types/react-dom':
         specifier: catalog:react19
         version: 19.0.4(@types/react@19.1.0)
+      dotenv-cli:
+        specifier: 'catalog:'
+        version: 8.0.0
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -585,6 +609,9 @@ importers:
       '@types/node':
         specifier: ^22.14.0
         version: 22.14.0
+      dotenv-cli:
+        specifier: 'catalog:'
+        version: 8.0.0
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -3079,6 +3106,14 @@ packages:
   dot-prop@5.3.0:
     resolution: {integrity: sha512-QM8q3zDe58hqUqjraQOmzZ1LIH9SWQJTlEKCH4kJ2oQvLZk7RbQXvtDM2XEq3fwkV9CCvvH4LA0AV+ogFsBM2Q==}
     engines: {node: '>=8'}
+
+  dotenv-cli@8.0.0:
+    resolution: {integrity: sha512-aLqYbK7xKOiTMIRf1lDPbI+Y+Ip/wo5k3eyp6ePysVaSqbyxjyK3dK35BTxG+rmd7djf5q2UPs4noPNH+cj0Qw==}
+    hasBin: true
+
+  dotenv-expand@10.0.0:
+    resolution: {integrity: sha512-GopVGCpVS1UKH75VKHGuQFqS1Gusej0z4FyQkPdwjil2gNIv+LNsqBlboOzpJFZKVT95GkCyWJbBSdFEFUWI2A==}
+    engines: {node: '>=12'}
 
   dotenv@16.0.3:
     resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
@@ -7698,6 +7733,15 @@ snapshots:
   dot-prop@5.3.0:
     dependencies:
       is-obj: 2.0.0
+
+  dotenv-cli@8.0.0:
+    dependencies:
+      cross-spawn: 7.0.6
+      dotenv: 16.4.7
+      dotenv-expand: 10.0.0
+      minimist: 1.2.8
+
+  dotenv-expand@10.0.0: {}
 
   dotenv@16.0.3: {}
 

@@ -25,6 +25,7 @@
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.14.0",
     "prettier": "catalog:",
+    "dotenv-cli": "catalog:",
     "prettier-plugin-tailwindcss": "^0.6.11"
   },
   "prettier": "@repo/prettier-config",
