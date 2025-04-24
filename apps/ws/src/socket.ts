@@ -1,4 +1,6 @@
+import type { IncomingMessage } from "http";
 import { logger } from "@repo/common";
+import { rateLimiter } from "@repo/rate-limit";
 import { WebSocket } from "ws";
 
 import { inMemoryStore } from "./store/in-memory";
@@ -9,7 +11,7 @@ import {
   type SocketMessage,
 } from "./types/types";
 
-export function handleConnection(ws: WebSocket) {
+export function handleConnection(ws: WebSocket, req: IncomingMessage) {
   ws.on("error", (err) => {
     logger.error(err, "❌ WebSocket Error");
   });
@@ -30,7 +32,7 @@ export function handleConnection(ws: WebSocket) {
 
   // Handle incoming messages
   ws.on("message", (data) => {
-    console.log("DATA", data);
+    // console.log("DATA", data);
 
     try {
       let parsedData: string;
@@ -60,6 +62,33 @@ export function handleConnection(ws: WebSocket) {
 
       const message: SocketMessage = SocketMessageSchema.parse(parsedData);
       logger.info(message, "📩 Received message");
+
+      const forwardedFor = req?.headers?.["x-forwarded-for"];
+      const ip =
+        req.socket.remoteAddress ??
+        (Array.isArray(forwardedFor)
+          ? forwardedFor[0]
+          : forwardedFor?.split(",")[0]?.trim());
+      logger.info(`Received message from IP: ${ip}`);
+
+      void (async () => {
+        const { allowed, resetIn } = await rateLimiter.isAllowed(
+          ip ?? "",
+          1,
+          60
+        );
+
+        if (!allowed) {
+          logger.warn(`Rate limit exceeded for IP: ${ip}`);
+          ws.send(
+            JSON.stringify({
+              type: OutGoingSocketMessageType.TOO_MANY_REQUESTS,
+              message: `Rate limit exceeded. Try again in ${resetIn} seconds.`,
+            })
+          );
+          return;
+        }
+      })();
 
       if (message.type === InComingSocketMessageType.INIT) {
         const { userId } = message.payload;

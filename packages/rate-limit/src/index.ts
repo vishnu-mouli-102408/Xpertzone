@@ -34,4 +34,6 @@ class RateLimiter {
 // ✅ Export a **singleton**
 
 const redisUrl = process.env.REDIS_URL ?? "redis://localhost:6379";
+console.log("REDIS_URL", redisUrl);
+
 export const rateLimiter = new RateLimiter(redisUrl);

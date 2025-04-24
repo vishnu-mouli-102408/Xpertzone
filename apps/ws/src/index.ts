@@ -18,6 +18,8 @@ dotenv.config();
 const PORT = 4000;
 const WORKERS = os.cpus().length ?? 1;
 
+console.log("REDIS_URL", process.env.REDIS_URL);
+
 function setupWebSocketServer(httpServer: ReturnType<typeof createServer>) {
   const wss = new WebSocketServer({
     server: httpServer,
@@ -35,8 +37,8 @@ function setupWebSocketServer(httpServer: ReturnType<typeof createServer>) {
     },
   });
 
-  wss.on("connection", (ws) => {
-    handleConnection(ws);
+  wss.on("connection", (ws, req) => {
+    handleConnection(ws, req);
   });
 
   return wss;

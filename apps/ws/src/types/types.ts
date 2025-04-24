@@ -35,6 +35,7 @@ export enum OutGoingSocketMessageType {
   INIT_ACK = "INIT_ACK",
   TYPING = "TYPING",
   PING = "PING",
+  TOO_MANY_REQUESTS = "TOO_MANY_REQUESTS",
 }
 
 export enum InComingSocketMessageType {
