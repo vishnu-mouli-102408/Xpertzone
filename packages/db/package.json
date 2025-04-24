@@ -11,6 +11,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
 	"lint": "eslint src --ext .ts,.tsx",
+	"clean": "git clean -xdf .cache .turbo node_modules",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",

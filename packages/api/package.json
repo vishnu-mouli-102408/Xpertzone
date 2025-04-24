@@ -16,6 +16,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
     "check-types": "tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc --watch --preserveWatchOutput"
   },
   "keywords": [],

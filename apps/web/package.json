@@ -12,6 +12,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
     "check-types": "tsc --noEmit",
+    "clean": "git clean -xdf .cache .next .turbo node_modules",
     "env:run": "dotenv --"
   },
   "dependencies": {

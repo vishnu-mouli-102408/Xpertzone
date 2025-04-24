@@ -13,6 +13,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
     "check-types": "tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
     "env:run": "dotenv --"
   },
   "keywords": [],

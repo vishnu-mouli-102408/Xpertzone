@@ -10,6 +10,7 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" --cache",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" --cache",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
     "check-types": "tsc --noEmit"
   },
   "exports": {
