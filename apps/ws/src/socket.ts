@@ -4,6 +4,7 @@ import { db } from "@repo/db";
 import { rateLimiter } from "@repo/rate-limit";
 import { WebSocket } from "ws";
 
+import { checkIfUserExistsInDB } from "./lib";
 import { inMemoryStore } from "./store/in-memory";
 import {
   InComingSocketMessageType,
@@ -122,6 +123,53 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
 
       if (message.type === InComingSocketMessageType.INIT) {
         const { userId } = message.payload;
+
+        void (async () => {
+          try {
+            const userExistsInDb = await checkIfUserExistsInDB(userId);
+            if (!userExistsInDb) {
+              logger.warn(`User ${userId} does not exist in the database`);
+              ws.send(
+                JSON.stringify({
+                  type: OutGoingSocketMessageType.ERROR,
+                  message: "User does not exist in the database",
+                })
+              );
+              return;
+            }
+          } catch (error) {
+            logger.error(error, "❌ Error checking user existence in DB");
+            ws.send(
+              JSON.stringify({
+                type: OutGoingSocketMessageType.ERROR,
+                message: "Error checking user existence",
+              })
+            );
+          }
+        })();
+
+        if (!userId) {
+          logger.warn("User ID is required for initialization");
+          ws.send(
+            JSON.stringify({
+              type: OutGoingSocketMessageType.ERROR,
+              message: "User ID is required",
+            })
+          );
+          return;
+        }
+
+        const isUserExists = inMemoryStore.hasConnection(userId);
+        if (isUserExists) {
+          logger.warn(`User ${userId} already exists`);
+          ws.send(
+            JSON.stringify({
+              type: OutGoingSocketMessageType.ERROR,
+              message: "User already Connected to the server",
+            })
+          );
+          return;
+        }
         if (userId) {
           ws.userId = userId;
           logger.info(`User ${userId} initialized`);
@@ -140,6 +188,69 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
         try {
           const { content, contentType, receiverId, senderId, timestamp } =
             message.payload;
+
+          if (!content || !receiverId || !senderId) {
+            logger.warn("Invalid message payload");
+            ws.send(
+              JSON.stringify({
+                type: OutGoingSocketMessageType.ERROR,
+                message: "Invalid message payload",
+              })
+            );
+            return;
+          }
+
+          // check if senderId and receiverId exists in the database
+          void (async () => {
+            try {
+              const senderExists = await checkIfUserExistsInDB(senderId);
+              const receiverExists = await checkIfUserExistsInDB(receiverId);
+              if (!senderExists) {
+                logger.warn(
+                  `Sender ${senderId} does not exist in the database`
+                );
+                ws.send(
+                  JSON.stringify({
+                    type: OutGoingSocketMessageType.ERROR,
+                    message: "Sender does not exist in the database",
+                  })
+                );
+                return;
+              }
+              if (!receiverExists) {
+                logger.warn(
+                  `Receiver ${receiverId} does not exist in the database`
+                );
+                ws.send(
+                  JSON.stringify({
+                    type: OutGoingSocketMessageType.ERROR,
+                    message: "Receiver does not exist in the database",
+                  })
+                );
+                return;
+              }
+            } catch (error) {
+              logger.error(error, "❌ Error checking user existence in DB");
+              ws.send(
+                JSON.stringify({
+                  type: OutGoingSocketMessageType.ERROR,
+                  message: "Error checking user existence",
+                })
+              );
+            }
+          })();
+
+          const isSenderExists = inMemoryStore.hasConnection(senderId);
+          if (!isSenderExists) {
+            logger.warn("Sender is not available in the store");
+            ws.send(
+              JSON.stringify({
+                type: OutGoingSocketMessageType.ERROR,
+                message: "Sender is Not Connected to the Server",
+              })
+            );
+            return;
+          }
           const isReceiverOnline = inMemoryStore.hasConnection(receiverId);
           if (isReceiverOnline) {
             const receiverSocket = inMemoryStore.getConnection(receiverId);
