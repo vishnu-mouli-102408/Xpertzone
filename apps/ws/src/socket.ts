@@ -124,30 +124,6 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
       if (message.type === InComingSocketMessageType.INIT) {
         const { userId } = message.payload;
 
-        void (async () => {
-          try {
-            const userExistsInDb = await checkIfUserExistsInDB(userId);
-            if (!userExistsInDb) {
-              logger.warn(`User ${userId} does not exist in the database`);
-              ws.send(
-                JSON.stringify({
-                  type: OutGoingSocketMessageType.ERROR,
-                  message: "User does not exist in the database",
-                })
-              );
-              return;
-            }
-          } catch (error) {
-            logger.error(error, "❌ Error checking user existence in DB");
-            ws.send(
-              JSON.stringify({
-                type: OutGoingSocketMessageType.ERROR,
-                message: "Error checking user existence",
-              })
-            );
-          }
-        })();
-
         if (!userId) {
           logger.warn("User ID is required for initialization");
           ws.send(
@@ -170,18 +146,42 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
           );
           return;
         }
-        if (userId) {
-          ws.userId = userId;
-          logger.info(`User ${userId} initialized`);
-          inMemoryStore.addConnection(userId, ws);
 
-          ws.send(
-            JSON.stringify({
-              type: OutGoingSocketMessageType.INIT_ACK,
-              message: "Initialization successful",
-            })
-          );
-        }
+        void (async () => {
+          try {
+            const userExistsInDb = await checkIfUserExistsInDB(userId);
+            if (userExistsInDb && userId) {
+              ws.userId = userId;
+              logger.info(`User ${userId} initialized`);
+              inMemoryStore.addConnection(userId, ws);
+
+              ws.send(
+                JSON.stringify({
+                  type: OutGoingSocketMessageType.INIT_ACK,
+                  message: "Initialization successful",
+                })
+              );
+            }
+            if (!userExistsInDb) {
+              logger.warn(`User ${userId} does not exist in the database`);
+              ws.send(
+                JSON.stringify({
+                  type: OutGoingSocketMessageType.ERROR,
+                  message: "User does not exist in the database",
+                })
+              );
+              return;
+            }
+          } catch (error) {
+            logger.error(error, "❌ Error checking user existence in DB");
+            ws.send(
+              JSON.stringify({
+                type: OutGoingSocketMessageType.ERROR,
+                message: "Error checking user existence",
+              })
+            );
+          }
+        })();
       }
 
       if (message.type === InComingSocketMessageType.MESSAGE) {
@@ -200,46 +200,6 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
             return;
           }
 
-          // check if senderId and receiverId exists in the database
-          void (async () => {
-            try {
-              const senderExists = await checkIfUserExistsInDB(senderId);
-              const receiverExists = await checkIfUserExistsInDB(receiverId);
-              if (!senderExists) {
-                logger.warn(
-                  `Sender ${senderId} does not exist in the database`
-                );
-                ws.send(
-                  JSON.stringify({
-                    type: OutGoingSocketMessageType.ERROR,
-                    message: "Sender does not exist in the database",
-                  })
-                );
-                return;
-              }
-              if (!receiverExists) {
-                logger.warn(
-                  `Receiver ${receiverId} does not exist in the database`
-                );
-                ws.send(
-                  JSON.stringify({
-                    type: OutGoingSocketMessageType.ERROR,
-                    message: "Receiver does not exist in the database",
-                  })
-                );
-                return;
-              }
-            } catch (error) {
-              logger.error(error, "❌ Error checking user existence in DB");
-              ws.send(
-                JSON.stringify({
-                  type: OutGoingSocketMessageType.ERROR,
-                  message: "Error checking user existence",
-                })
-              );
-            }
-          })();
-
           const isSenderExists = inMemoryStore.hasConnection(senderId);
           if (!isSenderExists) {
             logger.warn("Sender is not available in the store");
@@ -251,6 +211,7 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
             );
             return;
           }
+
           const isReceiverOnline = inMemoryStore.hasConnection(receiverId);
           if (isReceiverOnline) {
             const receiverSocket = inMemoryStore.getConnection(receiverId);
