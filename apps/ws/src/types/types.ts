@@ -9,7 +9,7 @@ const MessagePayload = z.object({
   senderId: z.string().min(1, "senderId must be a non-empty string"),
   receiverId: z.string().min(1, "receiverId must be a non-empty string"),
   content: z.string().min(1, "content must be a non-empty string"),
-  contentType: z.enum(["TEXT", "IMAGE", "VIDEO"]),
+  contentType: z.enum(["TEXT", "IMAGE", "FILE"]).default("TEXT"),
   timestamp: z
     .string()
     .optional()

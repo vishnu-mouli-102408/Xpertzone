@@ -21,6 +21,7 @@
   "license": "ISC",
   "dependencies": {
     "@repo/common": "workspace:*",
+    "@repo/db": "workspace:*",
     "@repo/rate-limit": "workspace:*",
     "dotenv": "^16.4.7",
     "ws": "^8.18.1",

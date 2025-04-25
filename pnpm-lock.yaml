@@ -285,6 +285,9 @@ importers:
       '@repo/common':
         specifier: workspace:*
         version: link:../../packages/common
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@repo/rate-limit':
         specifier: workspace:*
         version: link:../../packages/rate-limit

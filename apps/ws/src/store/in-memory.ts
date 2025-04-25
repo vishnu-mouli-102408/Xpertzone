@@ -82,6 +82,24 @@ class InMemoryStore {
     this.messageBatches.delete(userId);
   }
 
+  public clearAllMessages(): void {
+    this.messageBatches.clear();
+  }
+
+  public removeMessagesFromBatch(
+    messages: Map<string, MessagePayloadType[]>
+  ): void {
+    messages.forEach((messageArray, userId) => {
+      const batch = this.messageBatches.get(userId);
+      if (batch) {
+        this.messageBatches.set(
+          userId,
+          batch.filter((msg) => !messageArray.includes(msg))
+        );
+      }
+    });
+  }
+
   public getAllMessages(): Map<string, MessagePayloadType[]> {
     return this.messageBatches;
   }

@@ -1,5 +1,6 @@
 import type { IncomingMessage } from "http";
 import { logger } from "@repo/common";
+import { db } from "@repo/db";
 import { rateLimiter } from "@repo/rate-limit";
 import { WebSocket } from "ws";
 
@@ -10,6 +11,35 @@ import {
   SocketMessageSchema,
   type SocketMessage,
 } from "./types/types";
+
+setInterval(() => {
+  void (async () => {
+    try {
+      const allMessages = inMemoryStore.getAllMessages();
+      const parsedData = Array.from(allMessages.values()).flat();
+      //   console.log("Parsed Data", parsedData);
+
+      if (parsedData.length === 0 || !parsedData) return;
+      const dataToSave = parsedData.map((message) => ({
+        messageType: message.contentType,
+        receiverId: message.receiverId,
+        senderId: message.senderId,
+        content: message.content,
+        sentAt: new Date(message.timestamp),
+      }));
+
+      await db.message.createMany({
+        data: dataToSave,
+        skipDuplicates: true,
+      });
+
+      // Clear the in-memory store after saving to the database
+      inMemoryStore.removeMessagesFromBatch(allMessages);
+    } catch (error) {
+      logger.error(error, "❌ Error saving messages to the database");
+    }
+  })();
+}, 5000);
 
 export function handleConnection(ws: WebSocket, req: IncomingMessage) {
   ws.on("error", (err) => {
@@ -74,7 +104,7 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
       void (async () => {
         const { allowed, resetIn } = await rateLimiter.isAllowed(
           ip ?? "",
-          1,
+          100,
           60
         );
 
