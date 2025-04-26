@@ -15,8 +15,8 @@ import {
   Bell,
   Command,
   CreditCard,
-  Mail,
   Menu,
+  MessageSquare,
   Search,
   Settings,
   Users,
@@ -78,7 +78,11 @@ export const AppLayoutContent: FC<AppLayoutProps> = ({ children }) => {
       href: "/user/explore-experts",
     },
     { icon: <Users size={18} />, label: "Users", href: "/" },
-    { icon: <Mail size={18} />, label: "Messages", href: "/" },
+    {
+      icon: <MessageSquare size={18} />,
+      label: "Messages",
+      href: "/user/chats",
+    },
     { icon: <Search size={18} />, label: "Search", href: "/" },
     {
       icon: <Settings size={18} />,

@@ -197,6 +197,19 @@ body {
     @apply border border-white/10 bg-white/5 shadow-[0_8px_24px_-4px_rgba(0,0,0,0.2)] backdrop-blur-xl;
   }
 
+  .glass-morphism {
+    @apply border border-white/10 bg-black/20 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)] backdrop-blur-xl;
+  }
+
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .glassmorphism-sidebar {
+    @apply border-r border-white/10 bg-slate-900/80 backdrop-blur-lg;
+  }
+
   .neo-blur {
     @apply border border-white/10 bg-black/40 backdrop-blur-xl;
   }

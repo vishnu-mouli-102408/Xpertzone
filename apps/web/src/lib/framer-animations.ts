@@ -128,6 +128,26 @@ export const pageTransition: Variants = {
   },
 };
 
+export const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+export const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0 },
+};
+
+export const slideRightVariants: Variants = {
+  hidden: { x: -20, opacity: 0 },
+  show: { x: 0, opacity: 1 },
+};
+
 export const modalVariants = {
   hidden: { opacity: 0, y: 30, scale: 0.95, transition: { duration: 0.3 } },
   visible: { opacity: 1, y: 0, scale: 1 },

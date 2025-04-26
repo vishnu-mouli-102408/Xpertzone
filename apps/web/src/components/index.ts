@@ -14,6 +14,7 @@ import Settings from "./settings";
 import { SidebarProvider } from "./sidebar/sidebar-context";
 import ExpertProfile from "./user/expert-profile";
 import ExploreExperts from "./user/explore-experts";
+import UserChats from "./user/user-chats";
 import UserOverview from "./user/user-overview";
 
 export {
@@ -33,5 +34,6 @@ export {
   SearchModal,
   Settings,
   SidebarProvider,
+  UserChats,
   UserOverview,
 };
