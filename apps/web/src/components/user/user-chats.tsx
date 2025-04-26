@@ -6,6 +6,7 @@ import {
   itemVariants,
   slideRightVariants,
 } from "@/src/lib/framer-animations";
+import { useActiveChat } from "@/src/store/chat-store";
 import { useTRPC } from "@/src/trpc/react";
 import { Spinner } from "@repo/ui/components/spinner";
 import { useIsMobile } from "@repo/ui/hooks";
@@ -114,6 +115,10 @@ const UserChats = () => {
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   //   const [showMobileChat, setShowMobileChat] = useState(false);
+
+  const activeChat = useActiveChat();
+
+  console.log("ACTIVE CHAT", activeChat);
 
   const trpc = useTRPC();
 
@@ -307,9 +312,10 @@ const UserChats = () => {
         </motion.div>
         {/* Desktop Chat Area */}
         {!isMobile &&
-          (status === "error" ||
-          data.pages.length === 0 ||
-          data.pages[0]?.data?.chats.length === 0 ? (
+          ((status === "error" ||
+            data.pages.length === 0 ||
+            data.pages[0]?.data?.chats.length === 0) &&
+          !activeChat ? (
             <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
               <h1 className="text-lg font-semibold">Chats are Empty</h1>
               <p className="text-center text-sm text-white/50">
@@ -341,7 +347,7 @@ const UserChats = () => {
                   </div>
                   <div>
                     <h3 className="font-medium text-white">
-                      {activeContact?.name}
+                      {activeChat?.firstName} {activeChat?.lastName}
                     </h3>
                     <p className="text-xs text-white/50">
                       {activeContact?.online ? "Online" : "Offline"}

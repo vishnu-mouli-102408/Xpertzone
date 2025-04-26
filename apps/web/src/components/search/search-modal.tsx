@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { fadeInUp, staggerContainer } from "@/src/lib/framer-animations";
+import { useChatActions } from "@/src/store/chat-store";
 import { useTRPC } from "@/src/trpc/react";
 import { Button } from "@repo/ui/components/button";
 import { Slider } from "@repo/ui/components/slider";
@@ -42,6 +43,8 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
 
   const modalRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+
+  const { setActiveChat } = useChatActions();
 
   const router = useRouter();
   const trpc = useTRPC();
@@ -333,8 +336,18 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-primary-foreground bg-primary/80 rounded px-2 py-1 text-xs font-medium">
-                      ${expert.hourlyRate}/hr
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (location.pathname !== "/user/chats") {
+                          router.push("/user/chats");
+                        }
+                        setActiveChat(expert);
+                        onClose();
+                      }}
+                      className="text-primary-foreground bg-primary/80 rounded px-2 py-1 text-xs font-medium"
+                    >
+                      Chat
                     </div>
                   </div>
                 </motion.div>
