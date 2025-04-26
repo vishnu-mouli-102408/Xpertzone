@@ -342,7 +342,13 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
                         if (location.pathname !== "/user/chats") {
                           router.push("/user/chats");
                         }
-                        setActiveChat(expert);
+                        setActiveChat({
+                          bio: expert.bio,
+                          firstName: expert.firstName,
+                          id: expert.id,
+                          lastName: expert.lastName,
+                          profilePic: expert.profilePic,
+                        });
                         onClose();
                       }}
                       className="text-primary-foreground bg-primary/80 rounded px-2 py-1 text-xs font-medium"

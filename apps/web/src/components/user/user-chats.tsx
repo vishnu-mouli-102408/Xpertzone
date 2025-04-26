@@ -6,12 +6,17 @@ import {
   itemVariants,
   slideRightVariants,
 } from "@/src/lib/framer-animations";
-import { useActiveChat } from "@/src/store/chat-store";
+import { useActiveChat, useChatActions } from "@/src/store/chat-store";
 import { useTRPC } from "@/src/trpc/react";
-import { Spinner } from "@repo/ui/components/spinner";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@repo/ui/components/avatar";
 import { useIsMobile } from "@repo/ui/hooks";
 import { cn } from "@repo/ui/lib/utils";
 import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import {
   MessageSquarePlus,
   MoreHorizontal,
@@ -23,50 +28,6 @@ import {
 import { motion } from "motion/react";
 
 import { FrownIcon } from "../animations/flown";
-
-// Mock data - replace with actual data from your API
-const contacts = [
-  {
-    id: "1",
-    name: "Sarah Wilson",
-    lastMessage: "Hey, how are you doing?",
-    time: "10:30 AM",
-    unread: 2,
-    online: true,
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    lastMessage: "Can we meet tomorrow?",
-    time: "9:15 AM",
-    unread: 0,
-    online: true,
-  },
-  {
-    id: "3",
-    name: "Emily Johnson",
-    lastMessage: "The project is ready for review",
-    time: "Yesterday",
-    unread: 0,
-    online: false,
-  },
-  {
-    id: "4",
-    name: "Daniel Brown",
-    lastMessage: "Thanks for your help!",
-    time: "Yesterday",
-    unread: 0,
-    online: false,
-  },
-  {
-    id: "5",
-    name: "Alex Rodriguez",
-    lastMessage: "Did you see the latest update?",
-    time: "Sunday",
-    unread: 3,
-    online: false,
-  },
-];
 
 // Message mock data
 const initialMessages = [
@@ -110,11 +71,12 @@ const initialMessages = [
 
 const UserChats = () => {
   const isMobile = useIsMobile();
-  const [activeContact, setActiveContact] = useState(contacts[0]);
   const [messages, setMessages] = useState(initialMessages);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   //   const [showMobileChat, setShowMobileChat] = useState(false);
+
+  const { setActiveChat } = useChatActions();
 
   const activeChat = useActiveChat();
 
@@ -140,10 +102,6 @@ const UserChats = () => {
   console.log("ERROR", error);
   console.log("IS FETCHING NEXT PAGE", isFetchingNextPage);
 
-  const filteredContacts = contacts.filter((contact) =>
-    contact.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
 
@@ -168,22 +126,6 @@ const UserChats = () => {
       handleSendMessage();
     }
   };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleContactClick = (contact: any) => {
-    setActiveContact(contact);
-    if (isMobile) {
-      //   setShowMobileChat(true);
-    }
-  };
-
-  if (isFetchingNextPage) {
-    return (
-      <div className="flex h-[calc(100vh-115px)] w-full flex-col items-center justify-center">
-        <Spinner variant="ellipsis" className="size-14" />
-      </div>
-    );
-  }
 
   return (
     <div className="glass-morphism h-[calc(100vh-64px)] overflow-hidden shadow-lg">
@@ -245,47 +187,74 @@ const UserChats = () => {
                   </p>
                 </div>
               ) : (
-                filteredContacts.map((contact) => (
-                  <motion.div
-                    key={contact.id}
-                    variants={itemVariants}
-                    whileHover={{ x: 4 }}
-                    className={cn(
-                      "cursor-pointer rounded-lg p-3",
-                      activeContact?.id === contact.id
-                        ? "bg-white/10"
-                        : "hover:bg-white/5"
-                    )}
-                    onClick={() => handleContactClick(contact)}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#27272A]">
-                          <User size={18} className="text-white" />
-                        </div>
-                        {contact.online && (
+                data.pages
+                  .flatMap((page) => page.data?.chats ?? [])
+                  .filter(Boolean)
+                  ?.map((chat) => (
+                    <motion.div
+                      key={chat.id}
+                      variants={itemVariants}
+                      whileHover={{ x: 4 }}
+                      className={cn(
+                        "cursor-pointer rounded-lg p-3",
+                        activeChat?.id === chat.receiverId
+                          ? "bg-white/10"
+                          : "hover:bg-white/5"
+                      )}
+                      onClick={() => {
+                        setActiveChat({
+                          bio: chat.receiver.bio,
+                          firstName: chat.receiver.firstName,
+                          id: chat.receiver.id,
+                          lastName: chat.receiver.lastName,
+                          profilePic: chat.receiver.profilePic,
+                        });
+                        if (isMobile) {
+                          //   setShowMobileChat(true);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#27272A]">
+                            <User size={18} className="text-white" />
+                            <Avatar className="h-12 w-12 rounded-full">
+                              <AvatarImage
+                                src={
+                                  chat.receiver.profilePic ??
+                                  "https://github.com/shadcn.png"
+                                }
+                                alt={chat.receiver.firstName ?? "User Name"}
+                                className="rounded-full object-cover"
+                              />
+                              <AvatarFallback>
+                                {chat.receiver.firstName}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                          {/* {chat.online && (
                           <motion.div
                             className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-black bg-green-500"
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ duration: 0.2 }}
                           />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex justify-between">
-                          <p className="truncate text-sm font-medium text-white">
-                            {contact.name}
-                          </p>
-                          <p className="text-xs text-white/50">
-                            {contact.time}
-                          </p>
+                        )} */}
                         </div>
-                        <div className="mt-1 flex justify-between">
-                          <p className="truncate text-xs text-white/70">
-                            {contact.lastMessage}
-                          </p>
-                          {contact.unread > 0 && (
+                        <div className="min-w-0 flex-1">
+                          <div className="flex justify-between">
+                            <p className="truncate text-sm font-medium text-white">
+                              {chat.receiver.firstName} {chat.receiver.lastName}
+                            </p>
+                            <p className="text-xs text-white/50">
+                              {format(chat.sentAt, "hh:mm a")}
+                            </p>
+                          </div>
+                          <div className="mt-1 flex justify-between">
+                            <p className="truncate text-xs text-white/70">
+                              {chat.content}
+                            </p>
+                            {/* {chat.unread > 0 && (
                             <motion.div
                               className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#1D4ED8]"
                               initial={{ scale: 0 }}
@@ -300,21 +269,21 @@ const UserChats = () => {
                                 {contact.unread}
                               </span>
                             </motion.div>
-                          )}
+                          )} */}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))
+                    </motion.div>
+                  ))
               )}
             </motion.div>
           </div>
         </motion.div>
         {/* Desktop Chat Area */}
         {!isMobile &&
-          ((status === "error" ||
-            data.pages.length === 0 ||
-            data.pages[0]?.data?.chats.length === 0) &&
+          (status === "error" ||
+          data.pages.length === 0 ||
+          data.pages[0]?.data?.chats.length === 0 ||
           !activeChat ? (
             <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
               <h1 className="text-lg font-semibold">Chats are Empty</h1>
@@ -334,24 +303,35 @@ const UserChats = () => {
                 <div className="flex items-center space-x-3">
                   <div className="relative">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#27272A]">
-                      <User size={16} className="text-white" />
+                      {/* <User size={16} className="text-white" /> */}
+                      <Avatar className="h-10 w-10 rounded-full">
+                        <AvatarImage
+                          src={
+                            activeChat.profilePic ??
+                            "https://github.com/shadcn.png"
+                          }
+                          alt={activeChat.firstName ?? "User Name"}
+                          className="rounded-full object-cover"
+                        />
+                        <AvatarFallback>{activeChat.firstName}</AvatarFallback>
+                      </Avatar>
                     </div>
-                    {activeContact?.online && (
+                    {/* {activeChat?.online && (
                       <motion.div
                         className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-black bg-green-500"
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         layoutId="onlineIndicator"
                       />
-                    )}
+                    )} */}
                   </div>
                   <div>
                     <h3 className="font-medium text-white">
                       {activeChat?.firstName} {activeChat?.lastName}
                     </h3>
-                    <p className="text-xs text-white/50">
-                      {activeContact?.online ? "Online" : "Offline"}
-                    </p>
+                    {/* <p className="text-xs text-white/50">
+                      {activeChat?.online ? "Online" : "Offline"}
+                    </p> */}
                   </div>
                 </div>
 
@@ -396,7 +376,20 @@ const UserChats = () => {
                         >
                           {!isCurrentUser && showAvatar && (
                             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#27272A]">
-                              <User size={14} className="text-white" />
+                              {/* <User size={14} className="text-white" /> */}
+                              <Avatar className="h-8 w-8 rounded-full">
+                                <AvatarImage
+                                  src={
+                                    activeChat.profilePic ??
+                                    "https://github.com/shadcn.png"
+                                  }
+                                  alt={activeChat.firstName ?? "User Name"}
+                                  className="rounded-full object-cover"
+                                />
+                                <AvatarFallback>
+                                  {activeChat.firstName}
+                                </AvatarFallback>
+                              </Avatar>
                             </div>
                           )}
                           <div

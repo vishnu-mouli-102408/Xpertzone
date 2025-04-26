@@ -964,9 +964,13 @@ export const userRouter = {
               ...whereCondition,
               senderId: ctx.user.id,
             },
+            distinct: ["receiverId"],
             cursor: cursor ? { id: cursor } : undefined,
             take: limit + 1,
             orderBy: { sentAt: "desc" },
+            include: {
+              receiver: true,
+            },
           }),
         ]);
 
