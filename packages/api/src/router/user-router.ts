@@ -394,7 +394,6 @@ export const userRouter = {
     .input(
       z
         .object({
-          page: z.number().int().optional(),
           cursor: z.string().optional(),
           limit: z.number().int().optional(),
           search: z.string().optional(),
@@ -913,4 +912,89 @@ export const userRouter = {
       };
     }
   }),
+
+  getAllChats: protectedProcedure
+    .input(
+      z
+        .object({
+          cursor: z.string().optional(),
+          limit: z.number().int().optional(),
+          search: z.string().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ input, ctx }) => {
+      try {
+        const { limit = 10, cursor, search = "" } = input ?? {};
+
+        logger.info(limit, cursor, search, "Query parameters");
+
+        let whereCondition: Prisma.MessageWhereInput = {};
+        if (search.trim() !== "") {
+          whereCondition = {
+            OR: [
+              {
+                sender: {
+                  firstName: { contains: search, mode: "insensitive" },
+                },
+              },
+              {
+                sender: { lastName: { contains: search, mode: "insensitive" } },
+              },
+              {
+                receiver: {
+                  firstName: { contains: search, mode: "insensitive" },
+                },
+              },
+              {
+                receiver: {
+                  lastName: { contains: search, mode: "insensitive" },
+                },
+              },
+            ],
+          };
+        }
+
+        const [total, chats] = await Promise.all([
+          db.message.count({
+            where: { ...whereCondition, senderId: ctx.user.id },
+          }),
+          db.message.findMany({
+            where: {
+              ...whereCondition,
+              senderId: ctx.user.id,
+            },
+            cursor: cursor ? { id: cursor } : undefined,
+            take: limit + 1,
+            orderBy: { sentAt: "desc" },
+          }),
+        ]);
+
+        const hasNextPage = chats.length > limit;
+        const nextCursor =
+          hasNextPage && chats.length > 0 ? chats[chats.length - 1]?.id : null;
+
+        const chatsToReturn = hasNextPage ? chats.slice(0, -1) : chats;
+
+        return {
+          message: "Chats fetched successfully",
+          success: true,
+          data: {
+            totalChats: total,
+            chats: chatsToReturn,
+            nextCursor,
+            totalPages: Math.ceil(total / (limit || 10)),
+          },
+          code: OK,
+        };
+      } catch (error) {
+        logger.error(error, "Error fetching chats");
+        return {
+          message: "Internal server error",
+          success: false,
+          data: null,
+          code: INTERNAL_SERVER_ERROR,
+        };
+      }
+    }),
 };

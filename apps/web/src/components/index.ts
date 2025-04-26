@@ -1,3 +1,4 @@
+import { FrownIcon } from "./animations/flown";
 import { AuroraHero } from "./aurora-hero";
 import Billing from "./billing";
 import CTA from "./cta";
@@ -27,6 +28,7 @@ export {
   FAQ,
   FeaturesSection,
   Footer,
+  FrownIcon,
   LogoTicker,
   Navbar,
   Pricing,

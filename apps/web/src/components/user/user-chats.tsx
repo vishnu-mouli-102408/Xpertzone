@@ -6,10 +6,13 @@ import {
   itemVariants,
   slideRightVariants,
 } from "@/src/lib/framer-animations";
+import { useTRPC } from "@/src/trpc/react";
+import { Spinner } from "@repo/ui/components/spinner";
 import { useIsMobile } from "@repo/ui/hooks";
 import { cn } from "@repo/ui/lib/utils";
+import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import {
-  MessageSquare,
+  MessageSquarePlus,
   MoreHorizontal,
   Search,
   Send,
@@ -17,6 +20,8 @@ import {
   User,
 } from "lucide-react";
 import { motion } from "motion/react";
+
+import { FrownIcon } from "../animations/flown";
 
 // Mock data - replace with actual data from your API
 const contacts = [
@@ -110,6 +115,26 @@ const UserChats = () => {
   const [searchQuery, setSearchQuery] = useState("");
   //   const [showMobileChat, setShowMobileChat] = useState(false);
 
+  const trpc = useTRPC();
+
+  const { data, status, error, isFetchingNextPage } = useSuspenseInfiniteQuery(
+    trpc.user.getAllChats.infiniteQueryOptions(
+      {
+        limit: 10,
+      },
+      {
+        getNextPageParam: (lastPage) => {
+          return (lastPage.data?.nextCursor as string | undefined) ?? undefined;
+        },
+      }
+    )
+  );
+
+  console.log("DATA", data);
+  console.log("STATUS", status);
+  console.log("ERROR", error);
+  console.log("IS FETCHING NEXT PAGE", isFetchingNextPage);
+
   const filteredContacts = contacts.filter((contact) =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -147,6 +172,14 @@ const UserChats = () => {
     }
   };
 
+  if (isFetchingNextPage) {
+    return (
+      <div className="flex h-[calc(100vh-115px)] w-full flex-col items-center justify-center">
+        <Spinner variant="ellipsis" className="size-14" />
+      </div>
+    );
+  }
+
   return (
     <div className="glass-morphism h-[calc(100vh-64px)] overflow-hidden shadow-lg">
       <div className="flex h-full">
@@ -165,7 +198,7 @@ const UserChats = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <MessageSquare
+                <MessageSquarePlus
                   size={18}
                   className="cursor-pointer text-white/70"
                 />
@@ -192,212 +225,239 @@ const UserChats = () => {
 
           {/* Contacts List */}
           <div className="scrollbar-none flex-1 overflow-y-auto">
-            <motion.div className="space-y-1 p-2" variants={containerVariants}>
-              {filteredContacts.map((contact) => (
-                <motion.div
-                  key={contact.id}
-                  variants={itemVariants}
-                  whileHover={{ x: 4 }}
-                  className={cn(
-                    "cursor-pointer rounded-lg p-3",
-                    activeContact?.id === contact.id
-                      ? "bg-white/10"
-                      : "hover:bg-white/5"
-                  )}
-                  onClick={() => handleContactClick(contact)}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#27272A]">
-                        <User size={18} className="text-white" />
-                      </div>
-                      {contact.online && (
-                        <motion.div
-                          className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-black bg-green-500"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ duration: 0.2 }}
-                        />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex justify-between">
-                        <p className="truncate text-sm font-medium text-white">
-                          {contact.name}
-                        </p>
-                        <p className="text-xs text-white/50">{contact.time}</p>
-                      </div>
-                      <div className="mt-1 flex justify-between">
-                        <p className="truncate text-xs text-white/70">
-                          {contact.lastMessage}
-                        </p>
-                        {contact.unread > 0 && (
+            <motion.div
+              className="h-full space-y-1 p-2"
+              variants={containerVariants}
+            >
+              {status === "error" ||
+              data.pages.length === 0 ||
+              data.pages[0]?.data?.chats.length === 0 ? (
+                <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
+                  <FrownIcon />
+                  <h1 className="text-lg font-semibold">No Chats To Found</h1>
+                  <p className="text-center text-sm text-white/50">
+                    You don&apos;t have any chats yet. Start a conversation!
+                  </p>
+                </div>
+              ) : (
+                filteredContacts.map((contact) => (
+                  <motion.div
+                    key={contact.id}
+                    variants={itemVariants}
+                    whileHover={{ x: 4 }}
+                    className={cn(
+                      "cursor-pointer rounded-lg p-3",
+                      activeContact?.id === contact.id
+                        ? "bg-white/10"
+                        : "hover:bg-white/5"
+                    )}
+                    onClick={() => handleContactClick(contact)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#27272A]">
+                          <User size={18} className="text-white" />
+                        </div>
+                        {contact.online && (
                           <motion.div
-                            className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#1D4ED8]"
+                            className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-black bg-green-500"
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            transition={{
-                              type: "spring",
-                              stiffness: 500,
-                              damping: 20,
-                            }}
-                          >
-                            <span className="text-xs font-medium text-white">
-                              {contact.unread}
-                            </span>
-                          </motion.div>
+                            transition={{ duration: 0.2 }}
+                          />
                         )}
                       </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex justify-between">
+                          <p className="truncate text-sm font-medium text-white">
+                            {contact.name}
+                          </p>
+                          <p className="text-xs text-white/50">
+                            {contact.time}
+                          </p>
+                        </div>
+                        <div className="mt-1 flex justify-between">
+                          <p className="truncate text-xs text-white/70">
+                            {contact.lastMessage}
+                          </p>
+                          {contact.unread > 0 && (
+                            <motion.div
+                              className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#1D4ED8]"
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 500,
+                                damping: 20,
+                              }}
+                            >
+                              <span className="text-xs font-medium text-white">
+                                {contact.unread}
+                              </span>
+                            </motion.div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </motion.div>
           </div>
         </motion.div>
         {/* Desktop Chat Area */}
-        {!isMobile && (
-          <motion.div
-            className="flex flex-1 flex-col bg-black/20"
-            variants={slideRightVariants}
-            initial="hidden"
-            animate="show"
-          >
-            {/* Chat Header */}
-            <div className="flex items-center justify-between border-b border-white/10 p-4">
-              <div className="flex items-center space-x-3">
-                <div className="relative">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#27272A]">
-                    <User size={16} className="text-white" />
+        {!isMobile &&
+          (status === "error" ||
+          data.pages.length === 0 ||
+          data.pages[0]?.data?.chats.length === 0 ? (
+            <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
+              <h1 className="text-lg font-semibold">Chats are Empty</h1>
+              <p className="text-center text-sm text-white/50">
+                Select a contact or start a new conversation to chat with them.
+              </p>
+            </div>
+          ) : (
+            <motion.div
+              className="flex flex-1 flex-col bg-black/20"
+              variants={slideRightVariants}
+              initial="hidden"
+              animate="show"
+            >
+              {/* Chat Header */}
+              <div className="flex items-center justify-between border-b border-white/10 p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#27272A]">
+                      <User size={16} className="text-white" />
+                    </div>
+                    {activeContact?.online && (
+                      <motion.div
+                        className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-black bg-green-500"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        layoutId="onlineIndicator"
+                      />
+                    )}
                   </div>
-                  {activeContact?.online && (
-                    <motion.div
-                      className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-black bg-green-500"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      layoutId="onlineIndicator"
-                    />
-                  )}
+                  <div>
+                    <h3 className="font-medium text-white">
+                      {activeContact?.name}
+                    </h3>
+                    <p className="text-xs text-white/50">
+                      {activeContact?.online ? "Online" : "Offline"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium text-white">
-                    {activeContact?.name}
-                  </h3>
-                  <p className="text-xs text-white/50">
-                    {activeContact?.online ? "Online" : "Offline"}
-                  </p>
-                </div>
-              </div>
 
-              <motion.button
-                className="rounded-full p-2 hover:bg-white/10"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <MoreHorizontal size={18} className="text-white/70" />
-              </motion.button>
-            </div>
-
-            {/* Messages */}
-            <div className="scrollbar-none flex-1 overflow-y-auto p-4">
-              <motion.div
-                className="space-y-4"
-                variants={containerVariants}
-                initial="hidden"
-                animate="show"
-              >
-                {messages.map((message, index) => {
-                  const isCurrentUser = message.sender === "1";
-                  const showAvatar =
-                    index === 0 ||
-                    messages[index - 1]?.sender !== message.sender;
-
-                  return (
-                    <motion.div
-                      key={message.id}
-                      className={cn(
-                        "flex",
-                        isCurrentUser ? "justify-end" : "justify-start"
-                      )}
-                      variants={itemVariants}
-                      layout
-                    >
-                      <div
-                        className={cn(
-                          "flex max-w-[75%] items-end gap-2",
-                          isCurrentUser && "flex-row-reverse"
-                        )}
-                      >
-                        {!isCurrentUser && showAvatar && (
-                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#27272A]">
-                            <User size={14} className="text-white" />
-                          </div>
-                        )}
-                        <div
-                          className={cn(
-                            "rounded-2xl px-4 py-2",
-                            isCurrentUser
-                              ? "rounded-br-sm bg-[#1D4ED8] text-white"
-                              : "rounded-bl-sm bg-white/10 text-white"
-                          )}
-                        >
-                          <p className="text-sm">{message.text}</p>
-                          <div
-                            className={cn(
-                              "mt-1 flex items-center gap-1 text-[10px]",
-                              isCurrentUser
-                                ? "justify-end text-white/70"
-                                : "text-white/50"
-                            )}
-                          >
-                            {message.time}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            </div>
-
-            {/* Message Input */}
-            <div className="border-t border-white/10 p-4">
-              <div className="flex items-center gap-2">
                 <motion.button
                   className="rounded-full p-2 hover:bg-white/10"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <Smile size={20} className="text-white/70" />
-                </motion.button>
-                <div className="relative flex-1">
-                  <textarea
-                    className="scrollbar-none h-12 max-h-32 w-full resize-none overflow-y-auto rounded-lg bg-white/5 px-4 py-3 pr-12 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/20"
-                    placeholder="Type your message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    rows={1}
-                  />
-                </div>
-                <motion.button
-                  className={cn(
-                    "flex items-center justify-center rounded-full p-3",
-                    newMessage.trim()
-                      ? "bg-[#1D4ED8] text-white"
-                      : "bg-white/5 text-white/40"
-                  )}
-                  whileHover={newMessage.trim() ? { scale: 1.05 } : {}}
-                  whileTap={newMessage.trim() ? { scale: 0.95 } : {}}
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim()}
-                >
-                  <Send size={18} />
+                  <MoreHorizontal size={18} className="text-white/70" />
                 </motion.button>
               </div>
-            </div>
-          </motion.div>
-        )}
+
+              {/* Messages */}
+              <div className="scrollbar-none flex-1 overflow-y-auto p-4">
+                <motion.div
+                  className="space-y-4"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="show"
+                >
+                  {messages.map((message, index) => {
+                    const isCurrentUser = message.sender === "1";
+                    const showAvatar =
+                      index === 0 ||
+                      messages[index - 1]?.sender !== message.sender;
+
+                    return (
+                      <motion.div
+                        key={message.id}
+                        className={cn(
+                          "flex",
+                          isCurrentUser ? "justify-end" : "justify-start"
+                        )}
+                        variants={itemVariants}
+                        layout
+                      >
+                        <div
+                          className={cn(
+                            "flex max-w-[75%] items-end gap-2",
+                            isCurrentUser && "flex-row-reverse"
+                          )}
+                        >
+                          {!isCurrentUser && showAvatar && (
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#27272A]">
+                              <User size={14} className="text-white" />
+                            </div>
+                          )}
+                          <div
+                            className={cn(
+                              "rounded-2xl px-4 py-2",
+                              isCurrentUser
+                                ? "rounded-br-sm bg-[#1D4ED8] text-white"
+                                : "rounded-bl-sm bg-white/10 text-white"
+                            )}
+                          >
+                            <p className="text-sm">{message.text}</p>
+                            <div
+                              className={cn(
+                                "mt-1 flex items-center gap-1 text-[10px]",
+                                isCurrentUser
+                                  ? "justify-end text-white/70"
+                                  : "text-white/50"
+                              )}
+                            >
+                              {message.time}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              </div>
+
+              {/* Message Input */}
+              <div className="border-t border-white/10 p-4">
+                <div className="flex items-center gap-2">
+                  <motion.button
+                    className="rounded-full p-2 hover:bg-white/10"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Smile size={20} className="text-white/70" />
+                  </motion.button>
+                  <div className="relative flex-1">
+                    <textarea
+                      className="scrollbar-none h-12 max-h-32 w-full resize-none overflow-y-auto rounded-lg bg-white/5 px-4 py-3 pr-12 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/20"
+                      placeholder="Type your message..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      rows={1}
+                    />
+                  </div>
+                  <motion.button
+                    className={cn(
+                      "flex items-center justify-center rounded-full p-3",
+                      newMessage.trim()
+                        ? "bg-[#1D4ED8] text-white"
+                        : "bg-white/5 text-white/40"
+                    )}
+                    whileHover={newMessage.trim() ? { scale: 1.05 } : {}}
+                    whileTap={newMessage.trim() ? { scale: 0.95 } : {}}
+                    onClick={handleSendMessage}
+                    disabled={!newMessage.trim()}
+                  >
+                    <Send size={18} />
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
 
         {/* Mobile Chat View */}
         {/* <AnimatePresence>
