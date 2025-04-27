@@ -1001,4 +1001,78 @@ export const userRouter = {
         };
       }
     }),
+  getChatsById: protectedProcedure
+    .input(
+      z.object({
+        receiverId: z.string(),
+        cursor: z.string().optional(),
+        limit: z.number().int().optional(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      try {
+        const { limit = 10, cursor } = input ?? {};
+        const { receiverId } = input;
+
+        logger.info(limit, cursor, receiverId, "Query parameters");
+
+        if (!receiverId) {
+          return {
+            message: "Receiver ID is required",
+            success: false,
+            data: null,
+            code: NOT_FOUND,
+          };
+        }
+
+        const [total, chats] = await Promise.all([
+          db.message.count({
+            where: {
+              senderId: ctx.user.id,
+              receiverId,
+            },
+          }),
+          db.message.findMany({
+            where: {
+              OR: [
+                { senderId: ctx.user.id, receiverId },
+                { senderId: receiverId, receiverId: ctx.user.id },
+              ],
+            },
+            cursor: cursor ? { id: cursor } : undefined,
+            take: limit + 1,
+            orderBy: { sentAt: "asc" },
+            include: {
+              receiver: true,
+            },
+          }),
+        ]);
+
+        const hasNextPage = chats.length > limit;
+        const nextCursor =
+          hasNextPage && chats.length > 0 ? chats[chats.length - 1]?.id : null;
+
+        const chatsToReturn = hasNextPage ? chats.slice(0, -1) : chats;
+
+        return {
+          message: "Chats fetched successfully",
+          success: true,
+          data: {
+            totalChats: total,
+            chats: chatsToReturn,
+            nextCursor,
+            totalPages: Math.ceil(total / (limit || 10)),
+          },
+          code: OK,
+        };
+      } catch (error) {
+        logger.error(error, "Error fetching chats");
+        return {
+          message: "Internal server error",
+          success: false,
+          data: null,
+          code: INTERNAL_SERVER_ERROR,
+        };
+      }
+    }),
 };

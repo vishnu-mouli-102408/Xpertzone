@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDbUser } from "@/src/hooks";
 import {
   containerVariants,
   itemVariants,
@@ -17,7 +18,10 @@ import { Button } from "@repo/ui/components/button";
 import { Spinner } from "@repo/ui/components/spinner";
 import { useIsMobile } from "@repo/ui/hooks";
 import { cn } from "@repo/ui/lib/utils";
-import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useSuspenseInfiniteQuery,
+} from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   MessageSquarePlus,
@@ -30,6 +34,7 @@ import {
 import { motion } from "motion/react";
 
 import { FrownIcon } from "../animations/flown";
+import ResultsNotFound from "../global/results-not-found";
 
 // Message mock data
 const initialMessages = [
@@ -78,6 +83,8 @@ const UserChats = () => {
   const [searchQuery, setSearchQuery] = useState("");
   //   const [showMobileChat, setShowMobileChat] = useState(false);
 
+  const { data: userData } = useDbUser();
+
   const { setActiveChat } = useChatActions();
 
   const activeChat = useActiveChat();
@@ -101,6 +108,29 @@ const UserChats = () => {
         }
       )
     );
+
+  const {
+    data: chatsData,
+    status: chatsStatus,
+    isFetching,
+    error: chatsError,
+    isFetchingNextPage: isFetcingMoreChats,
+  } = useInfiniteQuery(
+    trpc.user.getChatsById.infiniteQueryOptions(
+      {
+        receiverId: activeChat?.id ?? "",
+        limit: 10,
+      },
+      {
+        getNextPageParam: (lastPage) => {
+          return (lastPage.data?.nextCursor as string | undefined) ?? undefined;
+        },
+        enabled: !!activeChat?.id,
+      }
+    )
+  );
+
+  console.log("CHATS DATA", chatsData);
 
   console.log("DATA", data);
   console.log("STATUS", status);
@@ -301,17 +331,32 @@ const UserChats = () => {
             </motion.div>
           </div>
         </motion.div>
+
         {/* Desktop Chat Area */}
         {!isMobile &&
-          (status === "error" ||
-          data.pages.length === 0 ||
-          data.pages[0]?.data?.chats.length === 0 ||
-          !activeChat ? (
+          (isFetching && !isFetcingMoreChats ? (
+            <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
+              <Spinner variant="circle-filled" />
+              <p className="text-center text-sm text-white/50">
+                Loading messages...
+              </p>
+            </div>
+          ) : !chatsData ||
+            chatsData?.pages.length === 0 ||
+            chatsData?.pages[0]?.data?.chats.length === 0 ||
+            !activeChat ? (
             <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
               <h1 className="text-lg font-semibold">Chats are Empty</h1>
               <p className="text-center text-sm text-white/50">
                 Select a contact or start a new conversation to chat with them.
               </p>
+            </div>
+          ) : status === "error" || chatsStatus === "error" ? (
+            <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
+              <ResultsNotFound
+                description={error?.message ?? chatsError?.message}
+                title="Oops! Something went wrong"
+              />
             </div>
           ) : (
             <motion.div
@@ -370,76 +415,88 @@ const UserChats = () => {
 
               {/* Messages */}
               <div className="scrollbar-none flex-1 overflow-y-auto p-4">
+                {isFetcingMoreChats && (
+                  <div className="flex w-full items-center justify-center pb-2">
+                    <Spinner variant="ring" />
+                  </div>
+                )}
                 <motion.div
                   className="space-y-4"
                   variants={containerVariants}
                   initial="hidden"
                   animate="show"
                 >
-                  {messages.map((message, index) => {
-                    const isCurrentUser = message.sender === "1";
-                    const showAvatar =
-                      index === 0 ||
-                      messages[index - 1]?.sender !== message.sender;
+                  {chatsData?.pages.length > 0 &&
+                    chatsData.pages
+                      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                      .flatMap((page) => page.data?.chats ?? [])
+                      .filter(Boolean)
+                      .map((message, index) => {
+                        const isCurrentUser =
+                          message.senderId === userData?.data?.id;
+                        const showAvatar =
+                          index === 0 ||
+                          chatsData.pages[index - 1]?.data?.chats[0]
+                            ?.senderId !== message.senderId;
 
-                    return (
-                      <motion.div
-                        key={message.id}
-                        className={cn(
-                          "flex",
-                          isCurrentUser ? "justify-end" : "justify-start"
-                        )}
-                        variants={itemVariants}
-                        layout
-                      >
-                        <div
-                          className={cn(
-                            "flex max-w-[75%] items-end gap-2",
-                            isCurrentUser && "flex-row-reverse"
-                          )}
-                        >
-                          {!isCurrentUser && showAvatar && (
-                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#27272A]">
-                              {/* <User size={14} className="text-white" /> */}
-                              <Avatar className="h-8 w-8 rounded-full">
-                                <AvatarImage
-                                  src={
-                                    activeChat.profilePic ??
-                                    "https://github.com/shadcn.png"
-                                  }
-                                  alt={activeChat.firstName ?? "User Name"}
-                                  className="rounded-full object-cover"
-                                />
-                                <AvatarFallback>
-                                  {activeChat.firstName?.slice(0, 1)}
-                                </AvatarFallback>
-                              </Avatar>
-                            </div>
-                          )}
-                          <div
+                        return (
+                          <motion.div
+                            key={message.id}
                             className={cn(
-                              "rounded-2xl px-4 py-2",
-                              isCurrentUser
-                                ? "rounded-br-sm bg-[#1D4ED8] text-white"
-                                : "rounded-bl-sm bg-white/10 text-white"
+                              "flex",
+                              isCurrentUser ? "justify-end" : "justify-start"
                             )}
+                            variants={itemVariants}
+                            layout
                           >
-                            <p className="text-sm">{message.text}</p>
                             <div
                               className={cn(
-                                "mt-1 flex items-center gap-1 text-[10px]",
-                                isCurrentUser
-                                  ? "justify-end text-white/70"
-                                  : "text-white/50"
+                                "flex max-w-[75%] items-end gap-2",
+                                isCurrentUser && "flex-row-reverse"
                               )}
                             >
-                              {message.time}
+                              {!isCurrentUser && showAvatar && (
+                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#27272A]">
+                                  {/* <User size={14} className="text-white" /> */}
+                                  <Avatar className="h-8 w-8 rounded-full">
+                                    <AvatarImage
+                                      src={
+                                        activeChat.profilePic ??
+                                        "https://github.com/shadcn.png"
+                                      }
+                                      alt={activeChat.firstName ?? "User Name"}
+                                      className="rounded-full object-cover"
+                                    />
+                                    <AvatarFallback>
+                                      {activeChat.firstName?.slice(0, 1)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                </div>
+                              )}
+                              <div
+                                className={cn(
+                                  "rounded-2xl px-4 py-2",
+                                  isCurrentUser
+                                    ? "rounded-br-sm bg-[#1D4ED8] text-white"
+                                    : "rounded-bl-sm bg-white/10 text-white"
+                                )}
+                              >
+                                <p className="text-sm">{message.content}</p>
+                                <div
+                                  className={cn(
+                                    "mt-1 flex items-center gap-1 text-[10px]",
+                                    isCurrentUser
+                                      ? "justify-end text-white/70"
+                                      : "text-white/50"
+                                  )}
+                                >
+                                  {format(message.sentAt, "hh:mm a")}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                          </motion.div>
+                        );
+                      })}
                 </motion.div>
               </div>
 
