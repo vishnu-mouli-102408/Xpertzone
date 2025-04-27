@@ -9,6 +9,7 @@ import {
 } from "@/src/lib/framer-animations";
 import { useActiveChat, useChatActions } from "@/src/store/chat-store";
 import { useTRPC } from "@/src/trpc/react";
+import type { AppRouter } from "@repo/api";
 import {
   Avatar,
   AvatarFallback,
@@ -22,6 +23,7 @@ import {
   useInfiniteQuery,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
+import type { inferRouterOutputs } from "@trpc/server";
 import { format } from "date-fns";
 import {
   MessageSquarePlus,
@@ -84,6 +86,10 @@ const UserChats = () => {
   //   const [showMobileChat, setShowMobileChat] = useState(false);
 
   const { data: userData } = useDbUser();
+
+  type RouterOutput = inferRouterOutputs<AppRouter>;
+  type ChatData = NonNullable<RouterOutput["user"]["getChatsById"]["data"]>;
+  type ChatMessage = ChatData["chats"][number];
 
   const { setActiveChat } = useChatActions();
 
@@ -428,8 +434,12 @@ const UserChats = () => {
                 >
                   {chatsData?.pages.length > 0 &&
                     chatsData.pages
-                      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                      .flatMap((page) => page.data?.chats ?? [])
+                      .flatMap((page): ChatMessage[] => {
+                        if (page.data?.chats) {
+                          return page.data.chats as ChatMessage[];
+                        }
+                        return [];
+                      })
                       .filter(Boolean)
                       .map((message, index) => {
                         const isCurrentUser =
