@@ -13,6 +13,8 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@repo/ui/components/avatar";
+import { Button } from "@repo/ui/components/button";
+import { Spinner } from "@repo/ui/components/spinner";
 import { useIsMobile } from "@repo/ui/hooks";
 import { cn } from "@repo/ui/lib/utils";
 import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
@@ -84,18 +86,21 @@ const UserChats = () => {
 
   const trpc = useTRPC();
 
-  const { data, status, error, isFetchingNextPage } = useSuspenseInfiniteQuery(
-    trpc.user.getAllChats.infiniteQueryOptions(
-      {
-        limit: 10,
-      },
-      {
-        getNextPageParam: (lastPage) => {
-          return (lastPage.data?.nextCursor as string | undefined) ?? undefined;
+  const { data, status, error, fetchNextPage, isFetchingNextPage } =
+    useSuspenseInfiniteQuery(
+      trpc.user.getAllChats.infiniteQueryOptions(
+        {
+          limit: 10,
         },
-      }
-    )
-  );
+        {
+          getNextPageParam: (lastPage) => {
+            return (
+              (lastPage.data?.nextCursor as string | undefined) ?? undefined
+            );
+          },
+        }
+      )
+    );
 
   console.log("DATA", data);
   console.log("STATUS", status);
@@ -228,7 +233,7 @@ const UserChats = () => {
                                 className="rounded-full object-cover"
                               />
                               <AvatarFallback>
-                                {chat.receiver.firstName}
+                                {chat.receiver.firstName?.slice(0, 1)}
                               </AvatarFallback>
                             </Avatar>
                           </div>
@@ -276,6 +281,23 @@ const UserChats = () => {
                     </motion.div>
                   ))
               )}
+              {data.pages.length > 1 && (
+                <div className="flex items-center justify-center py-2">
+                  {isFetchingNextPage ? (
+                    <Spinner variant="ring" />
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        void fetchNextPage();
+                      }}
+                      size={"sm"}
+                      className="cursor-pointer"
+                    >
+                      Load More
+                    </Button>
+                  )}
+                </div>
+              )}
             </motion.div>
           </div>
         </motion.div>
@@ -313,7 +335,9 @@ const UserChats = () => {
                           alt={activeChat.firstName ?? "User Name"}
                           className="rounded-full object-cover"
                         />
-                        <AvatarFallback>{activeChat.firstName}</AvatarFallback>
+                        <AvatarFallback>
+                          {activeChat.firstName?.slice(0, 1)}
+                        </AvatarFallback>
                       </Avatar>
                     </div>
                     {/* {activeChat?.online && (
@@ -387,7 +411,7 @@ const UserChats = () => {
                                   className="rounded-full object-cover"
                                 />
                                 <AvatarFallback>
-                                  {activeChat.firstName}
+                                  {activeChat.firstName?.slice(0, 1)}
                                 </AvatarFallback>
                               </Avatar>
                             </div>
