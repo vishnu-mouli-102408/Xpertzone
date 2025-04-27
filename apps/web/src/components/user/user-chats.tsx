@@ -436,7 +436,7 @@ const UserChats = () => {
                     chatsData.pages
                       .flatMap((page): ChatMessage[] => {
                         if (page.data?.chats) {
-                          return page.data.chats as ChatMessage[];
+                          return page.data.chats;
                         }
                         return [];
                       })
