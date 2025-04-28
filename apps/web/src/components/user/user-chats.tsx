@@ -347,10 +347,10 @@ const UserChats = () => {
                 Loading messages...
               </p>
             </div>
-          ) : !chatsData ||
-            chatsData?.pages.length === 0 ||
-            chatsData?.pages[0]?.data?.chats.length === 0 ||
-            !activeChat ? (
+          ) : //   !chatsData ||
+          //     chatsData?.pages.length === 0 ||
+          //     chatsData?.pages[0]?.data?.chats.length === 0 ||
+          !activeChat ? (
             <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
               <h1 className="text-lg font-semibold">Chats are Empty</h1>
               <p className="text-center text-sm text-white/50">
@@ -432,7 +432,8 @@ const UserChats = () => {
                   initial="hidden"
                   animate="show"
                 >
-                  {chatsData?.pages.length > 0 &&
+                  {chatsData &&
+                    chatsData?.pages?.length > 0 &&
                     chatsData.pages
                       .flatMap((page): ChatMessage[] => {
                         if (page.data?.chats) {
