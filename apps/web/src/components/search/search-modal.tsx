@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { fadeInUp, staggerContainer } from "@/src/lib/framer-animations";
-import { useChatActions } from "@/src/store/chat-store";
+import { useChatActions } from "@/src/store";
 import { useTRPC } from "@/src/trpc/react";
 import { Button } from "@repo/ui/components/button";
 import { Slider } from "@repo/ui/components/slider";

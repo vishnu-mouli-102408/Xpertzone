@@ -7,7 +7,7 @@ import {
   itemVariants,
   slideRightVariants,
 } from "@/src/lib/framer-animations";
-import { useActiveChat, useChatActions } from "@/src/store/chat-store";
+import { useActiveChat, useChatActions } from "@/src/store";
 import { useTRPC } from "@/src/trpc/react";
 import type { AppRouter } from "@repo/api";
 import {
