@@ -77,13 +77,11 @@ export const AppLayoutContent: FC<AppLayoutProps> = ({ children }) => {
       label: "Explore Experts",
       href: "/user/explore-experts",
     },
-    { icon: <Users size={18} />, label: "Users", href: "/" },
     {
       icon: <MessageSquare size={18} />,
       label: "Messages",
       href: "/user/chats",
     },
-    { icon: <Search size={18} />, label: "Search", href: "/" },
     {
       icon: <Settings size={18} />,
       label: "Settings",

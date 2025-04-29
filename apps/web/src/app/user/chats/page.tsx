@@ -20,7 +20,7 @@ const Page = () => {
         <Suspense
           fallback={
             <div className="flex h-[calc(100vh-115px)] w-full flex-col items-center justify-center">
-              <Spinner variant="ellipsis" />
+              <Spinner variant="ring" />
             </div>
           }
         >
