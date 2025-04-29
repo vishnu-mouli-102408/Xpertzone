@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useDbUser } from "@/src/hooks";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useDbUser, useWebSocket } from "@/src/hooks";
 import {
   containerVariants,
   itemVariants,
@@ -9,7 +9,6 @@ import {
 } from "@/src/lib/framer-animations";
 import { useActiveChat, useChatActions } from "@/src/store";
 import { useTRPC } from "@/src/trpc/react";
-import type { AppRouter } from "@repo/api";
 import {
   Avatar,
   AvatarFallback,
@@ -23,7 +22,6 @@ import {
   useInfiniteQuery,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
-import type { inferRouterOutputs } from "@trpc/server";
 import { format } from "date-fns";
 import {
   MessageSquarePlus,
@@ -38,58 +36,28 @@ import { motion } from "motion/react";
 import { FrownIcon } from "../animations/flown";
 import ResultsNotFound from "../global/results-not-found";
 
-// Message mock data
-const initialMessages = [
-  { id: "1", sender: "2", text: "Hey there!", time: "10:00 AM", read: true },
-  {
-    id: "2",
-    sender: "1",
-    text: "Hi! How are you doing?",
-    time: "10:01 AM",
-    read: true,
-  },
-  {
-    id: "3",
-    sender: "2",
-    text: "I'm good, thanks! Just finishing up some work. How about you?",
-    time: "10:05 AM",
-    read: true,
-  },
-  {
-    id: "4",
-    sender: "1",
-    text: "Pretty good! I wanted to ask if you'd be free for a meeting tomorrow?",
-    time: "10:08 AM",
-    read: true,
-  },
-  {
-    id: "5",
-    sender: "2",
-    text: "Sure, what time works best for you?",
-    time: "10:15 AM",
-    read: true,
-  },
-  {
-    id: "6",
-    sender: "1",
-    text: "How about 2 PM?",
-    time: "10:20 AM",
-    read: true,
-  },
-];
+type MessageType = {
+  id: string;
+  content: string;
+  senderId: string;
+  receiverId: string;
+  createdAt: string;
+  contentType: "TEXT" | "IMAGE" | "FILE";
+};
 
 const UserChats = () => {
+  //   type RouterOutput = inferRouterOutputs<AppRouter>;
+  //   type ChatData = NonNullable<RouterOutput["user"]["getChatsById"]["data"]>;
+  //   type ChatMessage = ChatData["chats"][number];
+
   const isMobile = useIsMobile();
-  const [messages, setMessages] = useState(initialMessages);
+  const [liveMessages, setLiveMessages] = useState<MessageType[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   //   const [showMobileChat, setShowMobileChat] = useState(false);
 
   const { data: userData } = useDbUser();
-
-  type RouterOutput = inferRouterOutputs<AppRouter>;
-  type ChatData = NonNullable<RouterOutput["user"]["getChatsById"]["data"]>;
-  type ChatMessage = ChatData["chats"][number];
 
   const { setActiveChat } = useChatActions();
 
@@ -136,6 +104,40 @@ const UserChats = () => {
     )
   );
 
+  const { on, sendMessage } = useWebSocket("ws://localhost:4000", {
+    reconnectOnUnmount: false,
+    userId: userData?.data?.id ?? "",
+  });
+
+  useEffect(() => {
+    const off = on("MESSAGE", (data) => {
+      if (typeof data === "object" && data) {
+        console.log("LIVE MESSAGE", data);
+        setLiveMessages((prev) => [...prev, data as MessageType]);
+      }
+    });
+
+    return off;
+  }, [on]);
+
+  const allMessages = useMemo(() => {
+    const pagedMessages =
+      chatsData?.pages.flatMap((page) => page.data?.chats ?? []) ?? [];
+    return [...pagedMessages, ...liveMessages];
+  }, [chatsData, liveMessages]);
+
+  console.log("ALL MESSAGES", allMessages);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [allMessages.length]);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [liveMessages]);
+
   console.log("CHATS DATA", chatsData);
 
   console.log("DATA", data);
@@ -146,19 +148,34 @@ const UserChats = () => {
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
 
-    const newMsg = {
-      id: String(messages.length + 1),
-      sender: "1", // Current user's ID
-      text: newMessage,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      read: false,
+    const msg: MessageType = {
+      id: crypto.randomUUID(),
+      content: newMessage,
+      senderId: userData?.data?.id ?? "",
+      receiverId: activeChat?.id ?? "",
+      createdAt: new Date().toISOString(),
+      contentType: "TEXT",
     };
 
-    setMessages([...messages, newMsg]);
+    // Clear input box
     setNewMessage("");
+
+    // 1. Optimistically show message in UI
+    setLiveMessages((prev) => [...prev, msg]);
+
+    // 2. Send over WebSocket
+    const sent = sendMessage("MESSAGE", {
+      senderId: userData?.data?.id ?? "",
+      receiverId: activeChat?.id ?? "",
+      content: newMessage,
+      contentType: "TEXT",
+      timestamp: new Date().toISOString(),
+    });
+
+    if (!sent) {
+      console.warn("Message not sent. WebSocket not connected.");
+      // Optional: Retry or show toast to user
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -243,6 +260,7 @@ const UserChats = () => {
                           : "hover:bg-white/5"
                       )}
                       onClick={() => {
+                        setLiveMessages([]);
                         setActiveChat({
                           bio: chat.receiver.bio,
                           firstName: chat.receiver.firstName,
@@ -432,82 +450,70 @@ const UserChats = () => {
                   initial="hidden"
                   animate="show"
                 >
-                  {chatsData &&
-                    chatsData?.pages?.length > 0 &&
-                    chatsData.pages
-                      .flatMap((page): ChatMessage[] => {
-                        if (page.data?.chats) {
-                          return page.data.chats;
-                        }
-                        return [];
-                      })
-                      .filter(Boolean)
-                      .map((message, index) => {
-                        const isCurrentUser =
-                          message.senderId === userData?.data?.id;
-                        const showAvatar =
-                          index === 0 ||
-                          chatsData.pages[index - 1]?.data?.chats[0]
-                            ?.senderId !== message.senderId;
-
-                        return (
-                          <motion.div
-                            key={message.id}
+                  {allMessages?.map((message, index) => {
+                    const isCurrentUser =
+                      message.senderId === userData?.data?.id;
+                    const showAvatar =
+                      index === 0 ||
+                      allMessages[index - 1]?.senderId !== message.senderId;
+                    return (
+                      <motion.div
+                        key={message.id}
+                        className={cn(
+                          "flex",
+                          isCurrentUser ? "justify-end" : "justify-start"
+                        )}
+                        variants={itemVariants}
+                        layout
+                      >
+                        <div
+                          className={cn(
+                            "flex max-w-[75%] items-end gap-2",
+                            isCurrentUser && "flex-row-reverse"
+                          )}
+                        >
+                          {!isCurrentUser && showAvatar && (
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#27272A]">
+                              {/* <User size={14} className="text-white" /> */}
+                              <Avatar className="h-8 w-8 rounded-full">
+                                <AvatarImage
+                                  src={
+                                    activeChat.profilePic ??
+                                    "https://github.com/shadcn.png"
+                                  }
+                                  alt={activeChat.firstName ?? "User Name"}
+                                  className="rounded-full object-cover"
+                                />
+                                <AvatarFallback>
+                                  {activeChat.firstName?.slice(0, 1)}
+                                </AvatarFallback>
+                              </Avatar>
+                            </div>
+                          )}
+                          <div
                             className={cn(
-                              "flex",
-                              isCurrentUser ? "justify-end" : "justify-start"
+                              "rounded-2xl px-4 py-2",
+                              isCurrentUser
+                                ? "rounded-br-sm bg-[#1D4ED8] text-white"
+                                : "rounded-bl-sm bg-white/10 text-white"
                             )}
-                            variants={itemVariants}
-                            layout
                           >
+                            <p className="text-sm">{message.content}</p>
                             <div
                               className={cn(
-                                "flex max-w-[75%] items-end gap-2",
-                                isCurrentUser && "flex-row-reverse"
+                                "mt-1 flex items-center gap-1 text-[10px]",
+                                isCurrentUser
+                                  ? "justify-end text-white/70"
+                                  : "text-white/50"
                               )}
                             >
-                              {!isCurrentUser && showAvatar && (
-                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#27272A]">
-                                  {/* <User size={14} className="text-white" /> */}
-                                  <Avatar className="h-8 w-8 rounded-full">
-                                    <AvatarImage
-                                      src={
-                                        activeChat.profilePic ??
-                                        "https://github.com/shadcn.png"
-                                      }
-                                      alt={activeChat.firstName ?? "User Name"}
-                                      className="rounded-full object-cover"
-                                    />
-                                    <AvatarFallback>
-                                      {activeChat.firstName?.slice(0, 1)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                </div>
-                              )}
-                              <div
-                                className={cn(
-                                  "rounded-2xl px-4 py-2",
-                                  isCurrentUser
-                                    ? "rounded-br-sm bg-[#1D4ED8] text-white"
-                                    : "rounded-bl-sm bg-white/10 text-white"
-                                )}
-                              >
-                                <p className="text-sm">{message.content}</p>
-                                <div
-                                  className={cn(
-                                    "mt-1 flex items-center gap-1 text-[10px]",
-                                    isCurrentUser
-                                      ? "justify-end text-white/70"
-                                      : "text-white/50"
-                                  )}
-                                >
-                                  {format(message.sentAt, "hh:mm a")}
-                                </div>
-                              </div>
+                              {/* {format(message.sentAt, "hh:mm a")} */}
                             </div>
-                          </motion.div>
-                        );
-                      })}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </motion.div>
               </div>
 
