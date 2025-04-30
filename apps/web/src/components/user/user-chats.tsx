@@ -126,7 +126,7 @@ const UserChats = () => {
     return off;
   }, [on]);
 
-  //   const latestDbMessageIdRef = useRef<string | null>(null);
+  const latestDbMessageIdRef = useRef<string | null>(null);
 
   const allMessages = useMemo(() => {
     const pagedMessages =
@@ -137,52 +137,34 @@ const UserChats = () => {
     return [...pagedMessages, ...live];
   }, [chatsData, liveMessagesMap, activeChat?.id]);
 
-  //   useEffect(() => {
-  //     if (chatsData) {
-  //       const latestMessage = chatsData?.pages
-  //         ?.flatMap((page) => page.data?.chats ?? [])
-  //         ?.reduce((latest, current) =>
-  //           new Date(latest.sentAt) > new Date(current.sentAt) ? latest : current
-  //         );
+  useEffect(() => {
+    if (chatsData) {
+      const latestMessage = chatsData?.pages
+        ?.flatMap((page) => page.data?.chats ?? [])
+        ?.reduce((latest, current) =>
+          new Date(latest.sentAt) > new Date(current.sentAt) ? latest : current
+        );
 
-  //       const latestId = latestMessage?.id;
-  //       const receiverId = latestMessage?.receiverId;
+      const latestId = latestMessage?.id;
+      const receiverId = latestMessage?.receiverId;
 
-  //       if (!latestId || !receiverId) return;
+      if (!latestId || !receiverId) return;
 
-  //       // Only clear liveMessagesMap if the latest message has changed
-  //       if (latestDbMessageIdRef.current !== latestId) {
-  //         latestDbMessageIdRef.current = latestId;
+      // Only clear liveMessagesMap if the latest message has changed
+      if (latestDbMessageIdRef.current !== latestId) {
+        latestDbMessageIdRef.current = latestId;
 
-  //         // Clear liveMessagesMap for the current receiverId
-  //         setLiveMessagesMap((prev) => ({
-  //           ...prev,
-  //           [receiverId]: [],
-  //         }));
-  //       }
-  //     }
-  //   }, [chatsData]);
+        // Clear liveMessagesMap for the current receiverId
+        setLiveMessagesMap((prev) => ({
+          ...prev,
+          [receiverId]: [],
+        }));
+      }
+    }
+  }, [chatsData]);
 
   console.log("ALL MESSAGES", allMessages);
   console.log("LIVE MESSAGES MAP", liveMessagesMap);
-
-  //   useEffect(() => {
-  //     const latestMessage = chatsData?.pages?.[0]?.data?.chats?.[0];
-  //     const latestId = latestMessage?.id;
-  //     const receiverId = latestMessage?.receiverId;
-
-  //     if (!latestId || !receiverId) return;
-
-  //     // Only clear liveMessagesMap if the latest message has changed
-  //     if (latestDbMessageIdRef.current !== latestId) {
-  //       latestDbMessageIdRef.current = latestId;
-
-  //       setLiveMessagesMap((prev) => ({
-  //         ...prev,
-  //         [receiverId]: [],
-  //       }));
-  //     }
-  //   }, [chatsData]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -511,7 +493,7 @@ const UserChats = () => {
                   initial="hidden"
                   animate="show"
                 >
-                  {allMessages?.reverse()?.map((message, index) => {
+                  {allMessages?.map((message, index) => {
                     const isCurrentUser =
                       message.senderId === userData?.data?.id;
                     const showAvatar =
