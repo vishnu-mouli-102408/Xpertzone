@@ -127,54 +127,62 @@ const UserChats = () => {
   }, [on]);
 
   const latestDbMessageIdRef = useRef<string | null>(null);
-  const prevChatIdRef = useRef<string | null>(null);
 
   const allMessages = useMemo(() => {
-    if (chatsData) {
-      const pagedMessages =
-        chatsData?.pages.flatMap((page) => page.data?.chats ?? []) ?? [];
+    const pagedMessages =
+      chatsData?.pages.flatMap((page) => page.data?.chats ?? []) ?? [];
 
-      const live = liveMessagesMap[activeChat?.id ?? ""] ?? [];
+    const live = liveMessagesMap[activeChat?.id ?? ""] ?? [];
 
-      console.log("PREV CHAT ID REF", prevChatIdRef.current);
-      console.log("ACTIVE CHAT ID", activeChat?.id);
-
-      // ✅ Reverse only when chat actually changes
-      const shouldReverse =
-        activeChat?.id && prevChatIdRef.current !== activeChat.id;
-
-      if (shouldReverse) {
-        prevChatIdRef.current = activeChat.id;
-      }
-
-      const sorted = shouldReverse
-        ? [...pagedMessages].reverse()
-        : [...pagedMessages];
-
-      return [...sorted, ...live];
-    }
+    return [...pagedMessages, ...live];
   }, [chatsData, liveMessagesMap, activeChat?.id]);
+
+  useEffect(() => {
+    if (chatsData) {
+      const latestMessage = chatsData?.pages
+        ?.flatMap((page) => page.data?.chats ?? [])
+        ?.reduce((latest, current) =>
+          new Date(latest.sentAt) > new Date(current.sentAt) ? latest : current
+        );
+
+      const latestId = latestMessage?.id;
+      const receiverId = latestMessage?.receiverId;
+
+      if (!latestId || !receiverId) return;
+
+      // Only clear liveMessagesMap if the latest message has changed
+      if (latestDbMessageIdRef.current !== latestId) {
+        latestDbMessageIdRef.current = latestId;
+
+        // Clear liveMessagesMap for the current receiverId
+        setLiveMessagesMap((prev) => ({
+          ...prev,
+          [receiverId]: [],
+        }));
+      }
+    }
+  }, [chatsData]);
 
   console.log("ALL MESSAGES", allMessages);
   console.log("LIVE MESSAGES MAP", liveMessagesMap);
 
-  useEffect(() => {
-    const latestMessage = chatsData?.pages?.[0]?.data?.chats?.[0];
-    const latestId = latestMessage?.id;
-    const receiverId = latestMessage?.receiverId;
+  //   useEffect(() => {
+  //     const latestMessage = chatsData?.pages?.[0]?.data?.chats?.[0];
+  //     const latestId = latestMessage?.id;
+  //     const receiverId = latestMessage?.receiverId;
 
-    if (!latestId || !receiverId) return;
+  //     if (!latestId || !receiverId) return;
 
-    // Only clear liveMessagesMap if the latest message has changed
-    if (latestDbMessageIdRef.current !== latestId) {
-      latestDbMessageIdRef.current = latestId;
+  //     // Only clear liveMessagesMap if the latest message has changed
+  //     if (latestDbMessageIdRef.current !== latestId) {
+  //       latestDbMessageIdRef.current = latestId;
 
-      setLiveMessagesMap((prev) => ({
-        ...prev,
-        [receiverId]: [],
-      }));
-    }
-  }, [chatsData]);
+  //       setLiveMessagesMap((prev) => ({
+  //         ...prev,
+  //         [receiverId]: [],
+  //       }));
+  //     }
+  //   }, [chatsData]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
