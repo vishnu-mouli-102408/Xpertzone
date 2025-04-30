@@ -126,23 +126,37 @@ const UserChats = () => {
     return off;
   }, [on]);
 
+  const latestDbMessageIdRef = useRef<string | null>(null);
+
   const allMessages = useMemo(() => {
     const pagedMessages =
       chatsData?.pages.flatMap((page) => page.data?.chats ?? []) ?? [];
 
     const live = liveMessagesMap[activeChat?.id ?? ""] ?? [];
 
-    return [...pagedMessages, ...live];
+    // Reverse DB messages to get oldest -> newest
+    const orderedPagedMessages = [...pagedMessages].reverse();
+
+    return [...orderedPagedMessages, ...live];
   }, [chatsData, liveMessagesMap, activeChat?.id]);
 
   console.log("ALL MESSAGES", allMessages);
   console.log("LIVE MESSAGES MAP", liveMessagesMap);
 
   useEffect(() => {
-    if (chatsData) {
+    const latestMessage = chatsData?.pages?.[0]?.data?.chats?.[0];
+    const latestId = latestMessage?.id;
+    const receiverId = latestMessage?.receiverId;
+
+    if (!latestId || !receiverId) return;
+
+    // Only clear liveMessagesMap if the latest message has changed
+    if (latestDbMessageIdRef.current !== latestId) {
+      latestDbMessageIdRef.current = latestId;
+
       setLiveMessagesMap((prev) => ({
         ...prev,
-        [chatsData?.pages[0]?.data?.chats[0]?.receiverId ?? ""]: [],
+        [receiverId]: [],
       }));
     }
   }, [chatsData]);
@@ -474,7 +488,7 @@ const UserChats = () => {
                   initial="hidden"
                   animate="show"
                 >
-                  {allMessages?.map((message, index) => {
+                  {allMessages?.reverse()?.map((message, index) => {
                     const isCurrentUser =
                       message.senderId === userData?.data?.id;
                     const showAvatar =
