@@ -100,6 +100,7 @@ const UserChats = () => {
           return (lastPage.data?.nextCursor as string | undefined) ?? undefined;
         },
         enabled: !!activeChat?.id,
+        refetchOnWindowFocus: false,
       }
     )
   );
@@ -127,6 +128,7 @@ const UserChats = () => {
   }, [chatsData, liveMessages]);
 
   console.log("ALL MESSAGES", allMessages);
+  console.log("LIVE MESSAGES", liveMessages);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -521,7 +523,7 @@ const UserChats = () => {
               <div className="border-t border-white/10 p-4">
                 <div className="flex items-center gap-2">
                   <motion.button
-                    className="rounded-full p-2 hover:bg-white/10"
+                    className="cursor-pointer rounded-full p-2 hover:bg-white/10"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                   >
@@ -539,7 +541,7 @@ const UserChats = () => {
                   </div>
                   <motion.button
                     className={cn(
-                      "flex items-center justify-center rounded-full p-3",
+                      "flex cursor-pointer items-center justify-center rounded-full p-3",
                       newMessage.trim()
                         ? "bg-[#1D4ED8] text-white"
                         : "bg-white/5 text-white/40"
