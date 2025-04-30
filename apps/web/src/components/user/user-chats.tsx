@@ -134,16 +134,12 @@ const UserChats = () => {
 
     const live = liveMessagesMap[activeChat?.id ?? ""] ?? [];
 
-    return [...pagedMessages, ...live];
+    return [...pagedMessages.reverse(), ...live];
   }, [chatsData, liveMessagesMap, activeChat?.id]);
 
   useEffect(() => {
     if (chatsData) {
-      const latestMessage = chatsData?.pages
-        ?.flatMap((page) => page.data?.chats ?? [])
-        ?.reduce((latest, current) =>
-          new Date(latest.sentAt) > new Date(current.sentAt) ? latest : current
-        );
+      const latestMessage = chatsData?.pages?.[0]?.data?.chats[0];
 
       const latestId = latestMessage?.id;
       const receiverId = latestMessage?.receiverId;
@@ -168,7 +164,7 @@ const UserChats = () => {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [allMessages?.length]);
+  }, [allMessages?.length, liveMessagesMap]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -557,6 +553,7 @@ const UserChats = () => {
                       </motion.div>
                     );
                   })}
+                  <div ref={bottomRef} />
                 </motion.div>
               </div>
 

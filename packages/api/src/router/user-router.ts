@@ -1041,7 +1041,7 @@ export const userRouter = {
             },
             cursor: cursor ? { id: cursor } : undefined,
             take: limit + 1,
-            orderBy: { sentAt: "asc" },
+            orderBy: { sentAt: "desc" },
             include: {
               receiver: true,
             },
