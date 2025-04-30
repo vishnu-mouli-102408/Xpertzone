@@ -127,17 +127,32 @@ const UserChats = () => {
   }, [on]);
 
   const latestDbMessageIdRef = useRef<string | null>(null);
+  const prevChatIdRef = useRef<string | null>(null);
 
   const allMessages = useMemo(() => {
-    const pagedMessages =
-      chatsData?.pages.flatMap((page) => page.data?.chats ?? []) ?? [];
+    if (chatsData) {
+      const pagedMessages =
+        chatsData?.pages.flatMap((page) => page.data?.chats ?? []) ?? [];
 
-    const live = liveMessagesMap[activeChat?.id ?? ""] ?? [];
+      const live = liveMessagesMap[activeChat?.id ?? ""] ?? [];
 
-    // Reverse DB messages to get oldest -> newest
-    const orderedPagedMessages = [...pagedMessages].reverse();
+      console.log("PREV CHAT ID REF", prevChatIdRef.current);
+      console.log("ACTIVE CHAT ID", activeChat?.id);
 
-    return [...orderedPagedMessages, ...live];
+      // ✅ Reverse only when chat actually changes
+      const shouldReverse =
+        activeChat?.id && prevChatIdRef.current !== activeChat.id;
+
+      if (shouldReverse) {
+        prevChatIdRef.current = activeChat.id;
+      }
+
+      const sorted = shouldReverse
+        ? [...pagedMessages].reverse()
+        : [...pagedMessages];
+
+      return [...sorted, ...live];
+    }
   }, [chatsData, liveMessagesMap, activeChat?.id]);
 
   console.log("ALL MESSAGES", allMessages);
@@ -163,7 +178,7 @@ const UserChats = () => {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [allMessages.length]);
+  }, [allMessages?.length]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
