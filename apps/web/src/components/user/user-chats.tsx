@@ -142,10 +142,10 @@ const UserChats = () => {
     if (chatsData) {
       setLiveMessagesMap((prev) => ({
         ...prev,
-        [activeChat?.id ?? ""]: [],
+        [chatsData?.pages[0]?.data?.chats[0]?.receiverId ?? ""]: [],
       }));
     }
-  }, [activeChat?.id, chatsData]);
+  }, [chatsData]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
