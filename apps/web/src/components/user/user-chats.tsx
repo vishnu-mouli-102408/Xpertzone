@@ -51,7 +51,10 @@ const UserChats = () => {
   //   type ChatMessage = ChatData["chats"][number];
 
   const isMobile = useIsMobile();
-  const [liveMessages, setLiveMessages] = useState<MessageType[]>([]);
+  const [liveMessagesMap, setLiveMessagesMap] = useState<
+    Record<string, MessageType[]>
+  >({});
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,6 +82,8 @@ const UserChats = () => {
               (lastPage.data?.nextCursor as string | undefined) ?? undefined
             );
           },
+          refetchOnWindowFocus: false,
+          enabled: !!userData?.data?.id,
         }
       )
     );
@@ -114,7 +119,7 @@ const UserChats = () => {
     const off = on("MESSAGE", (data) => {
       if (typeof data === "object" && data) {
         console.log("LIVE MESSAGE", data);
-        setLiveMessages((prev) => [...prev, data as MessageType]);
+        // setLiveMessages((prev) => [...prev, data as MessageType]);
       }
     });
 
@@ -124,11 +129,23 @@ const UserChats = () => {
   const allMessages = useMemo(() => {
     const pagedMessages =
       chatsData?.pages.flatMap((page) => page.data?.chats ?? []) ?? [];
-    return [...pagedMessages, ...liveMessages];
-  }, [chatsData, liveMessages]);
+
+    const live = liveMessagesMap[activeChat?.id ?? ""] ?? [];
+
+    return [...pagedMessages, ...live];
+  }, [chatsData, liveMessagesMap, activeChat?.id]);
 
   console.log("ALL MESSAGES", allMessages);
-  console.log("LIVE MESSAGES", liveMessages);
+  console.log("LIVE MESSAGES MAP", liveMessagesMap);
+
+  useEffect(() => {
+    if (chatsData) {
+      setLiveMessagesMap((prev) => ({
+        ...prev,
+        [activeChat?.id ?? ""]: [],
+      }));
+    }
+  }, [activeChat?.id, chatsData]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -138,7 +155,7 @@ const UserChats = () => {
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [liveMessages]);
+  }, [liveMessagesMap]);
 
   console.log("CHATS DATA", chatsData);
 
@@ -163,7 +180,13 @@ const UserChats = () => {
     setNewMessage("");
 
     // 1. Optimistically show message in UI
-    setLiveMessages((prev) => [...prev, msg]);
+    setLiveMessagesMap((prev) => {
+      const existing = prev[activeChat?.id ?? ""] ?? [];
+      return {
+        ...prev,
+        [activeChat?.id ?? ""]: [...existing, msg],
+      };
+    });
 
     // 2. Send over WebSocket
     const sent = sendMessage("MESSAGE", {
@@ -262,7 +285,6 @@ const UserChats = () => {
                           : "hover:bg-white/5"
                       )}
                       onClick={() => {
-                        setLiveMessages([]);
                         setActiveChat({
                           bio: chat.receiver.bio,
                           firstName: chat.receiver.firstName,
