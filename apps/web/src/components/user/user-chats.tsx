@@ -126,8 +126,6 @@ const UserChats = () => {
     return off;
   }, [on]);
 
-  const latestDbMessageIdRef = useRef<string | null>(null);
-
   const allMessages = useMemo(() => {
     const pagedMessages =
       chatsData?.pages.flatMap((page) => page.data?.chats ?? []) ?? [];
@@ -138,33 +136,25 @@ const UserChats = () => {
   }, [chatsData, liveMessagesMap, activeChat?.id]);
 
   useEffect(() => {
-    if (chatsData) {
-      const latestMessage = chatsData?.pages?.[0]?.data?.chats[0];
+    if (!activeChat?.id) return;
+    if (isFetching) {
+      console.log("Pending");
 
-      const latestId = latestMessage?.id;
-      const receiverId = latestMessage?.receiverId;
-
-      if (!latestId || !receiverId) return;
-
-      // Only clear liveMessagesMap if the latest message has changed
-      if (latestDbMessageIdRef.current !== latestId) {
-        latestDbMessageIdRef.current = latestId;
-
-        // Clear liveMessagesMap for the current receiverId
-        setLiveMessagesMap((prev) => ({
-          ...prev,
-          [receiverId]: [],
-        }));
-      }
+      setLiveMessagesMap((prev) => ({
+        ...prev,
+        [activeChat?.id]: [],
+      }));
     }
-  }, [chatsData]);
+  }, [activeChat?.id, isFetching]);
+
+  console.log("CHAT STATUS", chatsStatus);
 
   console.log("ALL MESSAGES", allMessages);
   console.log("LIVE MESSAGES MAP", liveMessagesMap);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [allMessages?.length, liveMessagesMap]);
+  }, [allMessages?.length, chatsData, liveMessagesMap]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
