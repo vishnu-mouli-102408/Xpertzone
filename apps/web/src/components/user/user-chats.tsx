@@ -88,6 +88,16 @@ const UserChats = () => {
       )
     );
 
+  const [chatOrder, setChatOrder] = useState(
+    data.pages
+      .flatMap((page) => page.data?.chats ?? [])
+      .map((chat) => ({
+        chatId: chat.receiverId,
+        lastMessage: chat.content,
+        lastMessageTimestamp: chat?.sentAt ?? 0,
+      }))
+  );
+
   const {
     data: chatsData,
     status: chatsStatus,
@@ -149,6 +159,7 @@ const UserChats = () => {
 
   console.log("ALL MESSAGES", allMessages);
   console.log("LIVE MESSAGES MAP", liveMessagesMap);
+  console.log("CHAT ORDER", chatOrder);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -189,6 +200,26 @@ const UserChats = () => {
         ...prev,
         [activeChat?.id ?? ""]: [...existing, msg],
       };
+    });
+
+    setChatOrder((prev) => {
+      const updatedList = prev.map((chat) =>
+        chat.chatId === activeChat?.id
+          ? {
+              ...chat,
+              chatId: msg.receiverId,
+              lastMessage: msg.content,
+              lastMessageTimestamp: msg.sentAt,
+            }
+          : chat
+      );
+      updatedList.sort((a, b) => {
+        const aTime = new Date(a.lastMessageTimestamp || 0).getTime();
+        const bTime = new Date(b.lastMessageTimestamp || 0).getTime();
+        return bTime - aTime;
+      });
+
+      return updatedList;
     });
 
     // 2. Send over WebSocket
@@ -273,28 +304,32 @@ const UserChats = () => {
                   </p>
                 </div>
               ) : (
-                data.pages
-                  .flatMap((page) => page.data?.chats ?? [])
-                  .filter(Boolean)
-                  ?.map((chat) => (
+                chatOrder?.map((chatData) => {
+                  const chat = data?.pages
+                    ?.flatMap((page) => page?.data?.chats ?? [])
+                    .filter(Boolean)
+                    ?.find((chat) => chat?.receiverId === chatData?.chatId);
+
+                  return (
                     <motion.div
-                      key={chat.id}
+                      key={chat?.id}
                       variants={itemVariants}
                       whileHover={{ x: 4 }}
                       className={cn(
                         "cursor-pointer rounded-lg p-3",
-                        activeChat?.id === chat.receiverId
+                        activeChat?.id === chat?.receiverId
                           ? "bg-white/10"
                           : "hover:bg-white/5"
                       )}
                       onClick={() => {
                         setActiveChat({
-                          bio: chat.receiver.bio,
-                          firstName: chat.receiver.firstName,
-                          id: chat.receiver.id,
-                          lastName: chat.receiver.lastName,
-                          profilePic: chat.receiver.profilePic,
+                          bio: chat?.receiver.bio ?? "",
+                          firstName: chat?.receiver.firstName ?? "",
+                          id: chat?.receiver.id ?? "",
+                          lastName: chat?.receiver.lastName ?? "",
+                          profilePic: chat?.receiver.profilePic ?? "",
                         });
+
                         if (isMobile) {
                           //   setShowMobileChat(true);
                         }
@@ -307,60 +342,62 @@ const UserChats = () => {
                             <Avatar className="h-12 w-12 rounded-full">
                               <AvatarImage
                                 src={
-                                  chat.receiver.profilePic ??
+                                  chat?.receiver.profilePic ??
                                   "https://github.com/shadcn.png"
                                 }
-                                alt={chat.receiver.firstName ?? "User Name"}
+                                alt={chat?.receiver.firstName ?? "User Name"}
                                 className="rounded-full object-cover"
                               />
                               <AvatarFallback>
-                                {chat.receiver.firstName?.slice(0, 1)}
+                                {chat?.receiver.firstName?.slice(0, 1)}
                               </AvatarFallback>
                             </Avatar>
                           </div>
                           {/* {chat.online && (
-                          <motion.div
-                            className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-black bg-green-500"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ duration: 0.2 }}
-                          />
-                        )} */}
+							<motion.div
+							  className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-black bg-green-500"
+							  initial={{ scale: 0 }}
+							  animate={{ scale: 1 }}
+							  transition={{ duration: 0.2 }}
+							/>
+						  )} */}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex justify-between">
                             <p className="truncate text-sm font-medium text-white">
-                              {chat.receiver.firstName} {chat.receiver.lastName}
+                              {chat?.receiver.firstName}{" "}
+                              {chat?.receiver.lastName}
                             </p>
                             <p className="text-xs text-white/50">
-                              {format(chat.sentAt, "hh:mm a")}
+                              {format(chat?.sentAt ?? new Date(), "hh:mm a")}
                             </p>
                           </div>
                           <div className="mt-1 flex justify-between">
                             <p className="truncate text-xs text-white/70">
-                              {chat.content}
+                              {chatData?.lastMessage ?? chat?.content}
                             </p>
                             {/* {chat.unread > 0 && (
-                            <motion.div
-                              className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#1D4ED8]"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{
-                                type: "spring",
-                                stiffness: 500,
-                                damping: 20,
-                              }}
-                            >
-                              <span className="text-xs font-medium text-white">
-                                {contact.unread}
-                              </span>
-                            </motion.div>
-                          )} */}
+							  <motion.div
+								className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#1D4ED8]"
+								initial={{ scale: 0 }}
+								animate={{ scale: 1 }}
+								transition={{
+								  type: "spring",
+								  stiffness: 500,
+								  damping: 20,
+								}}
+							  >
+								<span className="text-xs font-medium text-white">
+								  {contact.unread}
+								</span>
+							  </motion.div>
+							)} */}
                           </div>
                         </div>
                       </div>
                     </motion.div>
-                  ))
+                  );
+                })
               )}
               {data.pages.length > 1 && (
                 <div className="flex items-center justify-center py-2">
