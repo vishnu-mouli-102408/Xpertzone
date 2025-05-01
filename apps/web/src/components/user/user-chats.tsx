@@ -369,7 +369,12 @@ const UserChats = () => {
                               {chat?.receiver.lastName}
                             </p>
                             <p className="text-xs text-white/50">
-                              {format(chat?.sentAt ?? new Date(), "hh:mm a")}
+                              {format(
+                                chatData?.lastMessageTimestamp ??
+                                  chat?.sentAt ??
+                                  new Date(),
+                                "hh:mm a"
+                              )}
                             </p>
                           </div>
                           <div className="mt-1 flex justify-between">
