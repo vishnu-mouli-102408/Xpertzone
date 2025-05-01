@@ -41,7 +41,7 @@ type MessageType = {
   content: string;
   senderId: string;
   receiverId: string;
-  createdAt: string;
+  sentAt: Date;
   contentType: "TEXT" | "IMAGE" | "FILE";
 };
 
@@ -147,8 +147,6 @@ const UserChats = () => {
     }
   }, [activeChat?.id, isFetching]);
 
-  console.log("CHAT STATUS", chatsStatus);
-
   console.log("ALL MESSAGES", allMessages);
   console.log("LIVE MESSAGES MAP", liveMessagesMap);
 
@@ -177,7 +175,7 @@ const UserChats = () => {
       content: newMessage,
       senderId: userData?.data?.id ?? "",
       receiverId: activeChat?.id ?? "",
-      createdAt: new Date().toISOString(),
+      sentAt: new Date(),
       contentType: "TEXT",
     };
 
@@ -394,10 +392,7 @@ const UserChats = () => {
                 Loading messages...
               </p>
             </div>
-          ) : //   !chatsData ||
-          //     chatsData?.pages.length === 0 ||
-          //     chatsData?.pages[0]?.data?.chats.length === 0 ||
-          !activeChat ? (
+          ) : !activeChat ? (
             <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
               <h1 className="text-lg font-semibold">Chats are Empty</h1>
               <p className="text-center text-sm text-white/50">
@@ -423,7 +418,6 @@ const UserChats = () => {
                 <div className="flex items-center space-x-3">
                   <div className="relative">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#27272A]">
-                      {/* <User size={16} className="text-white" /> */}
                       <Avatar className="h-10 w-10 rounded-full">
                         <AvatarImage
                           src={
@@ -503,7 +497,6 @@ const UserChats = () => {
                         >
                           {!isCurrentUser && showAvatar && (
                             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#27272A]">
-                              {/* <User size={14} className="text-white" /> */}
                               <Avatar className="h-8 w-8 rounded-full">
                                 <AvatarImage
                                   src={
@@ -536,7 +529,7 @@ const UserChats = () => {
                                   : "text-white/50"
                               )}
                             >
-                              {/* {format(message.sentAt, "hh:mm a")} */}
+                              {format(message.sentAt, "hh:mm a")}
                             </div>
                           </div>
                         </div>
