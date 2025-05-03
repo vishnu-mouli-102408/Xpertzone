@@ -45,6 +45,16 @@ type MessageType = {
   contentType: "TEXT" | "IMAGE" | "FILE";
 };
 
+interface ChatOrderType {
+  chatId: string;
+  lastMessage: string | null;
+  lastMessageTimestamp: Date;
+  firstName?: string;
+  lastName?: string;
+  profilePic?: string;
+  bio?: string;
+}
+
 const UserChats = () => {
   //   type RouterOutput = inferRouterOutputs<AppRouter>;
   //   type ChatData = NonNullable<RouterOutput["user"]["getChatsById"]["data"]>;
@@ -88,7 +98,7 @@ const UserChats = () => {
       )
     );
 
-  const [chatOrder, setChatOrder] = useState(
+  const [chatOrder, setChatOrder] = useState<ChatOrderType[]>(
     data.pages
       .flatMap((page) => page.data?.chats ?? [])
       .map((chat) => ({
@@ -206,16 +216,30 @@ const UserChats = () => {
     });
 
     setChatOrder((prev) => {
-      const updatedList = prev.map((chat) =>
-        chat.chatId === activeChat?.id
-          ? {
-              ...chat,
-              chatId: msg.receiverId,
-              lastMessage: msg.content,
-              lastMessageTimestamp: msg.sentAt,
-            }
-          : chat
+      const existingIndex = prev.findIndex(
+        (chat) => chat.chatId === activeChat?.id
       );
+      const updatedList = [...prev];
+
+      if (existingIndex !== -1) {
+        updatedList[existingIndex] = {
+          ...updatedList[existingIndex],
+          chatId: msg.receiverId,
+          lastMessage: msg.content,
+          lastMessageTimestamp: msg.sentAt,
+        };
+      } else {
+        updatedList.push({
+          chatId: msg.receiverId,
+          lastMessage: msg.content,
+          lastMessageTimestamp: msg.sentAt,
+          bio: activeChat?.bio ?? "",
+          firstName: activeChat?.firstName ?? "",
+          lastName: activeChat?.lastName ?? "",
+          profilePic: activeChat?.profilePic ?? "",
+        });
+      }
+
       updatedList.sort((a, b) => {
         const aTime = new Date(a.lastMessageTimestamp || 0).getTime();
         const bTime = new Date(b.lastMessageTimestamp || 0).getTime();
@@ -224,6 +248,26 @@ const UserChats = () => {
 
       return updatedList;
     });
+
+    // setChatOrder((prev) => {
+    //   const updatedList = prev.map((chat) =>
+    //     chat.chatId === activeChat?.id
+    //       ? {
+    //           ...chat,
+    //           chatId: msg.receiverId,
+    //           lastMessage: msg.content,
+    //           lastMessageTimestamp: msg.sentAt,
+    //         }
+    //       : chat
+    //   );
+    //   updatedList.sort((a, b) => {
+    //     const aTime = new Date(a.lastMessageTimestamp || 0).getTime();
+    //     const bTime = new Date(b.lastMessageTimestamp || 0).getTime();
+    //     return bTime - aTime;
+    //   });
+
+    //   return updatedList;
+    // });
 
     // 2. Send over WebSocket
     const sent = sendMessage("MESSAGE", {
@@ -320,17 +364,25 @@ const UserChats = () => {
                       whileHover={{ x: 4 }}
                       className={cn(
                         "cursor-pointer rounded-lg p-3",
-                        activeChat?.id === chat?.receiverId
+                        activeChat?.id ===
+                          (chat?.receiverId ?? chatData?.chatId)
                           ? "bg-white/10"
                           : "hover:bg-white/5"
                       )}
                       onClick={() => {
                         setActiveChat({
-                          bio: chat?.receiver.bio ?? "",
-                          firstName: chat?.receiver.firstName ?? "",
-                          id: chat?.receiver.id ?? "",
-                          lastName: chat?.receiver.lastName ?? "",
-                          profilePic: chat?.receiver.profilePic ?? "",
+                          bio: chat?.receiver.bio ?? chatData?.bio ?? "",
+                          firstName:
+                            chat?.receiver.firstName ??
+                            chatData?.firstName ??
+                            "",
+                          id: chat?.receiver.id ?? chatData?.chatId ?? "",
+                          lastName:
+                            chat?.receiver.lastName ?? chatData?.lastName ?? "",
+                          profilePic:
+                            chat?.receiver.profilePic ??
+                            chatData?.profilePic ??
+                            "",
                         });
 
                         if (isMobile) {
@@ -346,13 +398,19 @@ const UserChats = () => {
                               <AvatarImage
                                 src={
                                   chat?.receiver.profilePic ??
+                                  chatData?.profilePic ??
                                   "https://github.com/shadcn.png"
                                 }
-                                alt={chat?.receiver.firstName ?? "User Name"}
+                                alt={
+                                  chat?.receiver.firstName ??
+                                  chatData?.firstName ??
+                                  "User Name"
+                                }
                                 className="rounded-full object-cover"
                               />
                               <AvatarFallback>
-                                {chat?.receiver.firstName?.slice(0, 1)}
+                                {chat?.receiver.firstName?.slice(0, 1) ??
+                                  chatData?.firstName?.slice(0, 1)}
                               </AvatarFallback>
                             </Avatar>
                           </div>
@@ -368,8 +426,8 @@ const UserChats = () => {
                         <div className="min-w-0 flex-1">
                           <div className="flex justify-between">
                             <p className="truncate text-sm font-medium text-white">
-                              {chat?.receiver.firstName}{" "}
-                              {chat?.receiver.lastName}
+                              {chat?.receiver.firstName ?? chatData?.firstName}{" "}
+                              {chat?.receiver.lastName ?? chatData?.lastName}
                             </p>
                             <p className="text-xs text-white/50">
                               {format(
