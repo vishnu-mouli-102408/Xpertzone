@@ -98,6 +98,13 @@ const UserChats = () => {
       }))
   );
 
+  const chatQueryInput = useMemo(() => {
+    return {
+      receiverId: activeChat?.id ?? "",
+      limit: 10,
+    };
+  }, [activeChat?.id]);
+
   const {
     data: chatsData,
     status: chatsStatus,
@@ -105,19 +112,15 @@ const UserChats = () => {
     error: chatsError,
     isFetchingNextPage: isFetcingMoreChats,
   } = useInfiniteQuery(
-    trpc.user.getChatsById.infiniteQueryOptions(
-      {
-        receiverId: activeChat?.id ?? "",
-        limit: 10,
+    trpc.user.getChatsById.infiniteQueryOptions(chatQueryInput, {
+      getNextPageParam: (lastPage) => {
+        return (lastPage.data?.nextCursor as string | undefined) ?? undefined;
       },
-      {
-        getNextPageParam: (lastPage) => {
-          return (lastPage.data?.nextCursor as string | undefined) ?? undefined;
-        },
-        enabled: !!activeChat?.id,
-        refetchOnWindowFocus: false,
-      }
-    )
+      enabled: !!activeChat?.id,
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
+    })
   );
 
   const { on, sendMessage } = useWebSocket("ws://localhost:4000", {
