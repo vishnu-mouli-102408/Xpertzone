@@ -118,6 +118,10 @@ const ExploreExperts = () => {
                     reviews: expert?.totalReviews ?? 0,
                     specialties: expert?.skills ?? [],
                     title: expert?.expertise ?? "N/A",
+                    bio: expert?.bio ?? "N/A",
+                    firstName: expert?.firstName ?? "N/A",
+                    lastName: expert?.lastName ?? "N/A",
+                    profilePic: expert?.profilePic ?? "N/A",
                   }}
                   ShareButton={
                     <Button
@@ -150,7 +154,7 @@ const ExploreExperts = () => {
         <div id="infinite-paginate" ref={bottomRef}>
           {isFetchingNextPage && (
             <div className="flex w-full items-center justify-center py-4">
-              <Spinner className="size-10" variant="bars" />
+              <Spinner className="size-8" variant="bars" />
             </div>
           )}
         </div>

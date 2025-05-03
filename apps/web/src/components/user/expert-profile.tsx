@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useChatActions } from "@/src/store";
 import { useTRPC } from "@/src/trpc/react";
 import { Button } from "@repo/ui/components/button";
 import { HoverButton } from "@repo/ui/components/hover-button";
@@ -44,6 +45,8 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
   const [isWriteReviewOpen, setIsWriteReviewOpen] = useState(false);
   const [isOpenReadReviewsModal, setIsOpenReadReviewsModal] = useState(false);
   const [isOpenShareProfileModal, setIsOpenShareProfileModal] = useState(false);
+
+  const { setActiveChat } = useChatActions();
 
   const router = useRouter();
 
@@ -169,6 +172,18 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
                 transition={{ delay: 0.4, duration: 0.5 }}
               >
                 <Button
+                  onClick={() => {
+                    if (location.pathname !== "/user/chats") {
+                      router.push("/user/chats");
+                    }
+                    setActiveChat({
+                      bio: data?.data?.expert?.bio ?? "",
+                      firstName: data?.data?.expert?.firstName ?? "",
+                      id: data?.data?.expert?.id ?? "",
+                      lastName: data?.data?.expert?.lastName ?? "",
+                      profilePic: data?.data?.expert?.profilePic ?? "",
+                    });
+                  }}
                   variant="outline"
                   className="flex h-auto cursor-pointer flex-col gap-1 border-[#FFFFFF26] bg-[#221F26] py-3 text-gray-300 shadow-[inset_0px_0px_20px_0px_#FFFFFF33] transition-all duration-200 ease-in-out hover:scale-[1.005] hover:bg-[#403E43]/50 hover:text-white"
                 >

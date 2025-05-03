@@ -1,5 +1,7 @@
 import type { JSX } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useChatActions } from "@/src/store";
 import { Button } from "@repo/ui/components/button";
 import { MessageCircle, Phone, Star, Video } from "lucide-react";
 import * as motion from "motion/react-client";
@@ -15,6 +17,10 @@ export interface ExpertProps {
   imageUrl: string;
   availability: string;
   specialties: string[];
+  bio?: string;
+  firstName?: string;
+  lastName?: string;
+  profilePic?: string;
 }
 
 // shadow-[0_1px_1px_rgba(0,0,0,0.05), 0_4px_6px_rgba(34,42,53,0.04),0_24px_68px_rgba(47,48,55,0.05),0_2px_3px_rgba(0,0,0,0.04)]
@@ -26,6 +32,8 @@ const ExpertCard = ({
   expert: ExpertProps;
   ShareButton: JSX.Element;
 }) => {
+  const { setActiveChat } = useChatActions();
+  const router = useRouter();
   return (
     <motion.div
       className="shadow-card cursor-pointer overflow-hidden rounded-xl border border-[#FFFFFF26] bg-gradient-to-br from-[#222222] to-[#1A1F2C] shadow-[inset_0px_0px_20px_0px_#FFFFFF33] backdrop-blur-[30px]"
@@ -96,6 +104,18 @@ const ExpertCard = ({
 
         <div className="grid grid-cols-3 gap-2">
           <Button
+            onClick={() => {
+              if (location.pathname !== "/user/chats") {
+                router.push("/user/chats");
+              }
+              setActiveChat({
+                bio: expert?.bio ?? "",
+                firstName: expert?.firstName ?? "",
+                id: expert?.id ?? "",
+                lastName: expert?.lastName ?? "",
+                profilePic: expert?.profilePic ?? "",
+              });
+            }}
             variant="outline"
             size="sm"
             className="flex cursor-pointer items-center justify-center border-white/10 bg-[#221F26] text-gray-300 transition-all duration-300 ease-in-out hover:bg-[#403E43]/50 hover:text-white"
