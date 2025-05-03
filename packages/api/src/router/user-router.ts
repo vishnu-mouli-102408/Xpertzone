@@ -675,18 +675,24 @@ export const userRouter = {
         query: z.string().optional(),
         expertise: z.string().optional(),
         skills: z.array(z.string()).optional(),
-        minRate: z.number().optional(),
-        maxRate: z.number().optional(),
+        // minRate: z.number().optional(),
+        // maxRate: z.number().optional(),
         page: z.number().default(1),
         limit: z.number().default(10),
       })
     )
     .query(async ({ input }) => {
       try {
-        const { limit, page, expertise, maxRate, minRate, query, skills } =
-          input;
+        const {
+          limit,
+          page,
+          expertise,
+          //  maxRate, minRate,
+          query,
+          skills,
+        } = input;
 
-        logger.info({ input }, "Search Experts Input");
+        logger.info(input, "Search Experts Input");
 
         // Try to get from  cache first (faster)
         const cachedResults = await cache.get<SearchExpertsResult>(
@@ -739,20 +745,22 @@ export const userRouter = {
           };
         }
 
-        if (minRate || maxRate) {
-          where.hourlyRate = {};
+        // if (minRate || maxRate) {
+        //   where.hourlyRate = {};
 
-          if (minRate) {
-            // Convert string hourlyRate to number for comparison
-            where.hourlyRate.gte = minRate.toString();
-          }
+        //   if (minRate) {
+        //     // Convert string hourlyRate to number for comparison
+        //     where.hourlyRate.gte = minRate.toString();
+        //   }
 
-          if (maxRate) {
-            where.hourlyRate.lte = maxRate.toString();
-          }
-        }
+        //   if (maxRate) {
+        //     where.hourlyRate.lte = maxRate.toString();
+        //   }
+        // }
 
         const offset = (page - 1) * limit;
+
+        // console.log("WHERE", where);
 
         const [experts, totalCount] = await Promise.all([
           db.user

@@ -150,7 +150,7 @@ const ExploreExperts = () => {
         <div id="infinite-paginate" ref={bottomRef}>
           {isFetchingNextPage && (
             <div className="flex w-full items-center justify-center py-4">
-              <Spinner className="size-14" variant="bars" />
+              <Spinner className="size-10" variant="bars" />
             </div>
           )}
         </div>

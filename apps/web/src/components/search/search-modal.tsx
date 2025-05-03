@@ -7,7 +7,6 @@ import { fadeInUp, staggerContainer } from "@/src/lib/framer-animations";
 import { useChatActions } from "@/src/store";
 import { useTRPC } from "@/src/trpc/react";
 import { Button } from "@repo/ui/components/button";
-import { Slider } from "@repo/ui/components/slider";
 import { useDebounce, useIsMobile } from "@repo/ui/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { Filter, Search, X } from "lucide-react";
@@ -22,7 +21,7 @@ interface SearchModalProps {
 interface SearchFormValues {
   searchTerm: string;
   category: string;
-  priceRange: [number, number];
+  //   priceRange: [number, number];
 }
 
 // Categories
@@ -54,25 +53,25 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
     defaultValues: {
       searchTerm: "",
       category: "All",
-      priceRange: [0, 300],
+      //   priceRange: [0, 300],
     },
   });
 
   // Watch form values
   const watchSearchTerm = watch("searchTerm");
   const watchCategory = watch("category");
-  const watchPriceRange = watch("priceRange");
+  //   const watchPriceRange = watch("priceRange");
 
   const debouncedSearchText = useDebounce(watchSearchTerm, 500);
-  const debouncedPriceRange = useDebounce(watchPriceRange, 500);
+  //   const debouncedPriceRange = useDebounce(watchPriceRange, 500);
 
   const { data: searchResults, isPending } = useQuery(
     trpc.user.searchExperts.queryOptions({
       limit: 10,
       expertise: watchCategory,
       page: 1,
-      maxRate: debouncedPriceRange[1],
-      minRate: debouncedPriceRange[0],
+      //   maxRate: debouncedPriceRange[1],
+      //   minRate: debouncedPriceRange[0],
       query: debouncedSearchText,
     })
   );
@@ -225,7 +224,7 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
                 </div>
               </div>
 
-              <div className="pr-4 md:justify-self-end">
+              {/* <div className="pr-4 md:justify-self-end">
                 <Controller
                   name="priceRange"
                   control={control}
@@ -251,7 +250,7 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
                     </>
                   )}
                 />
-              </div>
+              </div> */}
             </motion.div>
           )}
         </div>
