@@ -45,6 +45,8 @@ type MessageType = {
   contentType: "TEXT" | "IMAGE" | "FILE";
 };
 
+type ScrollMode = "append" | "prepend";
+
 interface ChatOrderType {
   chatId: string;
   lastMessage: string | null;
@@ -135,6 +137,17 @@ const UserChats = () => {
       }))
   );
 
+  useEffect(() => {
+    if (activeChat?.id && chatRefs.current[activeChat.id]) {
+      chatRefs.current[activeChat.id]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center", // or "nearest" or "start"
+      });
+    }
+  }, [activeChat]);
+
+  // Message List
+
   const chatQueryInput = useMemo(() => {
     return {
       receiverId: activeChat?.id ?? "",
@@ -147,7 +160,8 @@ const UserChats = () => {
     status: chatsStatus,
     isFetching,
     error: chatsError,
-    isFetchingNextPage: isFetcingMoreChats,
+    fetchNextPage: fetchNextPageChats,
+    isFetchingNextPage: isFetchingMoreChats,
   } = useInfiniteQuery(
     trpc.user.getChatsById.infiniteQueryOptions(chatQueryInput, {
       getNextPageParam: (lastPage) => {
@@ -160,14 +174,50 @@ const UserChats = () => {
     })
   );
 
+  const [scrollMode, setScrollMode] = useState<ScrollMode>("append");
+
+  const allMessages = useMemo(() => {
+    const pagedMessages =
+      chatsData?.pages.flatMap((page) => page.data?.chats ?? []) ?? [];
+
+    const live = liveMessagesMap[activeChat?.id ?? ""] ?? [];
+
+    return [...pagedMessages.reverse(), ...live];
+  }, [chatsData, liveMessagesMap, activeChat?.id]);
+
+  const hasMore =
+    !!chatsData?.pages[chatsData.pages.length - 1]?.data?.nextCursor;
+
+  const messagesRef = useRef<HTMLDivElement | null>(null);
+  const handleScroll = () => {
+    const container = messagesRef.current;
+    if (!container) return;
+
+    if (container.scrollTop === 0 && hasMore && !isFetchingMoreChats) {
+      //   console.log("Reached top. Loading older messages...");
+      setScrollMode("prepend");
+      void fetchNextPageChats();
+    }
+  };
+
   useEffect(() => {
-    if (activeChat?.id && chatRefs.current[activeChat.id]) {
-      chatRefs.current[activeChat.id]?.scrollIntoView({
-        behavior: "smooth",
-        block: "center", // or "nearest" or "start"
+    if ((liveMessagesMap[activeChat?.id ?? ""] ?? []).length > 0) {
+      setScrollMode("append");
+    }
+  }, [liveMessagesMap, activeChat?.id]);
+
+  useEffect(() => {
+    const container = messagesRef.current;
+    if (!container) return;
+
+    // Append mode = scroll to bottom (new live message or chat switch)
+    if (scrollMode === "append") {
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        // console.log("Scrolled to bottom (new message or chat)");
       });
     }
-  }, [activeChat]);
+  }, [allMessages.length, scrollMode]);
 
   const { on, sendMessage } = useWebSocket("ws://localhost:4000", {
     reconnectOnUnmount: false,
@@ -185,15 +235,6 @@ const UserChats = () => {
     return off;
   }, [on]);
 
-  const allMessages = useMemo(() => {
-    const pagedMessages =
-      chatsData?.pages.flatMap((page) => page.data?.chats ?? []) ?? [];
-
-    const live = liveMessagesMap[activeChat?.id ?? ""] ?? [];
-
-    return [...pagedMessages.reverse(), ...live];
-  }, [chatsData, liveMessagesMap, activeChat?.id]);
-
   useEffect(() => {
     if (!activeChat?.id) return;
     if (isFetching) {
@@ -209,16 +250,6 @@ const UserChats = () => {
   console.log("ALL MESSAGES", allMessages);
   console.log("LIVE MESSAGES MAP", liveMessagesMap);
   console.log("CHAT ORDER", chatOrder);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [allMessages?.length, chatsData, liveMessagesMap]);
-
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [liveMessagesMap]);
 
   console.log("CHATS DATA", chatsData);
 
@@ -505,7 +536,7 @@ const UserChats = () => {
 
         {/* Desktop Chat Area */}
         {!isMobile &&
-          (isFetching && !isFetcingMoreChats ? (
+          (isFetching && !isFetchingMoreChats ? (
             <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
               <Spinner variant="circle-filled" />
               <p className="text-center text-sm text-white/50">
@@ -581,18 +612,25 @@ const UserChats = () => {
               </div>
 
               {/* Messages */}
-              <div className="scrollbar-none flex-1 overflow-y-auto p-4">
-                {isFetcingMoreChats && (
+              <div
+                ref={messagesRef}
+                onScroll={handleScroll}
+                className="scrollbar-none flex-1 overflow-y-auto p-4"
+              >
+                {isFetchingMoreChats && (
                   <div className="flex w-full items-center justify-center pb-2">
-                    <Spinner variant="ring" />
+                    <Spinner variant="ellipsis" />
                   </div>
                 )}
+
                 <motion.div
                   className="space-y-4"
                   variants={containerVariants}
                   initial="hidden"
                   animate="show"
                 >
+                  {/* {!!chatsData?.pages[chatsData.pages.length - 1]?.data
+                    ?.nextCursor && <div ref={topRef} />} */}
                   {allMessages?.map((message, index) => {
                     const isCurrentUser =
                       message.senderId === userData?.data?.id;
