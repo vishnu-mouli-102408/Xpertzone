@@ -618,7 +618,10 @@ const UserChats = () => {
                 className="scrollbar-none flex-1 overflow-y-auto p-4"
               >
                 {isFetchingMoreChats && (
-                  <div className="flex w-full items-center justify-center pb-2">
+                  <div className="flex w-full flex-1 items-center justify-center gap-2 pb-2">
+                    <p className="text-center text-sm text-white/50">
+                      Loading older messages
+                    </p>
                     <Spinner variant="ellipsis" />
                   </div>
                 )}
