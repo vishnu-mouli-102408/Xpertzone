@@ -119,7 +119,7 @@ const UserChats = () => {
 
   const chatsLoaderRef = useInfiniteScroll({
     callbackAction: () => {
-      void fetchNextPage;
+      void fetchNextPage();
     },
     hasMore: !!data.pages[data.pages.length - 1]?.data?.nextCursor,
     isLoading: isFetchingNextPage,
