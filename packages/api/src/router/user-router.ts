@@ -964,8 +964,13 @@ export const userRouter = {
         }
 
         const [total, chats] = await Promise.all([
-          db.message.count({
-            where: { ...whereCondition, senderId: ctx.user.id },
+          db.message.groupBy({
+            by: ["receiverId"],
+            where: {
+              ...whereCondition,
+              senderId: ctx.user.id,
+            },
+            _count: true,
           }),
           db.message.findMany({
             where: {
@@ -992,10 +997,10 @@ export const userRouter = {
           message: "Chats fetched successfully",
           success: true,
           data: {
-            totalChats: total,
+            totalChats: total?.length,
             chats: chatsToReturn,
             nextCursor,
-            totalPages: Math.ceil(total / (limit || 10)),
+            totalPages: Math.ceil(total?.length / (limit || 10)),
           },
           code: OK,
         };
