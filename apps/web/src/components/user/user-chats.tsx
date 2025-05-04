@@ -65,6 +65,8 @@ const UserChats = () => {
     Record<string, MessageType[]>
   >({});
 
+  const chatRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -132,6 +134,15 @@ const UserChats = () => {
       gcTime: 1000 * 60 * 10, // 10 minutes
     })
   );
+
+  useEffect(() => {
+    if (activeChat?.id && chatRefs.current[activeChat.id]) {
+      chatRefs.current[activeChat.id]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center", // or "nearest" or "start"
+      });
+    }
+  }, [activeChat]);
 
   const { on, sendMessage } = useWebSocket("ws://localhost:4000", {
     reconnectOnUnmount: false,
@@ -249,26 +260,6 @@ const UserChats = () => {
       return updatedList;
     });
 
-    // setChatOrder((prev) => {
-    //   const updatedList = prev.map((chat) =>
-    //     chat.chatId === activeChat?.id
-    //       ? {
-    //           ...chat,
-    //           chatId: msg.receiverId,
-    //           lastMessage: msg.content,
-    //           lastMessageTimestamp: msg.sentAt,
-    //         }
-    //       : chat
-    //   );
-    //   updatedList.sort((a, b) => {
-    //     const aTime = new Date(a.lastMessageTimestamp || 0).getTime();
-    //     const bTime = new Date(b.lastMessageTimestamp || 0).getTime();
-    //     return bTime - aTime;
-    //   });
-
-    //   return updatedList;
-    // });
-
     // 2. Send over WebSocket
     const sent = sendMessage("MESSAGE", {
       senderId: userData?.data?.id ?? "",
@@ -360,6 +351,13 @@ const UserChats = () => {
                   return (
                     <motion.div
                       key={chat?.id}
+                      ref={(el) => {
+                        if (chat?.receiverId) {
+                          chatRefs.current[chat.receiverId] = el;
+                        } else if (chatData?.chatId) {
+                          chatRefs.current[chatData.chatId] = el;
+                        }
+                      }}
                       variants={itemVariants}
                       whileHover={{ x: 4 }}
                       className={cn(
