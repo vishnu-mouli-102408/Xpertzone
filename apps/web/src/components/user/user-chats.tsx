@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useDbUser, useWebSocket } from "@/src/hooks";
+import { useDbUser, useInfiniteScroll, useWebSocket } from "@/src/hooks";
 import {
   containerVariants,
   itemVariants,
@@ -14,7 +14,6 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@repo/ui/components/avatar";
-import { Button } from "@repo/ui/components/button";
 import { Spinner } from "@repo/ui/components/spinner";
 import { useIsMobile } from "@repo/ui/hooks";
 import { cn } from "@repo/ui/lib/utils";
@@ -84,6 +83,7 @@ const UserChats = () => {
 
   const trpc = useTRPC();
 
+  // Chat List
   const { data, status, error, fetchNextPage, isFetchingNextPage } =
     useSuspenseInfiniteQuery(
       trpc.user.getAllChats.infiniteQueryOptions(
@@ -102,13 +102,36 @@ const UserChats = () => {
       )
     );
 
+  useEffect(() => {
+    if (!data?.pages) return;
+    if (status === "success") {
+      const chats = data?.pages
+        .flatMap((page) => page.data?.chats ?? [])
+        .map((chat) => ({
+          chatId: chat?.receiverId ?? "",
+          lastMessage: chat?.content ?? "",
+          lastMessageTimestamp: chat?.sentAt ?? new Date(),
+        }));
+
+      setChatOrder(chats);
+    }
+  }, [data, status]);
+
+  const chatsLoaderRef = useInfiniteScroll({
+    callbackAction: () => {
+      void fetchNextPage;
+    },
+    hasMore: !!data.pages[data.pages.length - 1]?.data?.nextCursor,
+    isLoading: isFetchingNextPage,
+  });
+
   const [chatOrder, setChatOrder] = useState<ChatOrderType[]>(
     data.pages
       .flatMap((page) => page.data?.chats ?? [])
       .map((chat) => ({
-        chatId: chat.receiverId,
-        lastMessage: chat.content,
-        lastMessageTimestamp: chat?.sentAt ?? 0,
+        chatId: chat?.receiverId ?? "",
+        lastMessage: chat?.content ?? "",
+        lastMessageTimestamp: chat?.sentAt ?? new Date(),
       }))
   );
 
@@ -468,21 +491,12 @@ const UserChats = () => {
                   );
                 })
               )}
-              {data.pages.length > 1 && (
-                <div className="flex items-center justify-center py-2">
-                  {isFetchingNextPage ? (
-                    <Spinner variant="ring" />
-                  ) : (
-                    <Button
-                      onClick={() => {
-                        void fetchNextPage();
-                      }}
-                      size={"sm"}
-                      className="cursor-pointer"
-                    >
-                      Load More
-                    </Button>
-                  )}
+              {!!data.pages[data.pages.length - 1]?.data?.nextCursor && (
+                <div
+                  ref={chatsLoaderRef}
+                  className="flex h-6 w-full items-center justify-center"
+                >
+                  {isFetchingNextPage && <Spinner variant="ellipsis" />}
                 </div>
               )}
             </motion.div>

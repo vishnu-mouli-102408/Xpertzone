@@ -927,80 +927,80 @@ export const userRouter = {
         .object({
           cursor: z.string().optional(),
           limit: z.number().int().optional(),
-          search: z.string().optional(),
         })
         .optional()
     )
     .query(async ({ input, ctx }) => {
       try {
-        const { limit = 10, cursor, search = "" } = input ?? {};
+        const { limit = 10, cursor } = input ?? {};
 
-        logger.info(limit, cursor, search, "Query parameters");
+        logger.info(limit, cursor, "Query parameters");
 
-        let whereCondition: Prisma.MessageWhereInput = {};
-        if (search.trim() !== "") {
-          whereCondition = {
-            OR: [
-              {
-                sender: {
-                  firstName: { contains: search, mode: "insensitive" },
-                },
-              },
-              {
-                sender: { lastName: { contains: search, mode: "insensitive" } },
-              },
-              {
-                receiver: {
-                  firstName: { contains: search, mode: "insensitive" },
-                },
-              },
-              {
-                receiver: {
-                  lastName: { contains: search, mode: "insensitive" },
-                },
-              },
-            ],
-          };
-        }
-
-        const [total, chats] = await Promise.all([
-          db.message.groupBy({
-            by: ["receiverId"],
-            where: {
-              ...whereCondition,
-              senderId: ctx.user.id,
+        const grouped = await db.message.groupBy({
+          by: ["receiverId"],
+          where: {
+            senderId: ctx.user.id,
+          },
+          _max: {
+            sentAt: true,
+          },
+          orderBy: {
+            _max: {
+              sentAt: "desc",
             },
-            _count: true,
-          }),
-          db.message.findMany({
-            where: {
-              ...whereCondition,
-              senderId: ctx.user.id,
-            },
-            distinct: ["receiverId"],
-            cursor: cursor ? { id: cursor } : undefined,
-            take: limit + 1,
-            orderBy: { sentAt: "desc" },
-            include: {
-              receiver: true,
-            },
-          }),
-        ]);
+          },
+        });
 
-        const hasNextPage = chats.length > limit;
-        const nextCursor =
-          hasNextPage && chats.length > 0 ? chats[chats.length - 1]?.id : null;
+        const sortedGroups = grouped.sort((a, b) => {
+          const bTime = b._max.sentAt ? b._max.sentAt.getTime() : 0;
+          const aTime = a._max.sentAt ? a._max.sentAt.getTime() : 0;
+          return bTime - aTime;
+        });
 
-        const chatsToReturn = hasNextPage ? chats.slice(0, -1) : chats;
+        const startIndex = cursor
+          ? sortedGroups.findIndex((chat) => chat.receiverId === cursor) + 1
+          : 0;
+
+        const paginatedGroups = sortedGroups.slice(
+          startIndex,
+          startIndex + limit + 1
+        );
+        const hasNextPage = paginatedGroups.length > limit;
+
+        const finalGroups = hasNextPage
+          ? paginatedGroups.slice(0, -1)
+          : paginatedGroups;
+
+        const nextCursor = hasNextPage
+          ? finalGroups[finalGroups.length - 1]?.receiverId
+          : null;
+
+        const chats = await Promise.all(
+          finalGroups.map(async (group) => {
+            const latestMessage = await db.message.findFirst({
+              where: {
+                senderId: ctx.user.id,
+                receiverId: group.receiverId,
+              },
+              orderBy: {
+                sentAt: "desc",
+              },
+              include: {
+                receiver: true,
+              },
+            });
+            return latestMessage;
+          })
+        );
 
         return {
           message: "Chats fetched successfully",
           success: true,
           data: {
-            totalChats: total?.length,
-            chats: chatsToReturn,
+            totalChats: sortedGroups.length,
+            chats,
             nextCursor,
-            totalPages: Math.ceil(total?.length / (limit || 10)),
+            totalPages: Math.ceil(sortedGroups.length / limit),
           },
           code: OK,
         };
