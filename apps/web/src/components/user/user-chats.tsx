@@ -35,6 +35,7 @@ import { motion } from "motion/react";
 
 import { FrownIcon } from "../animations/flown";
 import ResultsNotFound from "../global/results-not-found";
+import SearchModal from "../search/search-modal";
 
 type MessageType = {
   id: string;
@@ -65,11 +66,12 @@ const UserChats = () => {
     Record<string, MessageType[]>
   >({});
 
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+
   const chatRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
   //   const [showMobileChat, setShowMobileChat] = useState(false);
 
   const { data: userData } = useDbUser();
@@ -299,6 +301,7 @@ const UserChats = () => {
                 className="rounded-full p-2 hover:bg-white/10"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
+                onClick={() => setIsSearchModalOpen(true)}
               >
                 <MessageSquarePlus
                   size={18}
@@ -309,7 +312,10 @@ const UserChats = () => {
           </div>
 
           {/* Search */}
-          <div className="border-b border-white/10 p-4">
+          <div
+            className="border-b border-white/10 p-4"
+            onClick={() => setIsSearchModalOpen(true)}
+          >
             <div className="relative">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 transform text-white/40"
@@ -318,15 +324,14 @@ const UserChats = () => {
               <input
                 type="text"
                 placeholder="Search Experts"
+                readOnly
                 className="w-full rounded-lg bg-white/5 py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/20"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
 
           {/* Contacts List */}
-          <div className="scrollbar-none flex-1 overflow-y-auto">
+          <div className="scrollbar-none mb-1 flex-1 overflow-y-auto">
             <motion.div
               className="h-full space-y-1 p-2"
               variants={containerVariants}
@@ -679,6 +684,11 @@ const UserChats = () => {
               </div>
             </motion.div>
           ))}
+
+        {/* Search Modal */}
+        {isSearchModalOpen && (
+          <SearchModal onClose={() => setIsSearchModalOpen(false)} />
+        )}
 
         {/* Mobile Chat View */}
         {/* <AnimatePresence>

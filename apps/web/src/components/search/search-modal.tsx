@@ -137,7 +137,7 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[999] flex items-start justify-center bg-black/60 px-4 pt-20 backdrop-blur-sm"
+      className="fixed inset-0 z-[999] flex items-start justify-center bg-black/60 px-4 pt-10 backdrop-blur-sm"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
