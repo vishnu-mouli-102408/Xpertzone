@@ -268,6 +268,10 @@ const ExpertChats = () => {
               chatId: messageData.senderId,
               lastMessage: messageData.content,
               lastMessageTimestamp: new Date(messageData.timestamp),
+              bio: activeChat?.bio ?? "",
+              firstName: activeChat?.firstName ?? "",
+              lastName: activeChat?.lastName ?? "",
+              profilePic: activeChat?.profilePic ?? "",
             });
           }
 
@@ -283,7 +287,13 @@ const ExpertChats = () => {
     });
 
     return off;
-  }, [on]);
+  }, [
+    activeChat?.bio,
+    activeChat?.firstName,
+    activeChat?.lastName,
+    activeChat?.profilePic,
+    on,
+  ]);
 
   useEffect(() => {
     if (!activeChat?.id) return;
