@@ -186,8 +186,16 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
 
       if (message.type === InComingSocketMessageType.MESSAGE) {
         try {
-          const { content, contentType, receiverId, senderId, timestamp } =
-            message.payload;
+          const {
+            content,
+            contentType,
+            receiverId,
+            senderId,
+            timestamp,
+            firstName,
+            lastName,
+            profilePic,
+          } = message.payload;
 
           if (!content || !receiverId || !senderId) {
             logger.warn("Invalid message payload");
@@ -225,6 +233,9 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
                     senderId,
                     timestamp,
                     receiverId,
+                    firstName,
+                    lastName,
+                    profilePic,
                   },
                 })
               );

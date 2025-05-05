@@ -43,6 +43,9 @@ type MessageType = {
   receiverId: string;
   sentAt: Date;
   contentType: "TEXT" | "IMAGE" | "FILE";
+  firstName?: string;
+  lastName?: string;
+  profilePic?: string;
 };
 
 type ScrollMode = "append" | "prepend";
@@ -240,6 +243,9 @@ const UserChats = () => {
         senderId: string;
         timestamp: string;
         receiverId: string;
+        firstName?: string;
+        lastName?: string;
+        profilePic?: string;
       };
       if (typeof data === "object" && data) {
         console.log("LIVE MESSAGE", data);
@@ -280,9 +286,9 @@ const UserChats = () => {
               lastMessage: messageData.content,
               lastMessageTimestamp: new Date(messageData.timestamp),
               bio: activeChat?.bio ?? "",
-              firstName: activeChat?.firstName ?? "",
-              lastName: activeChat?.lastName ?? "",
-              profilePic: activeChat?.profilePic ?? "",
+              firstName: messageData?.firstName ?? "",
+              lastName: messageData?.lastName ?? "",
+              profilePic: messageData?.profilePic ?? "",
             });
           }
 
@@ -339,6 +345,9 @@ const UserChats = () => {
       receiverId: activeChat?.id ?? "",
       sentAt: new Date(),
       contentType: "TEXT",
+      firstName: userData?.data?.firstName ?? "",
+      lastName: userData?.data?.lastName ?? "",
+      profilePic: userData?.data?.profilePic ?? "",
     };
 
     // Clear input box
@@ -394,6 +403,9 @@ const UserChats = () => {
       content: newMessage,
       contentType: "TEXT",
       timestamp: new Date().toISOString(),
+      firstName: userData?.data?.firstName ?? "",
+      lastName: userData?.data?.lastName ?? "",
+      profilePic: userData?.data?.profilePic ?? "",
     });
 
     if (!sent) {
