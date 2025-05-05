@@ -224,6 +224,7 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
                     contentType,
                     senderId,
                     timestamp,
+                    receiverId,
                   },
                 })
               );

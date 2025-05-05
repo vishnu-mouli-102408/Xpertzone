@@ -233,10 +233,63 @@ const UserChats = () => {
   });
 
   useEffect(() => {
-    const off = on("MESSAGE", (data) => {
+    const off = on("MESSAGE", (data: unknown) => {
+      const messageData = data as {
+        content: string;
+        contentType: "TEXT" | "IMAGE" | "FILE";
+        senderId: string;
+        timestamp: string;
+        receiverId: string;
+      };
       if (typeof data === "object" && data) {
         console.log("LIVE MESSAGE", data);
-        // setLiveMessages((prev) => [...prev, data as MessageType]);
+        setLiveMessagesMap((prev) => {
+          const existing = prev[messageData?.senderId] ?? [];
+          return {
+            ...prev,
+            [messageData.senderId]: [
+              ...existing,
+              {
+                id: crypto.randomUUID(),
+                content: messageData.content,
+                senderId: messageData.senderId,
+                receiverId: messageData.receiverId,
+                sentAt: new Date(messageData.timestamp),
+                contentType: messageData.contentType,
+              },
+            ],
+          };
+        });
+
+        setChatOrder((prev) => {
+          const existingIndex = prev.findIndex(
+            (chat) => chat.chatId === messageData.senderId
+          );
+          const updatedList = [...prev];
+
+          if (existingIndex !== -1) {
+            updatedList[existingIndex] = {
+              ...updatedList[existingIndex],
+              chatId: messageData.senderId,
+              lastMessage: messageData.content,
+              lastMessageTimestamp: new Date(messageData.timestamp),
+            };
+          } else {
+            updatedList.push({
+              chatId: messageData.senderId,
+              lastMessage: messageData.content,
+              lastMessageTimestamp: new Date(messageData.timestamp),
+            });
+          }
+
+          updatedList.sort((a, b) => {
+            const aTime = new Date(a.lastMessageTimestamp || 0).getTime();
+            const bTime = new Date(b.lastMessageTimestamp || 0).getTime();
+            return bTime - aTime;
+          });
+
+          return updatedList;
+        });
       }
     });
 
@@ -645,14 +698,11 @@ const UserChats = () => {
                   initial="hidden"
                   animate="show"
                 >
-                  {/* {!!chatsData?.pages[chatsData.pages.length - 1]?.data
-                    ?.nextCursor && <div ref={topRef} />} */}
-                  {allMessages?.map((message, index) => {
+                  {allMessages?.map((message) => {
                     const isCurrentUser =
                       message.senderId === userData?.data?.id;
                     const showAvatar =
-                      index === 0 ||
-                      allMessages[index - 1]?.senderId !== message.senderId;
+                      message?.receiverId === userData?.data?.id;
                     return (
                       <motion.div
                         key={message.id}
