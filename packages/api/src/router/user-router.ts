@@ -1000,6 +1000,10 @@ export const userRouter = {
           })
         );
 
+        logger.info(chats, "Fetched Chats");
+
+        // console.log("CHATS", chats);
+
         return {
           message: "Chats fetched successfully",
           success: true,

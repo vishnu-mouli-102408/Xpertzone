@@ -77,6 +77,8 @@ const UserChats = () => {
 
   const { data: userData } = useDbUser();
 
+  console.log("USER DATA", userData);
+
   const { setActiveChat } = useChatActions();
 
   const activeChat = useActiveChat();
@@ -110,14 +112,17 @@ const UserChats = () => {
       const chats = data?.pages
         .flatMap((page) => page.data?.chats ?? [])
         .map((chat) => ({
-          chatId: chat?.receiverId ?? "",
+          chatId:
+            (userData?.data?.id === chat?.senderId
+              ? chat?.receiverId
+              : chat?.senderId) ?? "",
           lastMessage: chat?.content ?? "",
           lastMessageTimestamp: chat?.sentAt ?? new Date(),
         }));
 
       setChatOrder(chats);
     }
-  }, [data, status]);
+  }, [data, status, userData?.data?.id]);
 
   const chatsLoaderRef = useInfiniteScroll({
     callbackAction: () => {
@@ -131,7 +136,10 @@ const UserChats = () => {
     data.pages
       .flatMap((page) => page.data?.chats ?? [])
       .map((chat) => ({
-        chatId: chat?.receiverId ?? "",
+        chatId:
+          (userData?.data?.id === chat?.senderId
+            ? chat?.receiverId
+            : chat?.senderId) ?? "",
         lastMessage: chat?.content ?? "",
         lastMessageTimestamp: chat?.sentAt ?? new Date(),
       }))
@@ -405,14 +413,24 @@ const UserChats = () => {
                   const chat = data?.pages
                     ?.flatMap((page) => page?.data?.chats ?? [])
                     .filter(Boolean)
-                    ?.find((chat) => chat?.receiverId === chatData?.chatId);
+                    ?.find(
+                      (chat) =>
+                        (userData?.data?.id === chat?.senderId
+                          ? chat?.receiverId
+                          : chat?.senderId) === chatData?.chatId
+                    );
+
+                  const partner =
+                    chat?.sender.id === userData?.data?.id
+                      ? chat?.receiver
+                      : chat?.sender;
 
                   return (
                     <motion.div
-                      key={chat?.id}
+                      key={chatData?.chatId}
                       ref={(el) => {
-                        if (chat?.receiverId) {
-                          chatRefs.current[chat.receiverId] = el;
+                        if (partner) {
+                          chatRefs.current[partner.id] = el;
                         } else if (chatData?.chatId) {
                           chatRefs.current[chatData.chatId] = el;
                         }
@@ -421,25 +439,20 @@ const UserChats = () => {
                       whileHover={{ x: 4 }}
                       className={cn(
                         "cursor-pointer rounded-lg p-3",
-                        activeChat?.id ===
-                          (chat?.receiverId ?? chatData?.chatId)
+                        activeChat?.id === (partner?.id ?? chatData?.chatId)
                           ? "bg-white/10"
                           : "hover:bg-white/5"
                       )}
                       onClick={() => {
                         setActiveChat({
-                          bio: chat?.receiver.bio ?? chatData?.bio ?? "",
+                          bio: partner?.bio ?? chatData?.bio ?? "",
                           firstName:
-                            chat?.receiver.firstName ??
-                            chatData?.firstName ??
-                            "",
-                          id: chat?.receiver.id ?? chatData?.chatId ?? "",
+                            partner?.firstName ?? chatData?.firstName ?? "",
+                          id: partner?.id ?? chatData?.chatId ?? "",
                           lastName:
-                            chat?.receiver.lastName ?? chatData?.lastName ?? "",
+                            partner?.lastName ?? chatData?.lastName ?? "",
                           profilePic:
-                            chat?.receiver.profilePic ??
-                            chatData?.profilePic ??
-                            "",
+                            partner?.profilePic ?? chatData?.profilePic ?? "",
                         });
 
                         if (isMobile) {
@@ -454,19 +467,19 @@ const UserChats = () => {
                             <Avatar className="h-12 w-12 rounded-full">
                               <AvatarImage
                                 src={
-                                  chat?.receiver.profilePic ??
+                                  partner?.profilePic ??
                                   chatData?.profilePic ??
                                   "https://github.com/shadcn.png"
                                 }
                                 alt={
-                                  chat?.receiver.firstName ??
+                                  partner?.firstName ??
                                   chatData?.firstName ??
                                   "User Name"
                                 }
                                 className="rounded-full object-cover"
                               />
                               <AvatarFallback>
-                                {chat?.receiver.firstName?.slice(0, 1) ??
+                                {partner?.firstName?.slice(0, 1) ??
                                   chatData?.firstName?.slice(0, 1)}
                               </AvatarFallback>
                             </Avatar>
@@ -483,8 +496,8 @@ const UserChats = () => {
                         <div className="min-w-0 flex-1">
                           <div className="flex justify-between">
                             <p className="truncate text-sm font-medium text-white">
-                              {chat?.receiver.firstName ?? chatData?.firstName}{" "}
-                              {chat?.receiver.lastName ?? chatData?.lastName}
+                              {partner?.firstName ?? chatData?.firstName}{" "}
+                              {partner?.lastName ?? chatData?.lastName}
                             </p>
                             <p className="text-xs text-white/50">
                               {format(
