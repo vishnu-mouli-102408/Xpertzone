@@ -920,7 +920,6 @@ export const userRouter = {
       };
     }
   }),
-
   getAllChats: protectedProcedure
     .input(
       z
@@ -934,58 +933,66 @@ export const userRouter = {
       try {
         const { limit = 10, cursor } = input ?? {};
 
-        logger.info(limit, cursor, "Query parameters");
-
-        const grouped = await db.message.groupBy({
-          by: ["receiverId"],
+        // Step 1: Fetch all distinct chat partners
+        const messages = await db.message.findMany({
           where: {
-            senderId: ctx.user.id,
+            OR: [{ senderId: ctx.user.id }, { receiverId: ctx.user.id }],
           },
-          _max: {
+          select: {
+            senderId: true,
+            receiverId: true,
             sentAt: true,
           },
-          orderBy: {
-            _max: {
-              sentAt: "desc",
-            },
-          },
         });
 
-        const sortedGroups = grouped.sort((a, b) => {
-          const bTime = b._max.sentAt ? b._max.sentAt.getTime() : 0;
-          const aTime = a._max.sentAt ? a._max.sentAt.getTime() : 0;
-          return bTime - aTime;
-        });
+        // Step 2: Collect unique chat partner IDs
+        const uniquePartnerMap = new Map<string, Date>();
 
+        for (const msg of messages) {
+          const otherUserId =
+            msg.senderId === ctx.user.id ? msg.receiverId : msg.senderId;
+
+          const existingDate = uniquePartnerMap.get(otherUserId);
+          if (!existingDate || msg.sentAt > existingDate) {
+            uniquePartnerMap.set(otherUserId, msg.sentAt);
+          }
+        }
+
+        // Step 3: Convert to array and sort by latest date
+        const sortedPartners = Array.from(uniquePartnerMap.entries()).sort(
+          (a, b) => b[1].getTime() - a[1].getTime()
+        );
+
+        // Step 4: Apply cursor-based pagination
         const startIndex = cursor
-          ? sortedGroups.findIndex((chat) => chat.receiverId === cursor) + 1
+          ? sortedPartners.findIndex(([id]) => id === cursor) + 1
           : 0;
 
-        const paginatedGroups = sortedGroups.slice(
+        const paginatedPartners = sortedPartners.slice(
           startIndex,
           startIndex + limit + 1
         );
-        const hasNextPage = paginatedGroups.length > limit;
-
-        const finalGroups = hasNextPage
-          ? paginatedGroups.slice(0, -1)
-          : paginatedGroups;
-
+        const hasNextPage = paginatedPartners.length > limit;
+        const finalPartners = hasNextPage
+          ? paginatedPartners.slice(0, -1)
+          : paginatedPartners;
         const nextCursor = hasNextPage
-          ? finalGroups[finalGroups.length - 1]?.receiverId
+          ? (finalPartners?.[finalPartners.length - 1]?.[0] ?? null)
           : null;
 
+        // Step 5: Fetch latest message for each partner
         const chats = await Promise.all(
-          finalGroups.map(async (group) => {
+          finalPartners.map(async ([partnerId]) => {
             const latestMessage = await db.message.findFirst({
               where: {
-                senderId: ctx.user.id,
-                receiverId: group.receiverId,
+                OR: [
+                  { senderId: ctx.user.id, receiverId: partnerId },
+                  { senderId: partnerId, receiverId: ctx.user.id },
+                ],
               },
-              orderBy: {
-                sentAt: "desc",
-              },
+              orderBy: { sentAt: "desc" },
               include: {
+                sender: true,
                 receiver: true,
               },
             });
@@ -997,10 +1004,10 @@ export const userRouter = {
           message: "Chats fetched successfully",
           success: true,
           data: {
-            totalChats: sortedGroups.length,
+            totalChats: sortedPartners.length,
             chats,
             nextCursor,
-            totalPages: Math.ceil(sortedGroups.length / limit),
+            totalPages: Math.ceil(sortedPartners.length / limit),
           },
           code: OK,
         };
@@ -1014,6 +1021,7 @@ export const userRouter = {
         };
       }
     }),
+
   getChatsById: protectedProcedure
     .input(
       z.object({

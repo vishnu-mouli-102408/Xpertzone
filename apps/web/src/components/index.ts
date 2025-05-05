@@ -2,6 +2,7 @@ import { FrownIcon } from "./animations/flown";
 import { AuroraHero } from "./aurora-hero";
 import Billing from "./billing";
 import CTA from "./cta";
+import ExpertChats from "./expert/expert-chats";
 import ExpertOverview from "./expert/expert-overview";
 import FAQ from "./faqs";
 import FeaturesSection from "./features";
@@ -22,6 +23,7 @@ export {
   AuroraHero,
   Billing,
   CTA,
+  ExpertChats,
   ExpertOverview,
   ExpertProfile,
   ExploreExperts,
