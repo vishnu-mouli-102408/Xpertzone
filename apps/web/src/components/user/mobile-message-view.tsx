@@ -268,7 +268,7 @@ const MobileMessageView: React.FC<Props> = ({
                     className={cn(
                       "rounded-2xl px-4 py-2",
                       isCurrentUser
-                        ? "bg-sidebar-primary rounded-br-sm text-white"
+                        ? "rounded-br-sm bg-[#1D4ED8] text-white"
                         : "rounded-bl-sm bg-white/10 text-white"
                     )}
                   >
@@ -314,9 +314,9 @@ const MobileMessageView: React.FC<Props> = ({
           </div>
           <motion.button
             className={cn(
-              "flex items-center justify-center rounded-full p-3",
+              "flex cursor-pointer items-center justify-center rounded-full p-3",
               newMessage.trim()
-                ? "bg-sidebar-primary text-white"
+                ? "bg-[#1D4ED8] text-white"
                 : "bg-white/5 text-white/40"
             )}
             whileHover={newMessage.trim() ? { scale: 1.05 } : {}}
