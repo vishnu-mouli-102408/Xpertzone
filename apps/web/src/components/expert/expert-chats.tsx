@@ -77,6 +77,7 @@ const ExpertChats = () => {
   const activeChat = useActiveChat();
 
   console.log("ACTIVE CHAT", activeChat);
+  console.log("SHOW MOBILE CHAT", showMobileChat);
 
   const trpc = useTRPC();
 
@@ -792,6 +793,13 @@ const ExpertChats = () => {
         <AnimatePresence>
           {isMobile && showMobileChat && activeChat && (
             <MobileMessageView
+              scrollMode={scrollMode}
+              setScrollMode={setScrollMode}
+              hasMore={hasMore}
+              fetchNextPageChats={fetchNextPageChats}
+              chatsStatus={chatsStatus}
+              isFetching={isFetching}
+              isFetchingMoreChats={isFetchingMoreChats}
               activeChat={activeChat}
               messages={allMessages}
               onBack={() => setShowMobileChat(false)}

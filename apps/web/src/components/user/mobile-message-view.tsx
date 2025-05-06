@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, type SetStateAction } from "react";
 import { useDbUser } from "@/src/hooks";
 import type { ChatUser } from "@/src/store";
 import type { AppRouter } from "@repo/api";
@@ -8,11 +9,14 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@repo/ui/components/avatar";
+import { Spinner } from "@repo/ui/components/spinner";
 import { cn } from "@repo/ui/lib/utils";
 import type { inferRouterOutputs } from "@trpc/server";
 import { format } from "date-fns";
 import { ArrowLeft, MoreHorizontal, Send, Smile } from "lucide-react";
 import { motion } from "motion/react";
+
+import ResultsNotFound from "../global/results-not-found";
 
 const containerVariants = {
   hidden: { opacity: 0, x: "100%" },
@@ -66,7 +70,16 @@ interface Props {
   setNewMessage: (message: string) => void;
   handleSendMessage: () => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
+  isFetchingMoreChats: boolean;
+  isFetching: boolean;
+  chatsStatus: "pending" | "error" | "success";
+  hasMore: boolean;
+  fetchNextPageChats: () => void;
+  scrollMode: ScrollMode;
+  setScrollMode: (value: SetStateAction<ScrollMode>) => void;
 }
+
+type ScrollMode = "append" | "prepend";
 
 const MobileMessageView: React.FC<Props> = ({
   activeChat,
@@ -76,8 +89,63 @@ const MobileMessageView: React.FC<Props> = ({
   setNewMessage,
   handleSendMessage,
   handleKeyDown,
+  chatsStatus,
+  isFetching,
+  isFetchingMoreChats,
+  fetchNextPageChats,
+  hasMore,
+  scrollMode,
+  setScrollMode,
 }) => {
   const { data: userData } = useDbUser();
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const container = messagesRef.current;
+    if (!container) return;
+
+    // Append mode = scroll to bottom (new live message or chat switch)
+    if (scrollMode === "append") {
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        // console.log("Scrolled to bottom (new message or chat)");
+      });
+    }
+  }, [messages.length, scrollMode]);
+
+  const handleScroll = () => {
+    const container = messagesRef.current;
+    if (!container) return;
+
+    if (container.scrollTop === 0 && hasMore && !isFetchingMoreChats) {
+      //   console.log("Reached top. Loading older messages...");
+      setScrollMode("prepend");
+      void fetchNextPageChats();
+    }
+  };
+
+  if (isFetching && !isFetchingMoreChats) {
+    return (
+      <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
+        <Spinner variant="circle-filled" />
+        <p className="text-center text-sm text-white/50">Loading messages...</p>
+      </div>
+    );
+  }
+
+  if (chatsStatus === "error" && !isFetchingMoreChats) {
+    return (
+      <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
+        <ResultsNotFound
+          description={"Unable to load messages. Please try again."}
+          title="Oops! Something went wrong"
+        />
+      </div>
+    );
+  }
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col bg-black"
@@ -137,7 +205,19 @@ const MobileMessageView: React.FC<Props> = ({
       </div>
 
       {/* Messages */}
-      <div className="scrollbar-none flex-1 overflow-y-auto p-4">
+      <div
+        ref={messagesRef}
+        onScroll={handleScroll}
+        className="scrollbar-none flex-1 overflow-y-auto p-4"
+      >
+        {isFetchingMoreChats && (
+          <div className="flex w-full flex-1 items-center justify-center gap-2 pb-2">
+            <p className="text-center text-sm text-white/50">
+              Loading older messages
+            </p>
+            <Spinner variant="ellipsis" />
+          </div>
+        )}
         <motion.div
           className="space-y-4"
           initial="hidden"
@@ -208,6 +288,7 @@ const MobileMessageView: React.FC<Props> = ({
               </motion.div>
             );
           })}
+          <div ref={bottomRef} />
         </motion.div>
       </div>
 
