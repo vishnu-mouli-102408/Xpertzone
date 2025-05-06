@@ -8,6 +8,7 @@ import { Button } from "@repo/ui/components/button";
 import { HoverButton } from "@repo/ui/components/hover-button";
 import { Modal } from "@repo/ui/components/modal";
 import { Separator } from "@repo/ui/components/seperator";
+import { useIsMobile } from "@repo/ui/hooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -46,7 +47,8 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
   const [isOpenReadReviewsModal, setIsOpenReadReviewsModal] = useState(false);
   const [isOpenShareProfileModal, setIsOpenShareProfileModal] = useState(false);
 
-  const { setActiveChat } = useChatActions();
+  const isMobile = useIsMobile();
+  const { setActiveChat, setShowMobileChat } = useChatActions();
 
   const router = useRouter();
 
@@ -183,6 +185,9 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
                       lastName: data?.data?.expert?.lastName ?? "",
                       profilePic: data?.data?.expert?.profilePic ?? "",
                     });
+                    if (isMobile) {
+                      setShowMobileChat(true);
+                    }
                   }}
                   variant="outline"
                   className="flex h-auto cursor-pointer flex-col gap-1 border-[#FFFFFF26] bg-[#221F26] py-3 text-gray-300 shadow-[inset_0px_0px_20px_0px_#FFFFFF33] transition-all duration-200 ease-in-out hover:scale-[1.005] hover:bg-[#403E43]/50 hover:text-white"

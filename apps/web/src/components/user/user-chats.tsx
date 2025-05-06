@@ -7,7 +7,7 @@ import {
   itemVariants,
   slideRightVariants,
 } from "@/src/lib/framer-animations";
-import { useActiveChat, useChatActions } from "@/src/store";
+import { useActiveChat, useChatActions, useShowMobileChat } from "@/src/store";
 import { useTRPC } from "@/src/trpc/react";
 import {
   Avatar,
@@ -77,13 +77,14 @@ const UserChats = () => {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState("");
-  const [showMobileChat, setShowMobileChat] = useState(false);
 
   const { data: userData } = useDbUser();
 
   console.log("USER DATA", userData);
 
-  const { setActiveChat } = useChatActions();
+  const showMobileChat = useShowMobileChat();
+
+  const { setActiveChat, setShowMobileChat } = useChatActions();
 
   const activeChat = useActiveChat();
 
@@ -171,7 +172,6 @@ const UserChats = () => {
     data: chatsData,
     status: chatsStatus,
     isFetching,
-    error: chatsError,
     fetchNextPage: fetchNextPageChats,
     isFetchingNextPage: isFetchingMoreChats,
   } = useInfiniteQuery(
@@ -642,7 +642,7 @@ const UserChats = () => {
           ) : status === "error" || chatsStatus === "error" ? (
             <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
               <ResultsNotFound
-                description={error?.message ?? chatsError?.message}
+                description={"Unable to load messages. Please try again."}
                 title="Oops! Something went wrong"
               />
             </div>
@@ -844,7 +844,6 @@ const UserChats = () => {
               isFetchingMoreChats={isFetchingMoreChats}
               activeChat={activeChat}
               messages={allMessages}
-              onBack={() => setShowMobileChat(false)}
               newMessage={newMessage}
               setNewMessage={setNewMessage}
               handleSendMessage={handleSendMessage}

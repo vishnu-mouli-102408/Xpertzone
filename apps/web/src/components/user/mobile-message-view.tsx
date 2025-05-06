@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type SetStateAction } from "react";
 import { useDbUser } from "@/src/hooks";
-import type { ChatUser } from "@/src/store";
+import { useChatActions, type ChatUser } from "@/src/store";
 import type { AppRouter } from "@repo/api";
 import {
   Avatar,
@@ -65,7 +65,6 @@ type MessageType = {
 interface Props {
   activeChat: ChatUser;
   messages: (ChatMessage | MessageType)[];
-  onBack: () => void;
   newMessage: string;
   setNewMessage: (message: string) => void;
   handleSendMessage: () => void;
@@ -84,7 +83,6 @@ type ScrollMode = "append" | "prepend";
 const MobileMessageView: React.FC<Props> = ({
   activeChat,
   messages,
-  onBack,
   newMessage,
   setNewMessage,
   handleSendMessage,
@@ -101,6 +99,8 @@ const MobileMessageView: React.FC<Props> = ({
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
+
+  const { setShowMobileChat } = useChatActions();
 
   useEffect(() => {
     const container = messagesRef.current;
@@ -140,7 +140,9 @@ const MobileMessageView: React.FC<Props> = ({
           className="mr-2 rounded-full p-2 hover:bg-white/10"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={onBack}
+          onClick={() => {
+            setShowMobileChat(false);
+          }}
         >
           <ArrowLeft size={18} className="text-white" />
         </motion.button>

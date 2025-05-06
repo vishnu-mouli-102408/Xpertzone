@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useChatActions } from "@/src/store";
 import { Button } from "@repo/ui/components/button";
+import { useIsMobile } from "@repo/ui/hooks";
 import { MessageCircle, Phone, Star, Video } from "lucide-react";
 import * as motion from "motion/react-client";
 
@@ -32,7 +33,8 @@ const ExpertCard = ({
   expert: ExpertProps;
   ShareButton: JSX.Element;
 }) => {
-  const { setActiveChat } = useChatActions();
+  const isMobile = useIsMobile();
+  const { setActiveChat, setShowMobileChat } = useChatActions();
   const router = useRouter();
   return (
     <motion.div
@@ -115,6 +117,9 @@ const ExpertCard = ({
                 lastName: expert?.lastName ?? "",
                 profilePic: expert?.profilePic ?? "",
               });
+              if (isMobile) {
+                setShowMobileChat(true);
+              }
             }}
             variant="outline"
             size="sm"

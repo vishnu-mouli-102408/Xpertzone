@@ -43,7 +43,7 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
-  const { setActiveChat } = useChatActions();
+  const { setActiveChat, setShowMobileChat } = useChatActions();
 
   const router = useRouter();
   const trpc = useTRPC();
@@ -348,6 +348,9 @@ const SearchModal = ({ onClose }: SearchModalProps) => {
                           lastName: expert.lastName,
                           profilePic: expert.profilePic,
                         });
+                        if (isMobile) {
+                          setShowMobileChat(true);
+                        }
                         onClose();
                       }}
                       className="text-primary-foreground bg-primary/80 rounded px-2 py-1 text-xs font-medium"
