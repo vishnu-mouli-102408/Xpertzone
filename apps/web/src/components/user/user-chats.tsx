@@ -532,7 +532,7 @@ const UserChats = () => {
                         });
 
                         if (isMobile) {
-                          //   setShowMobileChat(true);
+                          setShowMobileChat(true);
                         }
                       }}
                     >
