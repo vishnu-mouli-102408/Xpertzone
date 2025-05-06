@@ -71,6 +71,7 @@ const ExpertChats = () => {
   const { data: userData } = useDbUser();
 
   console.log("USER DATA", userData);
+  console.log("ISMOBILE", isMobile);
 
   const { setActiveChat } = useChatActions();
 

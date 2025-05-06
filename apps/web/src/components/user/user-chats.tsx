@@ -30,11 +30,12 @@ import {
   Smile,
   User,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 
 import { FrownIcon } from "../animations/flown";
 import ResultsNotFound from "../global/results-not-found";
 import SearchModal from "../search/search-modal";
+import MobileMessageView from "./mobile-message-view";
 
 type MessageType = {
   id: string;
@@ -76,7 +77,7 @@ const UserChats = () => {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState("");
-  //   const [showMobileChat, setShowMobileChat] = useState(false);
+  const [showMobileChat, setShowMobileChat] = useState(false);
 
   const { data: userData } = useDbUser();
 
@@ -831,11 +832,18 @@ const UserChats = () => {
         )}
 
         {/* Mobile Chat View */}
-        {/* <AnimatePresence>
-          {isMobile && showMobileChat && (
+        <AnimatePresence>
+          {isMobile && showMobileChat && activeChat && (
             <MobileMessageView
-              contact={activeContact}
-              messages={messages}
+              scrollMode={scrollMode}
+              setScrollMode={setScrollMode}
+              hasMore={hasMore}
+              fetchNextPageChats={fetchNextPageChats}
+              chatsStatus={chatsStatus}
+              isFetching={isFetching}
+              isFetchingMoreChats={isFetchingMoreChats}
+              activeChat={activeChat}
+              messages={allMessages}
               onBack={() => setShowMobileChat(false)}
               newMessage={newMessage}
               setNewMessage={setNewMessage}
@@ -843,7 +851,7 @@ const UserChats = () => {
               handleKeyDown={handleKeyDown}
             />
           )}
-        </AnimatePresence> */}
+        </AnimatePresence>
       </div>
     </div>
   );

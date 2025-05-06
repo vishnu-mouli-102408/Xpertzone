@@ -126,26 +126,6 @@ const MobileMessageView: React.FC<Props> = ({
     }
   };
 
-  if (isFetching && !isFetchingMoreChats) {
-    return (
-      <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
-        <Spinner variant="circle-filled" />
-        <p className="text-center text-sm text-white/50">Loading messages...</p>
-      </div>
-    );
-  }
-
-  if (chatsStatus === "error" && !isFetchingMoreChats) {
-    return (
-      <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2">
-        <ResultsNotFound
-          description={"Unable to load messages. Please try again."}
-          title="Oops! Something went wrong"
-        />
-      </div>
-    );
-  }
-
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col bg-black"
@@ -205,92 +185,108 @@ const MobileMessageView: React.FC<Props> = ({
       </div>
 
       {/* Messages */}
-      <div
-        ref={messagesRef}
-        onScroll={handleScroll}
-        className="scrollbar-none flex-1 overflow-y-auto p-4"
-      >
-        {isFetchingMoreChats && (
-          <div className="flex w-full flex-1 items-center justify-center gap-2 pb-2">
-            <p className="text-center text-sm text-white/50">
-              Loading older messages
-            </p>
-            <Spinner variant="ellipsis" />
-          </div>
-        )}
-        <motion.div
-          className="space-y-4"
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: {},
-            visible: { transition: { staggerChildren: 0.05 } },
-          }}
+      {isFetching && !isFetchingMoreChats ? (
+        <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
+          <Spinner variant="circle-filled" />
+          <p className="text-center text-sm text-white/50">
+            Loading messages...
+          </p>
+        </div>
+      ) : chatsStatus === "error" && !isFetchingMoreChats ? (
+        <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
+          <ResultsNotFound
+            description={"Unable to load messages. Please try again."}
+            title="Oops! Something went wrong"
+          />
+        </div>
+      ) : (
+        <div
+          ref={messagesRef}
+          onScroll={handleScroll}
+          className="scrollbar-none flex-1 overflow-y-auto p-4"
         >
-          {messages.map((message) => {
-            const isCurrentUser = userData?.data?.id === message.senderId;
-            const showAvatar = message?.receiverId === userData?.data?.id;
+          {isFetchingMoreChats && (
+            <div className="flex w-full flex-1 items-center justify-center gap-2 pb-2">
+              <p className="text-center text-sm text-white/50">
+                Loading older messages
+              </p>
+              <Spinner variant="ellipsis" />
+            </div>
+          )}
+          <motion.div
+            className="space-y-4"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.05 } },
+            }}
+          >
+            {messages.map((message) => {
+              const isCurrentUser = userData?.data?.id === message.senderId;
+              const showAvatar = message?.receiverId === userData?.data?.id;
 
-            return (
-              <motion.div
-                key={message.id}
-                className={cn(
-                  "flex",
-                  isCurrentUser ? "justify-end" : "justify-start"
-                )}
-                variants={itemVariants}
-                layout
-              >
-                <div
+              return (
+                <motion.div
+                  key={message.id}
                   className={cn(
-                    "flex max-w-[80%] items-end gap-2",
-                    isCurrentUser && "flex-row-reverse"
+                    "flex",
+                    isCurrentUser ? "justify-end" : "justify-start"
                   )}
+                  variants={itemVariants}
+                  layout
                 >
-                  {!isCurrentUser && showAvatar && (
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#27272A]">
-                      <Avatar className="h-8 w-8 rounded-full">
-                        <AvatarImage
-                          src={
-                            activeChat.profilePic ??
-                            "https://github.com/shadcn.png"
-                          }
-                          alt={activeChat.firstName ?? "User Name"}
-                          className="rounded-full object-cover"
-                        />
-                        <AvatarFallback>
-                          {activeChat.firstName?.slice(0, 1)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                  )}
                   <div
                     className={cn(
-                      "rounded-2xl px-4 py-2",
-                      isCurrentUser
-                        ? "rounded-br-sm bg-[#1D4ED8] text-white"
-                        : "rounded-bl-sm bg-white/10 text-white"
+                      "flex max-w-[80%] items-end gap-2",
+                      isCurrentUser && "flex-row-reverse"
                     )}
                   >
-                    <p className="text-sm">{message.content}</p>
+                    {!isCurrentUser && showAvatar && (
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#27272A]">
+                        <Avatar className="h-8 w-8 rounded-full">
+                          <AvatarImage
+                            src={
+                              activeChat.profilePic ??
+                              "https://github.com/shadcn.png"
+                            }
+                            alt={activeChat.firstName ?? "User Name"}
+                            className="rounded-full object-cover"
+                          />
+                          <AvatarFallback>
+                            {activeChat.firstName?.slice(0, 1)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                    )}
                     <div
                       className={cn(
-                        "mt-1 flex items-center gap-1 text-[10px]",
+                        "rounded-2xl px-4 py-2",
                         isCurrentUser
-                          ? "justify-end text-white/70"
-                          : "text-white/50"
+                          ? "rounded-br-sm bg-[#1D4ED8] text-white"
+                          : "rounded-bl-sm bg-white/10 text-white"
                       )}
                     >
-                      {format(message.sentAt, "hh:mm a")}
+                      <p className="text-sm">{message.content}</p>
+                      <div
+                        className={cn(
+                          "mt-1 flex items-center gap-1 text-[10px]",
+                          isCurrentUser
+                            ? "justify-end text-white/70"
+                            : "text-white/50"
+                        )}
+                      >
+                        {format(message.sentAt, "hh:mm a")}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
-          <div ref={bottomRef} />
-        </motion.div>
-      </div>
+                </motion.div>
+              );
+            })}
+            <div ref={bottomRef} />
+          </motion.div>
+        </div>
+      )}
 
       {/* Message Input */}
       <div className="border-t border-white/10 p-4">
