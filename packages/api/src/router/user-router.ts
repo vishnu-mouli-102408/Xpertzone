@@ -148,8 +148,7 @@ export const userRouter = {
           db.message.groupBy({
             by: ["sentAt"],
             where: {
-              senderId: userId,
-              receiverId: userId,
+              OR: [{ senderId: userId }, { receiverId: userId }],
               sentAt: { gte: startDate },
             },
             _count: {

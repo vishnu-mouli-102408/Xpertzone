@@ -133,8 +133,7 @@ export const expertRouter = {
           db.message.groupBy({
             by: ["sentAt"],
             where: {
-              senderId: expertId,
-              receiverId: expertId,
+              OR: [{ senderId: expertId }, { receiverId: expertId }],
               sentAt: { gte: startDate },
             },
             _count: {
