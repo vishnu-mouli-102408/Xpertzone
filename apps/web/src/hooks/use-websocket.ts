@@ -20,9 +20,9 @@ export type OutGoingMessagePayload = {
     content: string;
     contentType: "TEXT" | "IMAGE" | "FILE";
     timestamp: string;
-    firstName?: string;
-    lastName?: string;
-    profilePic?: string;
+    firstName: string;
+    lastName: string;
+    profilePic: string;
   };
 };
 

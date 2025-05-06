@@ -325,7 +325,7 @@ const ExpertChats = () => {
   console.log("IS FETCHING NEXT PAGE", isFetchingNextPage);
 
   const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !userData?.data?.id) return;
 
     const msg: MessageType = {
       id: crypto.randomUUID(),
@@ -334,9 +334,9 @@ const ExpertChats = () => {
       receiverId: activeChat?.id ?? "",
       sentAt: new Date(),
       contentType: "TEXT",
-      firstName: userData?.data?.firstName ?? "",
-      lastName: userData?.data?.lastName ?? "",
-      profilePic: userData?.data?.profilePic ?? "",
+      firstName: userData?.data?.firstName ?? "N/A",
+      lastName: userData?.data?.lastName ?? "N/A",
+      profilePic: userData?.data?.profilePic ?? "N/A",
     };
 
     // Clear input box
@@ -392,9 +392,9 @@ const ExpertChats = () => {
       content: newMessage,
       contentType: "TEXT",
       timestamp: new Date().toISOString(),
-      firstName: userData?.data?.firstName ?? "",
-      lastName: userData?.data?.lastName ?? "",
-      profilePic: userData?.data?.profilePic ?? "",
+      firstName: userData?.data?.firstName ?? "N/A",
+      lastName: userData?.data?.lastName ?? "N/A",
+      profilePic: userData?.data?.profilePic ?? "N/A",
     });
 
     if (!sent) {
