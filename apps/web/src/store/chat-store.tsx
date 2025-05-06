@@ -1,7 +1,7 @@
 import type { Message } from "@repo/db";
 import { create } from "zustand";
 
-type ChatUser = {
+export type ChatUser = {
   id: string;
   firstName: string | null;
   lastName: string | null;

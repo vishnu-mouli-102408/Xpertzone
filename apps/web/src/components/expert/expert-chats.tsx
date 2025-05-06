@@ -23,11 +23,12 @@ import {
 } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { MoreHorizontal, Send, Smile, User } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 
 import { FrownIcon } from "../animations/flown";
 import ResultsNotFound from "../global/results-not-found";
 import SearchModal from "../search/search-modal";
+import MobileMessageView from "../user/mobile-message-view";
 
 type MessageType = {
   id: string;
@@ -65,7 +66,7 @@ const ExpertChats = () => {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState("");
-  //   const [showMobileChat, setShowMobileChat] = useState(false);
+  const [showMobileChat, setShowMobileChat] = useState(false);
 
   const { data: userData } = useDbUser();
 
@@ -488,7 +489,7 @@ const ExpertChats = () => {
                         });
 
                         if (isMobile) {
-                          //   setShowMobileChat(true);
+                          setShowMobileChat(true);
                         }
                       }}
                     >
@@ -788,11 +789,11 @@ const ExpertChats = () => {
         )}
 
         {/* Mobile Chat View */}
-        {/* <AnimatePresence>
-          {isMobile && showMobileChat && (
+        <AnimatePresence>
+          {isMobile && showMobileChat && activeChat && (
             <MobileMessageView
-              contact={activeContact}
-              messages={messages}
+              activeChat={activeChat}
+              messages={allMessages}
               onBack={() => setShowMobileChat(false)}
               newMessage={newMessage}
               setNewMessage={setNewMessage}
@@ -800,7 +801,7 @@ const ExpertChats = () => {
               handleKeyDown={handleKeyDown}
             />
           )}
-        </AnimatePresence> */}
+        </AnimatePresence>
       </div>
     </div>
   );
