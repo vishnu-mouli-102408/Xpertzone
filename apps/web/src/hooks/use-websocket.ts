@@ -13,19 +13,40 @@ export enum MessageType {
   WILDCARD = "*",
 }
 
-export type OutGoingMessagePayload = {
-  type: MessageType;
-  payload: {
-    senderId: string;
-    receiverId: string;
-    content: string;
-    contentType: "TEXT" | "IMAGE" | "FILE";
-    timestamp: string;
-    firstName: string;
-    lastName: string;
-    profilePic: string;
-  };
-};
+type OutgoingMessage =
+  | {
+      type: MessageType.MESSAGE;
+      payload: {
+        senderId: string;
+        receiverId: string;
+        content: string;
+        contentType: "TEXT" | "IMAGE" | "FILE";
+        timestamp: string;
+        firstName: string;
+        lastName: string;
+        profilePic: string;
+      };
+    }
+  | {
+      type: MessageType.ERROR;
+      payload: { message: string };
+    }
+  | {
+      type: MessageType.TYPING;
+      payload: { senderId: string; receiverId: string; typing: boolean };
+    }
+  | {
+      type: MessageType.INIT_ACK;
+      payload: { ack: boolean };
+    }
+  | {
+      type: MessageType.TOO_MANY_REQUESTS;
+      payload: { limit: number };
+    }
+  | {
+      type: MessageType.ONLINE;
+      payload: { userId: string };
+    };
 
 export function useWebSocket(
   url: string,
@@ -111,10 +132,7 @@ export function useWebSocket(
   }, [url, handleMessage, options.userId]);
 
   const sendMessage = useCallback(
-    (
-      type: MessageType | string,
-      payload: OutGoingMessagePayload["payload"]
-    ) => {
+    (type: MessageType | string, payload: OutgoingMessage["payload"]) => {
       const message = JSON.stringify({ type, payload });
 
       if (

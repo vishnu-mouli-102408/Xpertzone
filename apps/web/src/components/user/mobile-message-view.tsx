@@ -77,6 +77,7 @@ interface Props {
   scrollMode: ScrollMode;
   setScrollMode: (value: SetStateAction<ScrollMode>) => void;
   onlineStatusMap: Record<string, boolean>;
+  typingStatusMap: Record<string, boolean>;
 }
 
 type ScrollMode = "append" | "prepend";
@@ -96,6 +97,7 @@ const MobileMessageView: React.FC<Props> = ({
   scrollMode,
   setScrollMode,
   onlineStatusMap,
+  typingStatusMap,
 }) => {
   const { data: userData } = useDbUser();
 
@@ -175,7 +177,11 @@ const MobileMessageView: React.FC<Props> = ({
           <div>
             <h3 className="font-medium text-white">{`${activeChat?.firstName} ${activeChat?.lastName}`}</h3>
             <p className="text-xs text-white/50">
-              {onlineStatusMap[activeChat?.id ?? ""] ? "Online" : "Offline"}
+              {typingStatusMap[activeChat?.id ?? ""]
+                ? "Typing..."
+                : onlineStatusMap[activeChat?.id ?? ""]
+                  ? "Online"
+                  : "Offline"}
             </p>
           </div>
         </div>

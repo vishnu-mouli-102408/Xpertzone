@@ -75,6 +75,10 @@ const UserChats = () => {
     Record<string, boolean>
   >({});
 
+  const [typingStatusMap, setTypingStatusMap] = useState<
+    Record<string, boolean>
+  >({});
+
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const chatRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -324,9 +328,27 @@ const UserChats = () => {
       }
     });
 
+    const unsubscribeTyping = on("TYPING", (data: unknown) => {
+      const messageData = data as {
+        typing: boolean;
+        senderId: string;
+        receiverId: string;
+      };
+      if (typeof data === "object" && data) {
+        console.log("TYPING MESSAGE", data);
+        setTypingStatusMap((prev) => {
+          return {
+            ...prev,
+            [messageData.senderId]: messageData.typing,
+          };
+        });
+      }
+    });
+
     return () => {
       unsubscribeMessage();
       unsubscribeOnline();
+      unsubscribeTyping();
     };
   }, [
     activeChat?.bio,
@@ -351,6 +373,7 @@ const UserChats = () => {
   console.log("ALL MESSAGES", allMessages);
   console.log("LIVE MESSAGES MAP", liveMessagesMap);
   console.log("ONLINE STATUS MAP", onlineStatusMap);
+  console.log("TYPING STATUS MAP", typingStatusMap);
 
   console.log("CHAT ORDER", chatOrder);
 
@@ -445,6 +468,29 @@ const UserChats = () => {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewMessage(e.target.value);
+    sendMessage("TYPING", {
+      senderId: userData?.data?.id ?? "",
+      receiverId: activeChat?.id ?? "",
+      typing: true,
+    });
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      sendMessage("TYPING", {
+        senderId: userData?.data?.id ?? "",
+        receiverId: activeChat?.id ?? "",
+        typing: false,
+      });
+    }, 1000);
   };
 
   return (
@@ -611,7 +657,9 @@ const UserChats = () => {
                           </div>
                           <div className="mt-1 flex justify-between">
                             <p className="truncate text-xs text-white/70">
-                              {chatData?.lastMessage ?? chat?.content}
+                              {typingStatusMap[partner?.id ?? ""]
+                                ? "Typing..."
+                                : (chatData?.lastMessage ?? chat?.content)}
                             </p>
                             {/* {chat.unread > 0 && (
 							  <motion.div
@@ -711,9 +759,11 @@ const UserChats = () => {
                       {activeChat?.firstName} {activeChat?.lastName}
                     </h3>
                     <p className="text-xs text-white/50">
-                      {onlineStatusMap[activeChat?.id ?? ""]
-                        ? "Online"
-                        : "Offline"}
+                      {typingStatusMap[activeChat?.id ?? ""]
+                        ? "Typing..."
+                        : onlineStatusMap[activeChat?.id ?? ""]
+                          ? "Online"
+                          : "Offline"}
                     </p>
                   </div>
                 </div>
@@ -829,7 +879,7 @@ const UserChats = () => {
                       className="scrollbar-none h-12 max-h-32 w-full resize-none overflow-y-auto rounded-lg bg-white/5 px-4 py-3 pr-12 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/20"
                       placeholder="Type your message..."
                       value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
+                      onChange={handleInputChange}
                       onKeyDown={handleKeyDown}
                       rows={1}
                     />
@@ -862,6 +912,7 @@ const UserChats = () => {
         <AnimatePresence>
           {isMobile && showMobileChat && activeChat && (
             <MobileMessageView
+              typingStatusMap={typingStatusMap}
               onlineStatusMap={onlineStatusMap}
               scrollMode={scrollMode}
               setScrollMode={setScrollMode}
