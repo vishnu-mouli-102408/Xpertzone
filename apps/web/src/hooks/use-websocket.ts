@@ -9,6 +9,7 @@ export enum MessageType {
   TYPING = "TYPING",
   PING = "PING",
   TOO_MANY_REQUESTS = "TOO_MANY_REQUESTS",
+  ONLINE = "ONLINE",
   WILDCARD = "*",
 }
 

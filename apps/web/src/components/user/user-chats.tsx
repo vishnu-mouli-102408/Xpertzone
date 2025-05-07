@@ -71,6 +71,10 @@ const UserChats = () => {
     Record<string, MessageType[]>
   >({});
 
+  const [onlineStatusMap, setOnlineStatusMap] = useState<
+    Record<string, boolean>
+  >({});
+
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const chatRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -237,7 +241,7 @@ const UserChats = () => {
   });
 
   useEffect(() => {
-    const off = on("MESSAGE", (data: unknown) => {
+    const unsubscribeMessage = on("MESSAGE", (data: unknown) => {
       const messageData = data as {
         content: string;
         contentType: "TEXT" | "IMAGE" | "FILE";
@@ -304,7 +308,26 @@ const UserChats = () => {
       }
     });
 
-    return off;
+    const unsubscribeOnline = on("ONLINE", (data: unknown) => {
+      const messageData = data as {
+        online: boolean;
+        userId: string;
+      };
+      if (typeof data === "object" && data) {
+        console.log("ONLINE MESSAGE", data);
+        setOnlineStatusMap((prev) => {
+          return {
+            ...prev,
+            [messageData.userId]: messageData.online,
+          };
+        });
+      }
+    });
+
+    return () => {
+      unsubscribeMessage();
+      unsubscribeOnline();
+    };
   }, [
     activeChat?.bio,
     activeChat?.firstName,
@@ -327,6 +350,8 @@ const UserChats = () => {
 
   console.log("ALL MESSAGES", allMessages);
   console.log("LIVE MESSAGES MAP", liveMessagesMap);
+  console.log("ONLINE STATUS MAP", onlineStatusMap);
+
   console.log("CHAT ORDER", chatOrder);
 
   console.log("CHATS DATA", chatsData);
@@ -560,14 +585,14 @@ const UserChats = () => {
                               </AvatarFallback>
                             </Avatar>
                           </div>
-                          {/* {chat.online && (
-							<motion.div
-							  className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-black bg-green-500"
-							  initial={{ scale: 0 }}
-							  animate={{ scale: 1 }}
-							  transition={{ duration: 0.2 }}
-							/>
-						  )} */}
+                          {onlineStatusMap[partner?.id ?? ""] && (
+                            <motion.div
+                              className="absolute -right-1 bottom-0 h-3 w-3 rounded-full border-2 border-black bg-green-500"
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ duration: 0.2 }}
+                            />
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex justify-between">
@@ -672,22 +697,24 @@ const UserChats = () => {
                         </AvatarFallback>
                       </Avatar>
                     </div>
-                    {/* {activeChat?.online && (
+                    {onlineStatusMap[activeChat?.id ?? ""] && (
                       <motion.div
-                        className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-black bg-green-500"
+                        className="absolute -right-1 bottom-0 h-2.5 w-2.5 rounded-full border-2 border-black bg-green-500"
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         layoutId="onlineIndicator"
                       />
-                    )} */}
+                    )}
                   </div>
                   <div>
                     <h3 className="font-medium text-white">
                       {activeChat?.firstName} {activeChat?.lastName}
                     </h3>
-                    {/* <p className="text-xs text-white/50">
-                      {activeChat?.online ? "Online" : "Offline"}
-                    </p> */}
+                    <p className="text-xs text-white/50">
+                      {onlineStatusMap[activeChat?.id ?? ""]
+                        ? "Online"
+                        : "Offline"}
+                    </p>
                   </div>
                 </div>
 
@@ -835,6 +862,7 @@ const UserChats = () => {
         <AnimatePresence>
           {isMobile && showMobileChat && activeChat && (
             <MobileMessageView
+              onlineStatusMap={onlineStatusMap}
               scrollMode={scrollMode}
               setScrollMode={setScrollMode}
               hasMore={hasMore}

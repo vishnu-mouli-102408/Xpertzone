@@ -1,6 +1,4 @@
-import cluster from "cluster";
 import { createServer } from "http";
-import os from "os";
 import { logger } from "@repo/common";
 import dotenv from "dotenv";
 import { WebSocketServer } from "ws";
@@ -16,7 +14,6 @@ declare module "ws" {
 dotenv.config();
 
 const PORT = 4000;
-const WORKERS = os.cpus().length ?? 1;
 
 function setupWebSocketServer(httpServer: ReturnType<typeof createServer>) {
   const wss = new WebSocketServer({
@@ -42,76 +39,55 @@ function setupWebSocketServer(httpServer: ReturnType<typeof createServer>) {
   return wss;
 }
 
-// Cluster support for better performance
-if (cluster.isPrimary && process.env.NODE_ENV === "production" && WORKERS > 1) {
-  logger.info(`Master ${process.pid} is running`);
+const httpServer = createServer();
+const wss = setupWebSocketServer(httpServer);
 
-  // Fork workers
-  for (let i = 0; i < WORKERS; i++) {
-    cluster.fork();
-  }
+httpServer.listen(PORT, () => {
+  logger.info(`WebSocket server running on ws://localhost:${PORT}`);
+});
 
-  cluster.on("exit", (worker, code, signal) => {
-    logger.warn(
-      `Worker ${worker.process.pid} died with code ${code} and signal ${signal}`
-    );
-    logger.info("Starting a new worker");
-    cluster.fork();
-  });
-} else {
-  // Worker code
-  const httpServer = createServer();
-  const wss = setupWebSocketServer(httpServer);
+httpServer.on("error", (err) => {
+  logger.error(err, "❌ Failed to start the server");
+  process.exit(1);
+});
 
-  httpServer.listen(PORT, () => {
-    logger.info(
-      `WebSocket server running on ws://localhost:${PORT} (PID: ${process.pid})`
-    );
-  });
+// Graceful shutdown
+const shutdownGracefully = () => {
+  logger.info(`Worker ${process.pid} is shutting down...`);
 
-  httpServer.on("error", (err) => {
-    logger.error(err, "❌ Failed to start the server");
-    process.exit(1);
-  });
+  // Close WebSocket server first to stop accepting new connections
+  wss.close(() => {
+    logger.info(`Worker ${process.pid} WebSocket server closed`);
 
-  // Graceful shutdown
-  const shutdownGracefully = () => {
-    logger.info(`Worker ${process.pid} is shutting down...`);
-
-    // Close WebSocket server first to stop accepting new connections
-    wss.close(() => {
-      logger.info(`Worker ${process.pid} WebSocket server closed`);
-
-      // Finally close the HTTP server
-      httpServer.close(() => {
-        logger.info(`Worker ${process.pid} HTTP server closed`);
-        process.exit(0);
-      });
-
-      // Force exit after timeout if something hangs
-      setTimeout(() => {
-        logger.warn("Forcing exit after timeout");
-        process.exit(1);
-      }, 10000);
+    // Finally close the HTTP server
+    httpServer.close(() => {
+      logger.info(`Worker ${process.pid} HTTP server closed`);
+      process.exit(0);
     });
 
-    wss.clients.forEach((client) => {
-      client.close();
-    });
-  };
-
-  // Handle termination signals
-  process.on("SIGINT", shutdownGracefully);
-  process.on("SIGTERM", shutdownGracefully);
-
-  // Handle uncaught exceptions and unhandled rejections
-  process.on("uncaughtException", (err) => {
-    logger.fatal(err, "UNCAUGHT EXCEPTION");
-    shutdownGracefully();
+    // Force exit after timeout if something hangs
+    setTimeout(() => {
+      logger.warn("Forcing exit after timeout");
+      process.exit(1);
+    }, 10000);
   });
 
-  process.on("unhandledRejection", (reason, promise) => {
-    logger.fatal({ reason, promise }, "UNHANDLED REJECTION");
-    shutdownGracefully();
+  wss.clients.forEach((client) => {
+    client.close();
   });
-}
+};
+
+// Handle termination signals
+process.on("SIGINT", shutdownGracefully);
+process.on("SIGTERM", shutdownGracefully);
+
+// Handle uncaught exceptions and unhandled rejections
+process.on("uncaughtException", (err) => {
+  logger.fatal(err, "UNCAUGHT EXCEPTION");
+  shutdownGracefully();
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  logger.fatal({ reason, promise }, "UNHANDLED REJECTION");
+  shutdownGracefully();
+});

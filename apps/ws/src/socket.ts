@@ -4,7 +4,7 @@ import { db } from "@repo/db";
 import { rateLimiter } from "@repo/rate-limit";
 import { WebSocket } from "ws";
 
-import { checkIfUserExistsInDB } from "./lib";
+import { broadCastStatus, checkIfUserExistsInDB } from "./lib";
 import { inMemoryStore } from "./store/in-memory";
 import {
   InComingSocketMessageType,
@@ -50,6 +50,7 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
     const userId = ws.userId;
     if (userId) {
       inMemoryStore.removeConnection(userId);
+      broadCastStatus(userId, "offline");
     }
     logger.info(`🔒 WebSocket connection closed for ${userId}`);
   });
@@ -154,6 +155,27 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
               ws.userId = userId;
               logger.info(`User ${userId} initialized`);
               inMemoryStore.addConnection(userId, ws);
+              inMemoryStore.setOnlineStatus(userId, true);
+
+              // Send online status of all other users to the newly connected user
+              const allConnections = inMemoryStore.getAllConnections();
+              for (const [existingUserId] of allConnections) {
+                if (existingUserId !== userId) {
+                  ws.send(
+                    JSON.stringify({
+                      type: "ONLINE",
+                      payload: {
+                        userId: existingUserId,
+                        online: true,
+                      },
+                    })
+                  );
+                }
+              }
+
+              // Broadcast online status of the newly connected user to all other users
+              broadCastStatus(userId, "online");
+              logger.info(`User ${userId} is online`);
 
               ws.send(
                 JSON.stringify({
@@ -182,6 +204,46 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
             );
           }
         })();
+      }
+
+      if (message.type === InComingSocketMessageType.TYPING) {
+        const { receiverId, senderId, typing } = message.payload;
+        const isSenderExists = inMemoryStore.hasConnection(senderId);
+        if (!isSenderExists) {
+          logger.warn("Sender is not available in the store");
+          ws.send(
+            JSON.stringify({
+              type: OutGoingSocketMessageType.ERROR,
+              message: "Sender is Not Connected to the Server",
+            })
+          );
+          return;
+        }
+
+        const isReceiverOnline = inMemoryStore.hasConnection(receiverId);
+        if (isReceiverOnline) {
+          const receiverSocket = inMemoryStore.getConnection(receiverId);
+          if (receiverSocket) {
+            receiverSocket.send(
+              JSON.stringify({
+                type: OutGoingSocketMessageType.TYPING,
+                payload: {
+                  typing,
+                  senderId,
+                  receiverId,
+                },
+              })
+            );
+          } else {
+            logger.warn("Receiver Socket Might be Offline");
+            ws.send(
+              JSON.stringify({
+                type: OutGoingSocketMessageType.ERROR,
+                message: "Receiver Socket Might be Offline",
+              })
+            );
+          }
+        }
       }
 
       if (message.type === InComingSocketMessageType.MESSAGE) {

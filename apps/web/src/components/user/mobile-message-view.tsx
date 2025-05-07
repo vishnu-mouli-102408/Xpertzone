@@ -76,6 +76,7 @@ interface Props {
   fetchNextPageChats: () => void;
   scrollMode: ScrollMode;
   setScrollMode: (value: SetStateAction<ScrollMode>) => void;
+  onlineStatusMap: Record<string, boolean>;
 }
 
 type ScrollMode = "append" | "prepend";
@@ -94,6 +95,7 @@ const MobileMessageView: React.FC<Props> = ({
   hasMore,
   scrollMode,
   setScrollMode,
+  onlineStatusMap,
 }) => {
   const { data: userData } = useDbUser();
 
@@ -161,19 +163,20 @@ const MobileMessageView: React.FC<Props> = ({
                 </AvatarFallback>
               </Avatar>
             </div>
-            {/* {contact.online && (
+            {onlineStatusMap[activeChat?.id ?? ""] && (
               <motion.div
-                className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-black bg-green-500"
+                className="absolute -right-1 bottom-0 h-2.5 w-2.5 rounded-full border-2 border-black bg-green-500"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
+                layoutId="onlineIndicator"
               />
-            )} */}
+            )}
           </div>
           <div>
             <h3 className="font-medium text-white">{`${activeChat?.firstName} ${activeChat?.lastName}`}</h3>
-            {/* <p className="text-xs text-white/50">
-              {contact.online ? "Online" : "Offline"}
-            </p> */}
+            <p className="text-xs text-white/50">
+              {onlineStatusMap[activeChat?.id ?? ""] ? "Online" : "Offline"}
+            </p>
           </div>
         </div>
 
