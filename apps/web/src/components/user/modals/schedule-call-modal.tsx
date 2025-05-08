@@ -1,6 +1,7 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 import { modalVariants } from "@/src/lib/framer-animations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CallType } from "@repo/db";
@@ -8,22 +9,19 @@ import { Button } from "@repo/ui/components/button";
 import { Calendar } from "@repo/ui/components/calendar";
 import { Modal } from "@repo/ui/components/modal";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/ui/components/popover";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@repo/ui/components/select";
+import { useClickOutside } from "@repo/ui/hooks";
 import { cn } from "@repo/ui/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, Headphones, Video } from "lucide-react";
 import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 interface ScheduleCallModalProps {
@@ -56,16 +54,19 @@ const ScheduleCallModal = ({
   firstName,
   lastName,
 }: ScheduleCallModalProps) => {
-  const {
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-    getValues,
-  } = useForm<ScheduleCallForm>({
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  const clickOutsideRef = useClickOutside(() => {
+    setTimeout(() => {
+      if (showCalendar) setShowCalendar(false);
+    }, 0);
+  });
+
+  const { handleSubmit, setValue, watch } = useForm<ScheduleCallForm>({
     resolver: zodResolver(scheduleCallFormSchema),
     defaultValues: {
       callType: CallType.AUDIO,
+      scheduledAt: new Date(),
     },
   });
 
@@ -89,9 +90,6 @@ const ScheduleCallModal = ({
       scheduledAt: scheduledDate,
     });
   };
-
-  console.log("ERRORS", errors);
-  console.log("VALUES", getValues());
 
   return (
     <Modal
@@ -117,17 +115,20 @@ const ScheduleCallModal = ({
           </div>
 
           <div className="my-4 space-y-6">
-            {/* Date Picker */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">
-                Select Date
-              </label>
-              <Popover>
-                <PopoverTrigger asChild>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Date Picker */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Select Date
+                </label>
+                <div className="relative">
                   <Button
+                    size={"lg"}
                     variant="outline"
+                    type="button"
+                    onClick={() => setShowCalendar(!showCalendar)}
                     className={cn(
-                      "w-full justify-start border-white/10 bg-[#222222]/80 text-left font-normal",
+                      "w-full cursor-pointer justify-start border-white/10 bg-[#222222]/80 text-left font-normal",
                       !selectedDate && "text-gray-400"
                     )}
                   >
@@ -135,53 +136,78 @@ const ScheduleCallModal = ({
                     {selectedDate ? (
                       format(selectedDate, "PPP")
                     ) : (
-                      <span>Pick a date</span>
+                      <span className="text-white">Pick a date</span>
                     )}
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate ? selectedDate : new Date()}
-                    onSelect={(date) =>
-                      setValue("scheduledAt", date ?? new Date())
-                    }
-                    disabled={(date) => date < new Date()}
-                    initialFocus
-                    className="rounded-md border border-white/10 bg-[#222222]"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Time Selector */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">
-                Select Time
-              </label>
-              <Select
-                onValueChange={(value) => setValue("timeSlot", value)}
-                value={selectedTime}
-              >
-                <SelectTrigger className="w-full border-white/10 bg-[#222222]/80">
-                  <SelectValue placeholder="Select a time" />
-                </SelectTrigger>
-                <SelectContent className="border-white/10 bg-[#222222]">
-                  {timeSlots.map((slot) => (
-                    <SelectItem
-                      key={slot.value}
-                      value={slot.value}
-                      className="hover:bg-[#403E43]"
+                  {showCalendar && (
+                    <motion.div
+                      ref={clickOutsideRef}
+                      className="absolute -left-4 top-full z-50 mt-2"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
                     >
-                      {slot.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                      <div className="rounded-md border border-white/10 bg-[#000000] p-2">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={(date) => {
+                            if (date) {
+                              setValue("scheduledAt", date);
+                              setShowCalendar(false);
+                            }
+                          }}
+                          disabled={(date) => {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            return date < today;
+                          }}
+                          classNames={{
+                            day_selected: "bg-[#403E43] text-white",
+                          }}
+                          initialFocus
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+
+              {/* Time Selector */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Select Time
+                </label>
+                <Select
+                  onValueChange={(value) => {
+                    setValue("timeSlot", value);
+                  }}
+                  value={selectedTime}
+                >
+                  <SelectTrigger className="w-full cursor-pointer border-white/10 bg-[#222222]/80">
+                    <SelectValue placeholder="Select a time" />
+                  </SelectTrigger>
+                  <SelectContent
+                    className="z-[100] max-h-[200px] overflow-y-auto border-white/10 bg-[#222222]"
+                    position="popper"
+                    sideOffset={4}
+                  >
+                    {timeSlots.map((slot) => (
+                      <SelectItem
+                        key={slot.value}
+                        value={slot.value}
+                        className="cursor-pointer hover:bg-[#403E43]"
+                      >
+                        {slot.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Call Type Selection */}
-            <div className="rounded-lg border border-white/5 bg-[#222222]/70 p-4">
+            <div className="mt-6 rounded-lg border border-white/5 bg-[#222222]/70 p-4">
               <h3 className="mb-3 text-sm font-medium text-gray-300">
                 Select Format
               </h3>
@@ -229,6 +255,18 @@ const ScheduleCallModal = ({
             </Button>
             <Button
               type="submit"
+              onClick={() => {
+                if (!selectedTime) {
+                  toast.warning("Please select a time slot", {
+                    description:
+                      "You need to select a time slot to schedule a call",
+                    duration: 3000,
+                    position: "bottom-center",
+                    closeButton: true,
+                  });
+                }
+                return;
+              }}
               className="cursor-pointer border border-white/10 bg-gradient-to-r from-[#403E43] to-[#221F26] text-white hover:opacity-90"
             >
               Confirm Booking
