@@ -2,10 +2,29 @@
 
 import type { Dispatch, SetStateAction } from "react";
 import { modalVariants } from "@/src/lib/framer-animations";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CallType } from "@repo/db";
 import { Button } from "@repo/ui/components/button";
+import { Calendar } from "@repo/ui/components/calendar";
 import { Modal } from "@repo/ui/components/modal";
-import { Headphones, Phone, Video } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@repo/ui/components/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/components/select";
+import { cn } from "@repo/ui/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon, Headphones, Video } from "lucide-react";
 import { motion } from "motion/react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 interface ScheduleCallModalProps {
   isScheduleOpen: boolean;
@@ -14,12 +33,66 @@ interface ScheduleCallModalProps {
   lastName: string;
 }
 
+// Generate time slots from 9 AM to 9 PM
+const timeSlots = Array.from({ length: 13 }, (_, i) => {
+  const hour = i + 9;
+  return {
+    value: `${hour.toString().padStart(2, "0")}:00`,
+    label: `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? "PM" : "AM"}`,
+  };
+});
+
+export const scheduleCallFormSchema = z.object({
+  callType: z.nativeEnum(CallType),
+  scheduledAt: z.date(),
+  timeSlot: z.string(),
+});
+
+type ScheduleCallForm = z.infer<typeof scheduleCallFormSchema>;
+
 const ScheduleCallModal = ({
   isScheduleOpen,
   setIsScheduleOpen,
   firstName,
   lastName,
 }: ScheduleCallModalProps) => {
+  const {
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+    getValues,
+  } = useForm<ScheduleCallForm>({
+    resolver: zodResolver(scheduleCallFormSchema),
+    defaultValues: {
+      callType: CallType.AUDIO,
+    },
+  });
+
+  const selectedDate = watch("scheduledAt");
+  const selectedTime = watch("timeSlot");
+  const selectedCallType = watch("callType");
+
+  const onSubmit = (data: ScheduleCallForm) => {
+    // Combine date and time
+    const [hours, minutes] = data.timeSlot.split(":");
+    const scheduledDate = new Date(data.scheduledAt);
+    scheduledDate.setHours(
+      parseInt(hours ?? "0"),
+      parseInt(minutes ?? "0"),
+      0,
+      0
+    );
+
+    console.log({
+      ...data,
+      scheduledAt: scheduledDate,
+    });
+  };
+
+  console.log("ERRORS", errors);
+  console.log("VALUES", getValues());
+
   return (
     <Modal
       className="max-w-md border border-none border-white/10 bg-[#12151c] p-8 text-white"
@@ -32,92 +105,136 @@ const ScheduleCallModal = ({
         animate="visible"
         exit="exit"
       >
-        <div>
-          <h1 className="text-lg">
-            Schedule a Call with {`${firstName} ${lastName}`}
-          </h1>
-          <p className="text-pretty text-sm text-gray-400">
-            Choose a date and time that works for you to connect with{" "}
-            {firstName}.
-          </p>
-        </div>
-
-        <div className="my-4 space-y-6">
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              variant="outline"
-              className="cursor-pointer border-white/10 bg-[#222222]/80 transition-all duration-200 ease-in-out hover:bg-[#403E43]/50"
-            >
-              Today
-            </Button>
-            <Button
-              variant="outline"
-              className="cursor-pointer border-white/10 bg-[#222222]/80 transition-all duration-200 ease-in-out hover:bg-[#403E43]/50"
-            >
-              Tomorrow
-            </Button>
-            <Button
-              variant="outline"
-              className="cursor-pointer border-white/10 bg-[#222222]/80 transition-all duration-200 ease-in-out hover:bg-[#403E43]/50"
-            >
-              Next Week
-            </Button>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div>
+            <h1 className="text-lg">
+              Schedule a Call with {`${firstName} ${lastName}`}
+            </h1>
+            <p className="text-pretty text-sm text-gray-400">
+              Choose a date and time that works for you to connect with{" "}
+              {firstName}.
+            </p>
           </div>
 
-          <div className="rounded-lg border border-white/5 bg-[#222222]/70 p-4">
-            <h3 className="mb-3 text-sm font-medium text-gray-300">
-              Select Format
-            </h3>
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                variant="outline"
-                className="border-primary/50 flex h-auto cursor-pointer flex-col items-center bg-[#403E43]/40 py-3 text-white"
-              >
-                <Phone className="mb-1 h-5 w-5" />
-                <span className="text-xs">Phone</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="flex h-auto cursor-pointer flex-col items-center border-white/10 bg-[#221F26] py-3 text-gray-400"
-              >
-                <Video className="mb-1 h-5 w-5" />
-                <span className="text-xs">Video</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="flex h-auto cursor-pointer flex-col items-center border-white/10 bg-[#221F26] py-3 text-gray-400"
-              >
-                <Headphones className="mb-1 h-5 w-5" />
-                <span className="text-xs">Audio</span>
-              </Button>
+          <div className="my-4 space-y-6">
+            {/* Date Picker */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Select Date
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start border-white/10 bg-[#222222]/80 text-left font-normal",
+                      !selectedDate && "text-gray-400"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate ? (
+                      format(selectedDate, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate ? selectedDate : new Date()}
+                    onSelect={(date) =>
+                      setValue("scheduledAt", date ?? new Date())
+                    }
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                    className="rounded-md border border-white/10 bg-[#222222]"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-          </div>
 
-          <div className="cursor-pointer rounded-lg border border-white/5 bg-[#222222]/70 p-4">
-            <h3 className="mb-3 text-sm font-medium text-gray-300">
-              Duration & Rate
-            </h3>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-300">30 minutes</p>
-                <p className="text-xs text-gray-500">Standard consultation</p>
+            {/* Time Selector */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Select Time
+              </label>
+              <Select
+                onValueChange={(value) => setValue("timeSlot", value)}
+                value={selectedTime}
+              >
+                <SelectTrigger className="w-full border-white/10 bg-[#222222]/80">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent className="border-white/10 bg-[#222222]">
+                  {timeSlots.map((slot) => (
+                    <SelectItem
+                      key={slot.value}
+                      value={slot.value}
+                      className="hover:bg-[#403E43]"
+                    >
+                      {slot.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Call Type Selection */}
+            <div className="rounded-lg border border-white/5 bg-[#222222]/70 p-4">
+              <h3 className="mb-3 text-sm font-medium text-gray-300">
+                Select Format
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    "flex h-auto cursor-pointer flex-col items-center py-3",
+                    selectedCallType === CallType.VIDEO
+                      ? "border-primary/50 bg-[#403E43]/40 text-white"
+                      : "border-white/10 bg-[#221F26] text-gray-400"
+                  )}
+                  onClick={() => setValue("callType", CallType.VIDEO)}
+                >
+                  <Video className="mb-1 h-5 w-5" />
+                  <span className="text-xs">Video</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    "flex h-auto cursor-pointer flex-col items-center py-3",
+                    selectedCallType === CallType.AUDIO
+                      ? "border-primary/50 bg-[#403E43]/40 text-white"
+                      : "border-white/10 bg-[#221F26] text-gray-400"
+                  )}
+                  onClick={() => setValue("callType", CallType.AUDIO)}
+                >
+                  <Headphones className="mb-1 h-5 w-5" />
+                  <span className="text-xs">Audio</span>
+                </Button>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            className="cursor-pointer border-white/10 bg-[#221F26] text-gray-300"
-            onClick={() => setIsScheduleOpen(false)}
-          >
-            Cancel
-          </Button>
-          <Button className="cursor-pointer border border-white/10 bg-gradient-to-r from-[#403E43] to-[#221F26] text-white hover:opacity-90">
-            Confirm Booking
-          </Button>
-        </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="cursor-pointer border-white/10 bg-[#221F26] text-gray-300"
+              onClick={() => setIsScheduleOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="cursor-pointer border border-white/10 bg-gradient-to-r from-[#403E43] to-[#221F26] text-white hover:opacity-90"
+            >
+              Confirm Booking
+            </Button>
+          </div>
+        </form>
       </motion.div>
     </Modal>
   );

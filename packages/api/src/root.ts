@@ -1,5 +1,6 @@
 import { accountRouter } from "./router/account-router";
 import { authRouter } from "./router/auth-router";
+import { callRouter } from "./router/call-router";
 import { expertRouter } from "./router/expert-router";
 import { healthCheckRouter } from "./router/health-check-router";
 import { paymentRouter } from "./router/payment-router";
@@ -13,6 +14,7 @@ export const appRouter = createTRPCRouter({
   health: healthCheckRouter,
   user: userRouter,
   payment: paymentRouter,
+  calls: callRouter,
 });
 
 // export type definition of API

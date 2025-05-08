@@ -1,4 +1,10 @@
-import { INTERNAL_SERVER_ERROR, logger, NOT_FOUND, OK } from "@repo/common";
+import {
+  INTERNAL_SERVER_ERROR,
+  logger,
+  NOT_ACCEPTABLE,
+  NOT_FOUND,
+  OK,
+} from "@repo/common";
 import { CallStatus, CallType, db } from "@repo/db";
 import z from "zod";
 
@@ -16,6 +22,46 @@ export const callRouter = {
     .mutation(async ({ input, ctx }) => {
       try {
         const { expertId, callType, scheduledAt } = input;
+
+        // Check if the scheduled time is in the future
+        if (scheduledAt <= new Date()) {
+          return {
+            message: "Cannot schedule call in the past",
+            success: false,
+            data: null,
+            code: NOT_ACCEPTABLE,
+          };
+        }
+
+        // Calculate one hour before and after the scheduled time
+        const oneHourBefore = new Date(scheduledAt.getTime() - 60 * 60 * 1000);
+        const oneHourAfter = new Date(scheduledAt.getTime() + 60 * 60 * 1000);
+
+        // Check for existing calls in the time slot
+        const existingCalls = await db.call.findMany({
+          where: {
+            expertId,
+            startedAt: {
+              gte: oneHourBefore,
+              lte: oneHourAfter,
+            },
+            status: {
+              in: ["SCHEDULED", "ONGOING"], // Check both scheduled and ongoing calls
+            },
+          },
+        });
+
+        if (existingCalls.length > 0) {
+          return {
+            message:
+              "Time slot is not available. Please choose a different time with at least 1 hour gap between calls.",
+            success: false,
+            data: null,
+            code: NOT_ACCEPTABLE,
+          };
+        }
+
+        // Create the call if time slot is available
         const call = await db.call.create({
           data: {
             userId: ctx.user.id,
