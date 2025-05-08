@@ -40,19 +40,27 @@ const UserOverview = () => {
 
   const recentCalls = data?.data?.recentCalls.map((item) => ({
     id: item.id,
-    expert: `${item.expert.firstName} ${item.expert.lastName}`,
+    expert:
+      `${item.expert.firstName ?? ""} ${item.expert.lastName ?? ""}`.trim(),
     type: item.callType,
-    date: format(item.startedAt, "MMM dd, h:mm a"),
-    duration: `${item.duration} min`,
+    date: item.startedAt ? format(item.startedAt, "MMM dd, h:mm a") : "N/A",
+    duration:
+      item.endedAt && item.startedAt
+        ? `${Math.round((item.endedAt.getTime() - item.startedAt.getTime()) / 60000)} min`
+        : "N/A",
     status: item.status,
   }));
 
   const upcomingCalls = data?.data?.upcomingCalls.map((item) => ({
     id: item.id,
-    expert: `${item.expert.firstName} ${item.expert.lastName}`,
+    expert:
+      `${item.expert.firstName ?? ""} ${item.expert.lastName ?? ""}`.trim(),
     type: item.callType,
-    date: format(item.scheduledAt, "MMM dd, h:mm a"),
-    duration: `${item.duration ?? 0} min`,
+    date: item.startedAt ? format(item.startedAt, "MMM dd, h:mm a") : "N/A",
+    duration:
+      item?.endedAt && item?.startedAt
+        ? `${Math.round((item?.endedAt.getTime() - item?.startedAt.getTime()) / 60000)} min`
+        : "N/A",
   }));
 
   const chatActivityData = data?.data?.activityArray.map((item) => ({

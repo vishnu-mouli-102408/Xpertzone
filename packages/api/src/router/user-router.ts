@@ -116,20 +116,30 @@ export const userRouter = {
           }),
 
           // Average call duration
-          db.call.aggregate({
-            _avg: { duration: true },
+          db.call.findMany({
             where: {
               userId,
+              status: "COMPLETED",
               startedAt: { gte: startDate },
+              endedAt: { not: null },
+            },
+            select: {
+              startedAt: true,
+              endedAt: true,
             },
           }),
 
           // Previous average call duration
-          db.call.aggregate({
-            _avg: { duration: true },
+          db.call.findMany({
             where: {
               userId,
+              status: "COMPLETED",
               startedAt: { gte: prevStartDate, lt: startDate },
+              endedAt: { not: null },
+            },
+            select: {
+              startedAt: true,
+              endedAt: true,
             },
           }),
 
@@ -157,17 +167,17 @@ export const userRouter = {
           }),
 
           // SECTION 3: UPCOMING CALLS
-          db.scheduledCall.findMany({
+          db.call.findMany({
             where: {
               userId,
-              status: "CONFIRMED",
-              scheduledAt: { gte: new Date() },
+              status: "SCHEDULED",
+              startedAt: { gte: new Date() },
             },
             select: {
               id: true,
-              scheduledAt: true,
+              startedAt: true,
+              endedAt: true,
               callType: true,
-              duration: true,
               expert: {
                 select: {
                   firstName: true,
@@ -177,15 +187,15 @@ export const userRouter = {
                 },
               },
             },
-            orderBy: { scheduledAt: "asc" },
+            orderBy: { startedAt: "asc" },
           }),
 
           // Previous upcoming calls
-          db.scheduledCall.count({
+          db.call.count({
             where: {
               userId,
-              status: "CONFIRMED",
-              scheduledAt: { gte: prevStartDate, lt: startDate },
+              status: "SCHEDULED",
+              startedAt: { gte: prevStartDate, lt: startDate },
             },
           }),
 
@@ -197,7 +207,7 @@ export const userRouter = {
             select: {
               id: true,
               startedAt: true,
-              duration: true,
+              endedAt: true,
               status: true,
               callType: true,
               expert: {
@@ -227,11 +237,25 @@ export const userRouter = {
           upcomingCalls.status === "fulfilled" ? upcomingCalls.value.length : 0;
         const avgCallDurationValue =
           avgCallDuration.status === "fulfilled"
-            ? (avgCallDuration.value._avg.duration ?? 0)
+            ? avgCallDuration.value.reduce((acc, call) => {
+                if (call.startedAt && call.endedAt) {
+                  return (
+                    acc + (call.endedAt.getTime() - call.startedAt.getTime())
+                  );
+                }
+                return acc;
+              }, 0) / (avgCallDuration.value.length || 1)
             : 0;
         const previousAvgCallDurationValue =
           previousAvgCallDuration.status === "fulfilled"
-            ? (previousAvgCallDuration.value._avg.duration ?? 0)
+            ? previousAvgCallDuration.value.reduce((acc, call) => {
+                if (call.startedAt && call.endedAt) {
+                  return (
+                    acc + (call.endedAt.getTime() - call.startedAt.getTime())
+                  );
+                }
+                return acc;
+              }, 0) / (previousAvgCallDuration.value.length || 1)
             : 0;
 
         const callPercentageChange =
@@ -280,7 +304,7 @@ export const userRouter = {
             // if (!data.startedAt) return; // Ensure date exists
             const day = new Intl.DateTimeFormat("en-US", {
               weekday: "short",
-            }).format(data.startedAt); // Convert to "Mon", "Tue", etc.
+            }).format(data.startedAt ?? new Date()); // Handle null case
 
             activityByDay[day] ??= {
               video_calls: 0,

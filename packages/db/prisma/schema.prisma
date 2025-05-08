@@ -39,10 +39,11 @@ enum Plan {
 }
 
 enum CallStatus {
-  ONGOING
-  COMPLETED
-  MISSED
-  CANCELED
+  SCHEDULED     // scheduled but not yet started
+  ONGOING     // live
+  COMPLETED   // call finished
+  MISSED      // users didn't show up
+  CANCELED    // user cancelled before starting
 }
 
 enum MessageType {
@@ -57,12 +58,7 @@ enum MessageStatus {
   READ
 }
 
-enum ScheduledCallStatus {
-  PENDING
-  CONFIRMED
-  CANCELED
-  COMPLETED
-}
+
 
 model User {
   id         String   @id @default(uuid())
@@ -92,8 +88,6 @@ model User {
 
   userCalls       Call[] @relation("UserCalls")  // Calls initiated by user
   expertCalls     Call[] @relation("ExpertCalls") // Calls received as an expert
-  scheduledCalls  ScheduledCall[] @relation("UserScheduledCalls") // Calls user has scheduled
-  expertSchedules ScheduledCall[] @relation("ExpertScheduledCalls") // Calls expert is booked for
   sentMessages    Message[] @relation("SenderMessages")
   receivedMessages Message[] @relation("ReceiverMessages")
 
@@ -133,19 +127,17 @@ model Call {
   userId     String
   expertId   String
   callType   CallType
-  duration   Int // in seconds
   status     CallStatus
-  startedAt  DateTime
+  startedAt  DateTime? // null when not yet started
   endedAt    DateTime?
 
   user   User @relation(fields: [userId], references: [id], name: "UserCalls", onDelete: Cascade)
   expert User @relation(fields: [expertId], references: [id], name: "ExpertCalls", onDelete: Cascade)
-  
-  ScheduledCall ScheduledCall[]
 
   @@index([userId])
   @@index([expertId])
 }
+
 
 model Message {
   id          String      @id @default(uuid())
@@ -166,26 +158,6 @@ model Message {
   @@index([receiverId])
 }
 
-model ScheduledCall {
-  id          String   @id @default(uuid())
-  userId      String
-  expertId    String
-  callType    CallType
-  scheduledAt DateTime // When the call is scheduled
-  duration    Int? // Estimated duration in minutes
-  status      ScheduledCallStatus @default(PENDING)
-  createdAt   DateTime @default(now())
-
-  // Relations
-  user   User @relation(fields: [userId], references: [id], name: "UserScheduledCalls", onDelete: Cascade)
-  expert User @relation(fields: [expertId], references: [id], name: "ExpertScheduledCalls", onDelete: Cascade)
-  
-  actualCallId String? // Nullable since call may not have happened yet
-  actualCall   Call?   @relation(fields: [actualCallId], references: [id], onDelete: Cascade) // Links to completed call
-
-  @@index([userId])
-  @@index([expertId])
-}
 
 model Review {
   id         String   @id @default(uuid())

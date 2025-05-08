@@ -101,20 +101,28 @@ export const expertRouter = {
           }),
 
           // Average call duration
-          db.call.aggregate({
-            _avg: { duration: true },
+          db.call.findMany({
             where: {
               expertId,
               startedAt: { gte: startDate },
+              endedAt: { not: null },
+            },
+            select: {
+              startedAt: true,
+              endedAt: true,
             },
           }),
 
           // Previous average call duration
-          db.call.aggregate({
-            _avg: { duration: true },
+          db.call.findMany({
             where: {
               expertId,
               startedAt: { gte: prevStartDate, lt: startDate },
+              endedAt: { not: null },
+            },
+            select: {
+              startedAt: true,
+              endedAt: true,
             },
           }),
 
@@ -142,17 +150,17 @@ export const expertRouter = {
           }),
 
           // SECTION 3: UPCOMING CALLS
-          db.scheduledCall.findMany({
+          db.call.findMany({
             where: {
               expertId,
-              status: "CONFIRMED",
-              scheduledAt: { gte: new Date() },
+              status: "SCHEDULED",
+              startedAt: { gte: new Date() },
             },
             select: {
               id: true,
-              scheduledAt: true,
+              startedAt: true,
+              endedAt: true,
               callType: true,
-              duration: true,
               user: {
                 select: {
                   firstName: true,
@@ -162,15 +170,15 @@ export const expertRouter = {
                 },
               },
             },
-            orderBy: { scheduledAt: "asc" },
+            orderBy: { startedAt: "asc" },
           }),
 
           // Previous upcoming calls
-          db.scheduledCall.count({
+          db.call.count({
             where: {
               expertId,
-              status: "CONFIRMED",
-              scheduledAt: { gte: prevStartDate, lt: startDate },
+              status: "SCHEDULED",
+              startedAt: { gte: prevStartDate, lt: startDate },
             },
           }),
 
@@ -182,7 +190,7 @@ export const expertRouter = {
             select: {
               id: true,
               startedAt: true,
-              duration: true,
+              endedAt: true,
               status: true,
               callType: true,
               user: {
@@ -206,11 +214,25 @@ export const expertRouter = {
           upcomingCalls.status === "fulfilled" ? upcomingCalls.value.length : 0;
         const avgCallDurationValue =
           avgCallDuration.status === "fulfilled"
-            ? (avgCallDuration.value._avg.duration ?? 0)
+            ? avgCallDuration.value.reduce((acc, call) => {
+                if (call.startedAt && call.endedAt) {
+                  return (
+                    acc + (call.endedAt.getTime() - call.startedAt.getTime())
+                  );
+                }
+                return acc;
+              }, 0) / (avgCallDuration.value.length || 1)
             : 0;
         const previousAvgCallDurationValue =
           previousAvgCallDuration.status === "fulfilled"
-            ? (previousAvgCallDuration.value._avg.duration ?? 0)
+            ? previousAvgCallDuration.value.reduce((acc, call) => {
+                if (call.startedAt && call.endedAt) {
+                  return (
+                    acc + (call.endedAt.getTime() - call.startedAt.getTime())
+                  );
+                }
+                return acc;
+              }, 0) / (previousAvgCallDuration.value.length || 1)
             : 0;
 
         const callPercentageChange =
@@ -252,7 +274,7 @@ export const expertRouter = {
             // if (!data.startedAt) return; // Ensure date exists
             const day = new Intl.DateTimeFormat("en-US", {
               weekday: "short",
-            }).format(data.startedAt); // Convert to "Mon", "Tue", etc.
+            }).format(data.startedAt ?? new Date()); // Handle null case
 
             activityByDay[day] ??= {
               video_calls: 0,
