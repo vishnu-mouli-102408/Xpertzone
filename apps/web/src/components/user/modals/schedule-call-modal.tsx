@@ -18,7 +18,7 @@ import {
 import { useClickOutside } from "@repo/ui/hooks";
 import { cn } from "@repo/ui/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, Headphones, Video } from "lucide-react";
+import { CalendarIcon, Clock, Headphones, Video } from "lucide-react";
 import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -244,33 +244,50 @@ const ScheduleCallModal = ({
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="cursor-pointer border-white/10 bg-[#221F26] text-gray-300"
-              onClick={() => setIsScheduleOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              onClick={() => {
-                if (!selectedTime) {
-                  toast.warning("Please select a time slot", {
-                    description:
-                      "You need to select a time slot to schedule a call",
-                    duration: 3000,
-                    position: "bottom-center",
-                    closeButton: true,
-                  });
-                }
-                return;
-              }}
-              className="cursor-pointer border border-white/10 bg-gradient-to-r from-[#403E43] to-[#221F26] text-white hover:opacity-90"
-            >
-              Confirm Booking
-            </Button>
+          <div className="mt-6 space-y-4">
+            <div className="rounded-lg border border-white/10 bg-[#222222]/40 p-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 rounded-full bg-[#403E43]/40 p-1.5">
+                  <Clock className="h-4 w-4 text-gray-300" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-gray-300">
+                    Call Duration
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Each scheduled call has a maximum duration of one hour.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="cursor-pointer border-white/10 bg-[#221F26] text-gray-300"
+                onClick={() => setIsScheduleOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                onClick={() => {
+                  if (!selectedTime) {
+                    toast.warning("Please select a time slot", {
+                      description:
+                        "You need to select a time slot to schedule a call",
+                      duration: 3000,
+                      position: "bottom-center",
+                      closeButton: true,
+                    });
+                  }
+                  return;
+                }}
+                className="cursor-pointer border border-white/10 bg-gradient-to-r from-[#403E43] to-[#221F26] text-white hover:opacity-90"
+              >
+                Confirm Booking
+              </Button>
+            </div>
           </div>
         </form>
       </motion.div>

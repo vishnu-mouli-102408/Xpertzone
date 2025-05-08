@@ -57,7 +57,7 @@ export const Modal = ({
         <Drawer.Portal>
           <Drawer.Content
             className={cn(
-              "fixed right-0 bottom-0 left-0 z-50 mt-24 !max-w-none rounded-t-[10px] border-t border-gray-700 bg-black/80",
+              "fixed right-0 bottom-0 left-0 z-50 mt-24 !max-w-none rounded-t-4xl border-t border-gray-700 bg-black/80",
               className
             )}
           >
