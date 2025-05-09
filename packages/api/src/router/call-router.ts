@@ -68,6 +68,7 @@ export const callRouter = {
             expertId,
             callType,
             startedAt: scheduledAt,
+            endedAt: new Date(scheduledAt.getTime() + 60 * 60 * 1000), // set to one hour after scheduledAt
             status: "SCHEDULED",
           },
         });
