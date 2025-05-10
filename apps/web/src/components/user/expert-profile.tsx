@@ -453,6 +453,7 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
       <AnimatePresence>
         {isScheduleOpen && (
           <ScheduleCallModal
+            expertId={data?.data?.expert?.id ?? ""}
             isScheduleOpen={isScheduleOpen}
             setIsScheduleOpen={setIsScheduleOpen}
             firstName={data?.data?.expert?.firstName ?? ""}

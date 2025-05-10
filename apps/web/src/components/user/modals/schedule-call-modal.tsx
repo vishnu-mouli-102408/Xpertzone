@@ -3,6 +3,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 import { modalVariants } from "@/src/lib/framer-animations";
+import { useTRPC } from "@/src/trpc/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CallType } from "@repo/db";
 import { Button } from "@repo/ui/components/button";
@@ -17,23 +18,27 @@ import {
 } from "@repo/ui/components/select";
 import { useClickOutside } from "@repo/ui/hooks";
 import { cn } from "@repo/ui/lib/utils";
+import { useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CalendarIcon, Clock, Headphones, Video } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+
+import ScheduleCallSuccessModal from "./schedule-call-success-modal";
 
 interface ScheduleCallModalProps {
   isScheduleOpen: boolean;
   setIsScheduleOpen: Dispatch<SetStateAction<boolean>>;
   firstName: string;
   lastName: string;
+  expertId: string;
 }
 
 // Generate time slots from 9 AM to 9 PM
-const timeSlots = Array.from({ length: 13 }, (_, i) => {
-  const hour = i + 9;
+const timeSlots = Array.from({ length: 24 }, (_, i) => {
+  const hour = i === 0 ? 12 : i;
   return {
     value: `${hour.toString().padStart(2, "0")}:00`,
     label: `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? "PM" : "AM"}`,
@@ -53,8 +58,11 @@ const ScheduleCallModal = ({
   setIsScheduleOpen,
   firstName,
   lastName,
+  expertId,
 }: ScheduleCallModalProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const trpc = useTRPC();
 
   const clickOutsideRef = useClickOutside(() => {
     setTimeout(() => {
@@ -74,22 +82,58 @@ const ScheduleCallModal = ({
   const selectedTime = watch("timeSlot");
   const selectedCallType = watch("callType");
 
-  const onSubmit = (data: ScheduleCallForm) => {
-    // Combine date and time
-    const [hours, minutes] = data.timeSlot.split(":");
-    const scheduledDate = new Date(data.scheduledAt);
-    scheduledDate.setHours(
-      parseInt(hours ?? "0"),
-      parseInt(minutes ?? "0"),
-      0,
-      0
-    );
+  const onSubmit = async (data: ScheduleCallForm) => {
+    try {
+      // Combine date and time
+      const [hours, minutes] = data.timeSlot.split(":");
+      const scheduledDate = new Date(data.scheduledAt);
+      scheduledDate.setHours(
+        parseInt(hours ?? "0"),
+        parseInt(minutes ?? "0"),
+        0,
+        0
+      );
 
-    console.log({
-      ...data,
-      scheduledAt: scheduledDate,
-    });
+      console.log({
+        ...data,
+        scheduledAt: scheduledDate,
+      });
+
+      await onSubmitForm({
+        callType: data.callType,
+        scheduledAt: scheduledDate,
+        expertId: expertId,
+      });
+    } catch (error) {
+      console.error("ERROR", error);
+      toast.error("There was a problem.", {
+        description:
+          "Seems like there was an issue on our end. Please try again later.",
+        duration: 3000,
+        position: "bottom-center",
+        closeButton: true,
+      });
+    }
   };
+
+  const { mutateAsync: onSubmitForm, isPending } = useMutation(
+    trpc.calls.scheduleCall.mutationOptions({
+      onSuccess: () => {
+        console.log("SUCCESS");
+        setShowSuccessModal(true);
+      },
+      onError: (error) => {
+        toast.error("There was a problem.", {
+          description:
+            error.message ||
+            "Seems like there was an issue on our end. Please try again later.",
+          duration: 3000,
+          position: "bottom-center",
+          closeButton: true,
+        });
+      },
+    })
+  );
 
   return (
     <Modal
@@ -192,9 +236,21 @@ const ScheduleCallModal = ({
                     position="popper"
                     sideOffset={4}
                   >
-                    {timeSlots.map((slot) => (
+                    {timeSlots.map((slot, i) => (
                       <SelectItem
-                        key={slot.value}
+                        disabled={(() => {
+                          if (!slot.value || !selectedDate) return true;
+                          const [hours] = slot.value.split(":") ?? ["0"];
+                          const selectedDateTime = new Date(selectedDate);
+                          selectedDateTime.setHours(
+                            parseInt(hours ?? "0"),
+                            0,
+                            0,
+                            0
+                          );
+                          return selectedDateTime < new Date();
+                        })()}
+                        key={`${slot.value}-${i}`}
                         value={slot.value}
                         className="cursor-pointer hover:bg-[#403E43]"
                       >
@@ -271,6 +327,7 @@ const ScheduleCallModal = ({
               </Button>
               <Button
                 type="submit"
+                disabled={isPending}
                 onClick={() => {
                   if (!selectedTime) {
                     toast.warning("Please select a time slot", {
@@ -285,12 +342,35 @@ const ScheduleCallModal = ({
                 }}
                 className="cursor-pointer border border-white/10 bg-gradient-to-r from-[#403E43] to-[#221F26] text-white hover:opacity-90"
               >
-                Confirm Booking
+                {isPending ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="mr-2 h-4 w-4 rounded-full border-2 border-zinc-400 border-t-white"
+                  />
+                ) : (
+                  "Confirm Booking"
+                )}
               </Button>
             </div>
           </div>
         </form>
       </motion.div>
+
+      <AnimatePresence>
+        {showSuccessModal && (
+          <ScheduleCallSuccessModal
+            onClose={() => setShowSuccessModal(false)}
+            isOpen={showSuccessModal}
+            expertName={`${firstName} ${lastName}`}
+            onCloseScheduleCallModal={() => setIsScheduleOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </Modal>
   );
 };
