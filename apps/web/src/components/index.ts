@@ -14,6 +14,8 @@ import Pricing from "./pricing";
 import SearchModal from "./search/search-modal";
 import Settings from "./settings";
 import { SidebarProvider } from "./sidebar/sidebar-context";
+import CallsOverview from "./user/calls-overview";
+import CallsSkeleton from "./user/calls-skeleton";
 import ExpertProfile from "./user/expert-profile";
 import ExploreExperts from "./user/explore-experts";
 import MobileMessageView from "./user/mobile-message-view";
@@ -23,6 +25,8 @@ import UserOverview from "./user/user-overview";
 export {
   AuroraHero,
   Billing,
+  CallsOverview,
+  CallsSkeleton,
   CTA,
   ExpertChats,
   ExpertOverview,

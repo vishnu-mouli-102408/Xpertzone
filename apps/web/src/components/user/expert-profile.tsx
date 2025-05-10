@@ -15,7 +15,6 @@ import {
   Calendar,
   Clock,
   MessageCircle,
-  Phone,
   Share2,
   SquarePen,
   Star,
@@ -166,7 +165,7 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
 
               {/* Quick Actions */}
               <motion.div
-                className="grid grid-cols-3 gap-2"
+                className="grid grid-cols-2 gap-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
@@ -193,19 +192,16 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
                   <MessageCircle className="h-5 w-5" />
                   <span className="text-xs">Message</span>
                 </Button>
+
                 <Button
-                  variant="outline"
-                  className="flex h-auto cursor-pointer flex-col gap-1 border-[#FFFFFF26] bg-[#221F26] py-3 text-gray-300 shadow-[inset_0px_0px_20px_0px_#FFFFFF33] transition-all duration-200 ease-in-out hover:scale-[1.005] hover:bg-[#403E43]/50 hover:text-white"
-                >
-                  <Phone className="h-5 w-5" />
-                  <span className="text-xs">Call</span>
-                </Button>
-                <Button
+                  onClick={() => {
+                    router.push("/user/calls");
+                  }}
                   variant="outline"
                   className="flex h-auto cursor-pointer flex-col gap-1 border-[#FFFFFF26] bg-[#221F26] py-3 text-gray-300 shadow-[inset_0px_0px_20px_0px_#FFFFFF33] transition-all duration-200 ease-in-out hover:scale-[1.005] hover:bg-[#403E43]/50 hover:text-white"
                 >
                   <Video className="h-5 w-5" />
-                  <span className="text-xs">Video</span>
+                  <span className="text-xs">Call</span>
                 </Button>
               </motion.div>
 

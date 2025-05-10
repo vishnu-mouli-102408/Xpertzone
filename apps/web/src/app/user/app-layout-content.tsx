@@ -20,6 +20,7 @@ import {
   Search,
   Settings,
   Users,
+  Video,
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -82,6 +83,7 @@ export const AppLayoutContent: FC<AppLayoutProps> = ({ children }) => {
       label: "Messages",
       href: "/user/chats",
     },
+    { icon: <Video size={18} />, label: "Calls", href: "/user/calls" },
     {
       icon: <Settings size={18} />,
       label: "Settings",

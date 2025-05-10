@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useChatActions } from "@/src/store";
 import { Button } from "@repo/ui/components/button";
 import { useIsMobile } from "@repo/ui/hooks";
-import { MessageCircle, Phone, Star, Video } from "lucide-react";
+import { MessageCircle, Star, Video } from "lucide-react";
 import * as motion from "motion/react-client";
 
 export interface ExpertProps {
@@ -104,7 +104,7 @@ const ExpertCard = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <Button
             onClick={() => {
               if (location.pathname !== "/user/chats") {
@@ -129,20 +129,15 @@ const ExpertCard = ({
             <span className="text-xs">Chat</span>
           </Button>
           <Button
-            variant="outline"
-            size="sm"
-            className="flex cursor-pointer items-center justify-center border-white/10 bg-[#221F26] text-gray-300 transition-all duration-300 ease-in-out hover:bg-[#403E43]/50 hover:text-white"
-          >
-            <Phone className="mr-1 h-4 w-4" />
-            <span className="text-xs">Call</span>
-          </Button>
-          <Button
+            onClick={() => {
+              router.push("/user/calls");
+            }}
             variant="outline"
             size="sm"
             className="flex cursor-pointer items-center justify-center border-white/10 bg-[#221F26] text-gray-300 transition-all duration-300 ease-in-out hover:bg-[#403E43]/50 hover:text-white"
           >
             <Video className="mr-1 h-4 w-4" />
-            <span className="text-xs">Video</span>
+            <span className="text-xs">Call</span>
           </Button>
         </div>
 
