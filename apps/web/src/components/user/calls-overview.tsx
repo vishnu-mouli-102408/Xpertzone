@@ -6,6 +6,7 @@ import {
 } from "@repo/ui/components/tabs";
 import * as motion from "motion/react-client";
 
+import PastCalls from "./past-calls";
 import UpcomingCalls from "./upcoming-calls";
 
 const CallsOverview = () => {
@@ -18,7 +19,7 @@ const CallsOverview = () => {
       >
         <h1 className="mb-2 text-3xl font-bold text-white">Calls</h1>
         <p className="mb-6 text-gray-400">
-          Manage your upcoming and past video calls
+          Manage your upcoming or ongoing video calls and past calls
         </p>
       </motion.div>
 
@@ -52,8 +53,7 @@ const CallsOverview = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            {/* <PastCalls /> */}
-            Past Calls
+            <PastCalls />
           </motion.div>
         </TabsContent>
       </Tabs>

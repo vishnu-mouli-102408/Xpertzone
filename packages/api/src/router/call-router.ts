@@ -240,14 +240,14 @@ export const callRouter = {
               ...(status === "UPCOMING"
                 ? {
                     status: CallStatus.SCHEDULED,
-                    startedAt: { gte: new Date() },
+                    endedAt: { gte: new Date() },
                   }
                 : {
                     OR: [
                       { status: CallStatus.COMPLETED },
                       {
                         status: CallStatus.SCHEDULED,
-                        startedAt: { lt: new Date() },
+                        endedAt: { lt: new Date() },
                       },
                     ],
                   }),
@@ -260,14 +260,14 @@ export const callRouter = {
               ...(status === "UPCOMING"
                 ? {
                     status: CallStatus.SCHEDULED,
-                    startedAt: { gte: new Date() },
+                    endedAt: { gte: new Date() },
                   }
                 : {
                     OR: [
                       { status: CallStatus.COMPLETED },
                       {
                         status: CallStatus.SCHEDULED,
-                        startedAt: { lt: new Date() },
+                        endedAt: { lt: new Date() },
                       },
                     ],
                   }),
@@ -335,14 +335,14 @@ export const callRouter = {
               ...(status === "UPCOMING"
                 ? {
                     status: CallStatus.SCHEDULED,
-                    startedAt: { gte: new Date() },
+                    endedAt: { gte: new Date() },
                   }
                 : {
                     OR: [
                       { status: CallStatus.COMPLETED },
                       {
                         status: CallStatus.SCHEDULED,
-                        startedAt: { lt: new Date() },
+                        endedAt: { lt: new Date() },
                       },
                     ],
                   }),
@@ -355,14 +355,14 @@ export const callRouter = {
               ...(status === "UPCOMING"
                 ? {
                     status: CallStatus.SCHEDULED,
-                    startedAt: { gte: new Date() },
+                    endedAt: { gte: new Date() },
                   }
                 : {
                     OR: [
                       { status: CallStatus.COMPLETED },
                       {
                         status: CallStatus.SCHEDULED,
-                        startedAt: { lt: new Date() },
+                        endedAt: { lt: new Date() },
                       },
                     ],
                   }),
