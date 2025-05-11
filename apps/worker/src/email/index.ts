@@ -1,5 +1,7 @@
 import { EMAIL_QUEUE_NAME, logger } from "@repo/common";
 import { sendMail } from "@repo/email";
+import ScheduleCallExpert from "@repo/email/templates/schedule-call-expert";
+import ScheduleCallEmail from "@repo/email/templates/schedule-call-user";
 import WelcomeEmail from "@repo/email/templates/welcome";
 import { Redis } from "ioredis";
 
@@ -23,7 +25,19 @@ export async function startEmailWorker(redis: Redis) {
 
         while (retryCount < maxRetries && !success) {
           try {
-            const { email, name, subject, type } = job;
+            const {
+              email,
+              name,
+              subject,
+              type,
+              userName,
+              expertName,
+              date,
+              time,
+              callLink,
+              userEmail,
+              expertEmail,
+            } = job;
             if (type === "welcome") {
               await sendMail({
                 email,
@@ -31,7 +45,40 @@ export async function startEmailWorker(redis: Redis) {
                 react: WelcomeEmail({ name }),
               });
               success = true;
-              logger.info("[EmailWorker] Job processed successfully");
+              logger.info("[EmailWorker-Welcome] Job processed successfully");
+            }
+            if (type === "schedule-call") {
+              await Promise.all([
+                sendMail({
+                  email: userEmail,
+                  subject,
+                  react: ScheduleCallEmail({
+                    userName,
+                    expertName,
+                    callLink,
+                    date,
+                    duration: "One hour",
+                    time,
+                  }),
+                }),
+                sendMail({
+                  email: expertEmail,
+                  subject,
+                  react: ScheduleCallExpert({
+                    userName,
+                    expertName,
+                    callLink,
+                    date,
+                    duration: "One hour",
+                    time,
+                  }),
+                }),
+              ]);
+
+              success = true;
+              logger.info(
+                "[EmailWorker-ScheduleCall] Job processed successfully"
+              );
             }
           } catch (err) {
             retryCount++;

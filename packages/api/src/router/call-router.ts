@@ -1,4 +1,6 @@
 import {
+  EMAIL_QUEUE_NAME,
+  getRedisClient,
   INTERNAL_SERVER_ERROR,
   logger,
   NOT_ACCEPTABLE,
@@ -6,6 +8,7 @@ import {
   OK,
 } from "@repo/common";
 import { CallStatus, CallType, db } from "@repo/db";
+import { format } from "date-fns";
 import z from "zod";
 
 import { protectedProcedure } from "../trpc";
@@ -21,6 +24,7 @@ export const callRouter = {
     )
     .mutation(async ({ input, ctx }) => {
       try {
+        const redis = getRedisClient();
         const { expertId, callType, scheduledAt } = input;
 
         // Check if the scheduled time is in the future
@@ -72,6 +76,28 @@ export const callRouter = {
             status: "SCHEDULED",
           },
         });
+
+        const expert = await db.user.findUnique({
+          where: {
+            id: expertId,
+          },
+        });
+
+        await redis.lpush(
+          EMAIL_QUEUE_NAME,
+          JSON.stringify({
+            userName: `${ctx.user.firstName} ${ctx.user.lastName}`,
+            expertName: `${expert?.firstName} ${expert?.lastName}`,
+            date: format(scheduledAt, "dd MMMM yyyy"), // 11 May 2025
+            time: format(scheduledAt, "HH:mm"), // 10:00 AM
+            duration: "One hour",
+            callLink: "https://meet.google.com/xxx-yyyy-zzz",
+            userEmail: ctx.user.email,
+            expertEmail: expert?.email,
+            subject: "Schedule Call",
+            type: "schedule-call",
+          })
+        );
 
         return {
           message: "Call scheduled successfully",
