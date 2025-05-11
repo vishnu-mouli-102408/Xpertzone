@@ -8,7 +8,14 @@ import { UserButton } from "@clerk/nextjs";
 import { Button } from "@repo/ui/components/button";
 import { Spinner } from "@repo/ui/components/spinner";
 import { useIsMobile } from "@repo/ui/hooks";
-import { BarChart3, Bell, Menu, MessageSquare, Settings } from "lucide-react";
+import {
+  BarChart3,
+  Bell,
+  Menu,
+  MessageSquare,
+  Settings,
+  Video,
+} from "lucide-react";
 import { motion } from "motion/react";
 
 export interface AppLayoutProps {
@@ -47,6 +54,7 @@ export const AppLayoutContent: FC<AppLayoutProps> = ({ children }) => {
       label: "Messages",
       href: "/expert/chats",
     },
+    { icon: <Video size={18} />, label: "Calls", href: "/expert/calls" },
     {
       icon: <Settings size={18} />,
       label: "Settings",

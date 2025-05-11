@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTRPC } from "@/src/trpc/react";
 import {
   Select,
@@ -40,6 +41,7 @@ type Filter = "7days" | "30days" | "90days" | "thisyear";
 const ExpertOverview = () => {
   const [filter, setFilter] = useState<Filter>("7days");
   const trpc = useTRPC();
+  const router = useRouter();
 
   const { data, isPending } = useQuery(
     trpc.expert.getExpertAnalytics.queryOptions({
@@ -226,7 +228,7 @@ const ExpertOverview = () => {
             <div className="flex space-x-3">
               <div className="flex items-center">
                 <span className="mr-1.5 h-3 w-3 rounded-full bg-indigo-500"></span>
-                <span className="text-xs text-gray-400">Calls</span>
+                <span className="text-xs text-gray-400">Video Calls</span>
               </div>
               <div className="flex items-center">
                 <span className="mr-1.5 h-3 w-3 rounded-full bg-emerald-500"></span>
@@ -234,7 +236,7 @@ const ExpertOverview = () => {
               </div>
               <div className="flex items-center">
                 <span className="mr-1.5 h-3 w-3 rounded-full bg-amber-500"></span>
-                <span className="text-xs text-gray-400">Meetings</span>
+                <span className="text-xs text-gray-400">Audio Calls</span>
               </div>
             </div>
           </div>
@@ -246,7 +248,7 @@ const ExpertOverview = () => {
                   margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
                 >
                   <defs>
-                    <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="colorVideo" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
                       <stop
                         offset="95%"
@@ -268,13 +270,7 @@ const ExpertOverview = () => {
                         stopOpacity={0.1}
                       />
                     </linearGradient>
-                    <linearGradient
-                      id="colorMeetings"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
+                    <linearGradient id="colorAudio" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8} />
                       <stop
                         offset="95%"
@@ -307,10 +303,10 @@ const ExpertOverview = () => {
                   />
                   <Area
                     type="monotone"
-                    dataKey="calls"
+                    dataKey="video"
                     stroke="#8B5CF6"
                     fillOpacity={1}
-                    fill="url(#colorCalls)"
+                    fill="url(#colorVideo)"
                   />
                   <Area
                     type="monotone"
@@ -321,10 +317,10 @@ const ExpertOverview = () => {
                   />
                   <Area
                     type="monotone"
-                    dataKey="meetings"
+                    dataKey="audio"
                     stroke="#F59E0B"
                     fillOpacity={0.6}
-                    fill="url(#colorMeetings)"
+                    fill="url(#colorAudio)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -380,8 +376,11 @@ const ExpertOverview = () => {
                 </h1>
               </div>
             )}
-            {upcomingCalls && upcomingCalls?.length > 0 && (
-              <button className="text-primary hover:text-primary/80 mt-2 w-full cursor-pointer text-center text-sm">
+            {upcomingCalls && upcomingCalls?.length > 4 && (
+              <button
+                onClick={() => router.push("/expert/calls")}
+                className="text-primary mt-2 w-full cursor-pointer text-center text-sm hover:text-blue-500"
+              >
                 View All Upcoming Calls
               </button>
             )}
@@ -456,9 +455,12 @@ const ExpertOverview = () => {
             </tbody>
           </table>
         </div>
-        {recentCalls && recentCalls?.length > 0 && (
+        {recentCalls && recentCalls?.length > 4 && (
           <div className="mt-4 text-center">
-            <button className="text-primary hover:text-primary/80 cursor-pointer text-sm">
+            <button
+              onClick={() => router.push("/expert/calls")}
+              className="text-primary cursor-pointer text-sm hover:text-blue-500"
+            >
               View Full Call History
             </button>
           </div>

@@ -298,6 +298,8 @@ export const userRouter = {
           { audio_calls: number; video_calls: number; text_messages: number }
         > = {};
 
+        logger.info(communicationActivity, "COMMUNICATION ACTIVITY");
+
         // 🟢 Process communication (audio/video calls)
         if (communicationActivity.status === "fulfilled") {
           communicationActivity.value.forEach((data) => {
@@ -354,19 +356,19 @@ export const userRouter = {
         }));
 
         // Log additional information
-        logger.info({ callPercentageChange }, "CALL PERCENTAGE CHANGE");
-        logger.info({ totalActiveExperts }, "TOTAL ACTIVE EXPERTS");
-        logger.info({ expertPercentageChange }, "EXPERT PERCENTAGE CHANGE");
-        logger.info({ avgCallDurationValue }, "AVG CALL DURATION VALUE");
+        logger.info(callPercentageChange, "CALL PERCENTAGE CHANGE");
+        logger.info(totalActiveExperts, "TOTAL ACTIVE EXPERTS");
+        logger.info(expertPercentageChange, "EXPERT PERCENTAGE CHANGE");
+        logger.info(avgCallDurationValue, "AVG CALL DURATION VALUE");
         logger.info(
-          { callDurationPercentageChange },
+          callDurationPercentageChange,
           "CALL DURATION PERCENTAGE CHANGE"
         );
-        logger.info({ activityByDay }, "ACTIVITY BY DAY");
-        logger.info({ activityArray }, "ACTIVITY ARRAY");
-        logger.info({ totalUpcomingCalls }, "TOTAL UPCOMING CALLS");
+        logger.info(activityByDay, "ACTIVITY BY DAY");
+        logger.info(activityArray, "ACTIVITY ARRAY");
+        logger.info(totalUpcomingCalls, "TOTAL UPCOMING CALLS");
         logger.info(
-          { upcomingCallsPercentageChange },
+          upcomingCallsPercentageChange,
           "UPCOMING CALLS PERCENTAGE CHANGE"
         );
 

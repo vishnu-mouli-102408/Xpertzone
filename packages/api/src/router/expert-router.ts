@@ -110,6 +110,8 @@ export const expertRouter = {
             select: {
               startedAt: true,
               endedAt: true,
+              status: true,
+              callType: true,
             },
           }),
 
@@ -123,6 +125,8 @@ export const expertRouter = {
             select: {
               startedAt: true,
               endedAt: true,
+              status: true,
+              callType: true,
             },
           }),
 
@@ -215,24 +219,36 @@ export const expertRouter = {
         const avgCallDurationValue =
           avgCallDuration.status === "fulfilled"
             ? avgCallDuration.value.reduce((acc, call) => {
-                if (call.startedAt && call.endedAt) {
+                if (
+                  call.startedAt &&
+                  call.endedAt &&
+                  call.status === "COMPLETED"
+                ) {
                   return (
                     acc + (call.endedAt.getTime() - call.startedAt.getTime())
                   );
                 }
                 return acc;
-              }, 0) / (avgCallDuration.value.length || 1)
+              }, 0) /
+              (avgCallDuration.value.length || 1) /
+              60000 // Convert milliseconds to minutes
             : 0;
         const previousAvgCallDurationValue =
           previousAvgCallDuration.status === "fulfilled"
             ? previousAvgCallDuration.value.reduce((acc, call) => {
-                if (call.startedAt && call.endedAt) {
+                if (
+                  call.startedAt &&
+                  call.endedAt &&
+                  call.status === "COMPLETED"
+                ) {
                   return (
                     acc + (call.endedAt.getTime() - call.startedAt.getTime())
                   );
                 }
                 return acc;
-              }, 0) / (previousAvgCallDuration.value.length || 1)
+              }, 0) /
+              (previousAvgCallDuration.value.length || 1) /
+              60000 // Convert milliseconds to minutes
             : 0;
 
         const callPercentageChange =
@@ -289,7 +305,7 @@ export const expertRouter = {
           });
         } else {
           logger.error(
-            { communicationActivity },
+            communicationActivity,
             "Error fetching communication activity"
           );
         }
@@ -324,19 +340,19 @@ export const expertRouter = {
         }));
 
         // Log additional information
-        logger.info({ callPercentageChange }, "CALL PERCENTAGE CHANGE");
-        logger.info({ avgRating }, "AVERAGE RATING");
-        logger.info({ totalReviewsCount }, "TOTAL REVIEWS COUNT");
-        logger.info({ avgCallDurationValue }, "AVG CALL DURATION VALUE");
+        logger.info(callPercentageChange, "CALL PERCENTAGE CHANGE");
+        logger.info(avgRating, "AVERAGE RATING");
+        logger.info(totalReviewsCount, "TOTAL REVIEWS COUNT");
+        logger.info(avgCallDurationValue, "AVG CALL DURATION VALUE");
         logger.info(
-          { callDurationPercentageChange },
+          callDurationPercentageChange,
           "CALL DURATION PERCENTAGE CHANGE"
         );
-        logger.info({ activityByDay }, "ACTIVITY BY DAY");
-        logger.info({ activityArray }, "ACTIVITY ARRAY");
-        logger.info({ totalUpcomingCalls }, "TOTAL UPCOMING CALLS");
+        logger.info(activityByDay, "ACTIVITY BY DAY");
+        logger.info(activityArray, "ACTIVITY ARRAY");
+        logger.info(totalUpcomingCalls, "TOTAL UPCOMING CALLS");
         logger.info(
-          { upcomingCallsPercentageChange },
+          upcomingCallsPercentageChange,
           "UPCOMING CALLS PERCENTAGE CHANGE"
         );
 
