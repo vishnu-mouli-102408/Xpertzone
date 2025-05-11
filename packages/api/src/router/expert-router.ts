@@ -104,6 +104,7 @@ export const expertRouter = {
           db.call.findMany({
             where: {
               expertId,
+              status: "COMPLETED",
               startedAt: { gte: startDate },
               endedAt: { not: null },
             },
@@ -119,6 +120,7 @@ export const expertRouter = {
           db.call.findMany({
             where: {
               expertId,
+              status: "COMPLETED",
               startedAt: { gte: prevStartDate, lt: startDate },
               endedAt: { not: null },
             },
