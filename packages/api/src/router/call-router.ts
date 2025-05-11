@@ -80,7 +80,7 @@ export const callRouter = {
           data: call,
         };
       } catch (error) {
-        logger.error("Error scheduling call", error);
+        logger.error(error, "Error scheduling call");
         return {
           message: "Internal server error",
           success: false,
@@ -110,7 +110,7 @@ export const callRouter = {
           data: call,
         };
       } catch (error) {
-        logger.error("Error starting call", error);
+        logger.error(error, "Error starting call");
         return {
           message: "Internal server error",
           success: false,
@@ -156,7 +156,7 @@ export const callRouter = {
           code: OK,
         };
       } catch (error) {
-        logger.error("Error ending call", error);
+        logger.error(error, "Error ending call");
         return {
           message: "Internal server error",
           success: false,
@@ -186,7 +186,197 @@ export const callRouter = {
           code: OK,
         };
       } catch (error) {
-        logger.error("Error updating call status", error);
+        logger.error(error, "Error updating call status");
+        return {
+          message: "Internal server error",
+          success: false,
+          data: null,
+          code: INTERNAL_SERVER_ERROR,
+        };
+      }
+    }),
+  getAllUserCalls: protectedProcedure
+    .input(
+      z.object({
+        status: z.enum(["UPCOMING", "COMPLETED"]),
+        type: z.nativeEnum(CallType).optional(),
+        cursor: z.string().optional(),
+        limit: z.number().int().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const { status, type, cursor, limit = 10 } = input;
+        const [total, calls] = await Promise.all([
+          db.call.count({
+            where: {
+              userId: ctx.user.id,
+              ...(status === "UPCOMING"
+                ? {
+                    status: CallStatus.SCHEDULED,
+                    startedAt: { gte: new Date() },
+                  }
+                : {
+                    OR: [
+                      { status: CallStatus.COMPLETED },
+                      {
+                        status: CallStatus.SCHEDULED,
+                        startedAt: { lt: new Date() },
+                      },
+                    ],
+                  }),
+              ...(type && { callType: type }),
+            },
+          }),
+          db.call.findMany({
+            where: {
+              userId: ctx.user.id,
+              ...(status === "UPCOMING"
+                ? {
+                    status: CallStatus.SCHEDULED,
+                    startedAt: { gte: new Date() },
+                  }
+                : {
+                    OR: [
+                      { status: CallStatus.COMPLETED },
+                      {
+                        status: CallStatus.SCHEDULED,
+                        startedAt: { lt: new Date() },
+                      },
+                    ],
+                  }),
+              ...(type && { callType: type }),
+            },
+            cursor: cursor ? { id: cursor } : undefined,
+            take: limit + 1,
+            orderBy: { startedAt: "desc" },
+            include: {
+              expert: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  profilePic: true,
+                  expertise: true,
+                },
+              },
+            },
+          }),
+        ]);
+
+        const hasNextPage = calls.length > limit;
+        const nextCursor =
+          hasNextPage && calls.length > 0 ? calls[calls.length - 1]?.id : null;
+
+        const callsToReturn = hasNextPage ? calls.slice(0, -1) : calls;
+        return {
+          message: "Calls fetched successfully",
+          success: true,
+          data: {
+            totalCalls: total,
+            calls: callsToReturn,
+            nextCursor,
+            totalPages: Math.ceil(total / (limit || 10)),
+          },
+          code: OK,
+        };
+      } catch (error) {
+        logger.error(error, "Error fetching calls");
+        return {
+          message: "Internal server error",
+          success: false,
+          data: null,
+          code: INTERNAL_SERVER_ERROR,
+        };
+      }
+    }),
+  getAllExpertCalls: protectedProcedure
+    .input(
+      z.object({
+        status: z.enum(["UPCOMING", "COMPLETED"]),
+        type: z.nativeEnum(CallType).optional(),
+        cursor: z.string().optional(),
+        limit: z.number().int().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const { status, type, cursor, limit = 10 } = input;
+        const [total, calls] = await Promise.all([
+          db.call.count({
+            where: {
+              expertId: ctx.user.id,
+              ...(status === "UPCOMING"
+                ? {
+                    status: CallStatus.SCHEDULED,
+                    startedAt: { gte: new Date() },
+                  }
+                : {
+                    OR: [
+                      { status: CallStatus.COMPLETED },
+                      {
+                        status: CallStatus.SCHEDULED,
+                        startedAt: { lt: new Date() },
+                      },
+                    ],
+                  }),
+              ...(type && { callType: type }),
+            },
+          }),
+          db.call.findMany({
+            where: {
+              expertId: ctx.user.id,
+              ...(status === "UPCOMING"
+                ? {
+                    status: CallStatus.SCHEDULED,
+                    startedAt: { gte: new Date() },
+                  }
+                : {
+                    OR: [
+                      { status: CallStatus.COMPLETED },
+                      {
+                        status: CallStatus.SCHEDULED,
+                        startedAt: { lt: new Date() },
+                      },
+                    ],
+                  }),
+              ...(type && { callType: type }),
+            },
+            cursor: cursor ? { id: cursor } : undefined,
+            take: limit + 1,
+            orderBy: { startedAt: "desc" },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  profilePic: true,
+                  expertise: true,
+                },
+              },
+            },
+          }),
+        ]);
+
+        const hasNextPage = calls.length > limit;
+        const nextCursor =
+          hasNextPage && calls.length > 0 ? calls[calls.length - 1]?.id : null;
+
+        const callsToReturn = hasNextPage ? calls.slice(0, -1) : calls;
+        return {
+          message: "Calls fetched successfully",
+          success: true,
+          data: {
+            totalCalls: total,
+            calls: callsToReturn,
+            nextCursor,
+            totalPages: Math.ceil(total / (limit || 10)),
+          },
+          code: OK,
+        };
+      } catch (error) {
+        logger.error(error, "Error fetching calls");
         return {
           message: "Internal server error",
           success: false,

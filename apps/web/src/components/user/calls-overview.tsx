@@ -1,12 +1,12 @@
-"use client";
-
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@repo/ui/components/tabs";
-import { motion } from "motion/react";
+import * as motion from "motion/react-client";
+
+import UpcomingCalls from "./upcoming-calls";
 
 const CallsOverview = () => {
   return (
@@ -23,7 +23,7 @@ const CallsOverview = () => {
       </motion.div>
 
       <Tabs defaultValue="upcoming" className="w-full">
-        <TabsList className="grid w-full max-w-md cursor-pointer grid-cols-2 border border-white/10 bg-black">
+        <TabsList className="grid h-11 w-full max-w-md cursor-pointer grid-cols-2 border border-white/10 bg-black">
           <TabsTrigger
             value="upcoming"
             className="cursor-pointer data-[state=active]:bg-white/10 data-[state=active]:text-white"
@@ -43,8 +43,7 @@ const CallsOverview = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            {/* <UpcomingCalls /> */}
-            Upcoming Calls
+            <UpcomingCalls />
           </motion.div>
         </TabsContent>
         <TabsContent value="past" className="mt-6" asChild>

@@ -14,8 +14,21 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-const Page = () => {
-  prefetch(trpc.user.getAllExperts.infiniteQueryOptions({ limit: 10 }));
+const Page = async () => {
+  await Promise.all([
+    prefetch(
+      trpc.calls.getAllUserCalls.infiniteQueryOptions({
+        status: "UPCOMING",
+        limit: 10,
+      })
+    ),
+    prefetch(
+      trpc.calls.getAllUserCalls.infiniteQueryOptions({
+        status: "COMPLETED",
+        limit: 10,
+      })
+    ),
+  ]);
   return (
     <HydrateClient>
       <div className="mx-auto min-h-[calc(100vh-64px)] w-full bg-black/50 p-6">
