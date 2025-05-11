@@ -244,7 +244,9 @@ export const userRouter = {
                   );
                 }
                 return acc;
-              }, 0) / (avgCallDuration.value.length || 1)
+              }, 0) /
+              (avgCallDuration.value.length || 1) /
+              60000 // Convert milliseconds to minutes
             : 0;
         const previousAvgCallDurationValue =
           previousAvgCallDuration.status === "fulfilled"
@@ -255,7 +257,9 @@ export const userRouter = {
                   );
                 }
                 return acc;
-              }, 0) / (previousAvgCallDuration.value.length || 1)
+              }, 0) /
+              (previousAvgCallDuration.value.length || 1) /
+              60000 // Convert milliseconds to minutes
             : 0;
 
         const callPercentageChange =
