@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import env from "@/src/env";
 import { staggerContainer } from "@/src/lib/framer-animations";
 import { useTRPC } from "@/src/trpc/react";
 import type { AppRouter } from "@repo/api";
@@ -164,7 +165,9 @@ const UpcomingCalls = () => {
                         size="sm"
                         className="flex-1 cursor-pointer border-white/20 text-white hover:bg-white/10"
                         onClick={() =>
-                          copyLink("https://meet.example.com/abc123")
+                          copyLink(
+                            `${env.NEXT_PUBLIC_APP_URL}/room/${call.roomId}`
+                          )
                         }
                       >
                         <Copy size={14} className="mr-1" />
@@ -174,7 +177,9 @@ const UpcomingCalls = () => {
                         size="sm"
                         className="flex-1 cursor-pointer border-none bg-white/10 text-white hover:bg-white/20"
                         onClick={() =>
-                          joinCall("https://meet.example.com/abc123")
+                          joinCall(
+                            `${env.NEXT_PUBLIC_APP_URL}/room/${call.roomId}`
+                          )
                         }
                       >
                         <Video size={14} className="mr-1" />

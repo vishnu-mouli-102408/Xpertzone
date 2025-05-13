@@ -130,6 +130,7 @@ model Call {
   status     CallStatus
   startedAt  DateTime? // null when not yet started
   endedAt    DateTime?
+  roomId     String?
 
   user   User @relation(fields: [userId], references: [id], name: "UserCalls", onDelete: Cascade)
   expert User @relation(fields: [expertId], references: [id], name: "ExpertCalls", onDelete: Cascade)

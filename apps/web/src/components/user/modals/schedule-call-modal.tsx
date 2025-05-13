@@ -18,7 +18,7 @@ import {
 } from "@repo/ui/components/select";
 import { useClickOutside } from "@repo/ui/hooks";
 import { cn } from "@repo/ui/lib/utils";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CalendarIcon, Clock, Headphones, Video } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -73,10 +73,12 @@ const ScheduleCallModal = ({
   const { handleSubmit, setValue, watch } = useForm<ScheduleCallForm>({
     resolver: zodResolver(scheduleCallFormSchema),
     defaultValues: {
-      callType: CallType.AUDIO,
+      callType: CallType.VIDEO,
       scheduledAt: new Date(),
     },
   });
+
+  const queryClient = useQueryClient();
 
   const selectedDate = watch("scheduledAt");
   const selectedTime = watch("timeSlot");
@@ -118,9 +120,22 @@ const ScheduleCallModal = ({
 
   const { mutateAsync: onSubmitForm, isPending } = useMutation(
     trpc.calls.scheduleCall.mutationOptions({
-      onSuccess: () => {
-        console.log("SUCCESS");
-        setShowSuccessModal(true);
+      onSuccess: async (data) => {
+        console.log("SUCCESS", data);
+        if (data?.success) {
+          await queryClient.invalidateQueries({
+            queryKey: trpc.calls.getAllUserCalls.queryKey(),
+          });
+          setShowSuccessModal(true);
+        } else {
+          toast.error("There was a problem.", {
+            description:
+              "Seems like there was an issue on our end. Please try again later.",
+            duration: 3000,
+            position: "bottom-center",
+            closeButton: true,
+          });
+        }
       },
       onError: (error) => {
         toast.error("There was a problem.", {

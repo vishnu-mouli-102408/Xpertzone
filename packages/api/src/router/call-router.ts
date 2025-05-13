@@ -71,6 +71,7 @@ export const callRouter = {
             userId: ctx.user.id,
             expertId,
             callType,
+            roomId: crypto.randomUUID(),
             startedAt: scheduledAt,
             endedAt: new Date(scheduledAt.getTime() + 60 * 60 * 1000), // set to one hour after scheduledAt
             status: "SCHEDULED",
@@ -91,7 +92,7 @@ export const callRouter = {
             date: format(scheduledAt, "dd MMMM yyyy"), // 11 May 2025
             time: format(scheduledAt, "HH:mm"), // 10:00 AM
             duration: "One hour",
-            callLink: "https://meet.google.com/xxx-yyyy-zzz",
+            callLink: `${process.env.NEXT_PUBLIC_APP_URL}/room/${call.roomId}`,
             userEmail: ctx.user.email,
             expertEmail: expert?.email,
             subject: "Schedule Call",
