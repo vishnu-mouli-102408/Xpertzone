@@ -8,12 +8,14 @@ interface ResultsNotFoundProps {
   className?: string;
   description?: string;
   title?: string;
+  icon?: React.ReactNode;
 }
 
 export default function ResultsNotFound({
   className,
   description,
   title,
+  icon,
 }: ResultsNotFoundProps) {
   return (
     <motion.div
@@ -43,10 +45,12 @@ export default function ResultsNotFound({
           }}
           className="relative z-10"
         >
-          <Search
-            className="h-12 w-12 text-gray-400 dark:text-gray-300"
-            strokeWidth={1.5}
-          />
+          {icon ?? (
+            <Search
+              className="h-12 w-12 text-gray-400 dark:text-gray-300"
+              strokeWidth={1.5}
+            />
+          )}
         </motion.div>
         <motion.div
           className="absolute inset-0 bg-gradient-to-r dark:from-purple-900/20 dark:via-blue-900/20 dark:to-cyan-900/20"

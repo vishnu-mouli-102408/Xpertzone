@@ -412,4 +412,38 @@ export const callRouter = {
         };
       }
     }),
+  getCallById: protectedProcedure
+    .input(z.object({ roomId: z.string() }))
+    .query(async ({ input }) => {
+      try {
+        const { roomId } = input;
+        const call = await db.call.findFirst({
+          where: {
+            roomId,
+          },
+        });
+        if (!call) {
+          return {
+            message: "Call not found",
+            success: false,
+            data: null,
+            code: NOT_FOUND,
+          };
+        }
+        return {
+          message: "Call fetched successfully",
+          success: true,
+          data: call,
+          code: OK,
+        };
+      } catch (error) {
+        logger.error(error, "Error fetching calls");
+        return {
+          message: "Internal server error",
+          success: false,
+          data: null,
+          code: INTERNAL_SERVER_ERROR,
+        };
+      }
+    }),
 };

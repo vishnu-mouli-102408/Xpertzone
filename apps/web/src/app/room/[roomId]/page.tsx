@@ -6,7 +6,7 @@ import { Spinner } from "@repo/ui/components/spinner";
 import Room from "./Room";
 
 export const metadata: Metadata = {
-  title: "Room",
+  title: "Calls | Room",
   description: "This is the layout for the room page.",
   icons: [{ rel: "icon", url: "/favicon/favicon.ico" }],
 };
@@ -15,11 +15,10 @@ export const dynamic = "force-dynamic";
 
 const Page = async ({ params }: { params: Promise<{ roomId: string }> }) => {
   const { roomId } = await params;
-  console.log("ROOM ID", roomId);
 
   return (
     <HydrateClient>
-      <div className="mx-auto min-h-screen w-full bg-black/50 p-6">
+      <div className="min-h-screen w-full bg-black/50">
         <Suspense
           fallback={
             <div className="flex h-full w-full items-center justify-center">
@@ -27,7 +26,7 @@ const Page = async ({ params }: { params: Promise<{ roomId: string }> }) => {
             </div>
           }
         >
-          <Room />
+          <Room roomId={roomId} />
         </Suspense>
       </div>
     </HydrateClient>
