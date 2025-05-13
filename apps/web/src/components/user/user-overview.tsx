@@ -93,8 +93,7 @@ const UserOverview = () => {
     },
     {
       title: "Avg. Call Duration",
-      value:
-        data?.data?.analytics.averageCallDuration.avgCallDurationValue ?? "0",
+      value: `${data?.data?.analytics?.averageCallDuration?.avgCallDurationValue ?? "0"} min`,
       icon: Clock,
       change: `${(data?.data?.analytics.averageCallDuration.callDurationPercentageChange ?? 0) >= 0 ? "+" : ""}${data?.data?.analytics.averageCallDuration.callDurationPercentageChange ?? "N/A"}%`,
       color: "bg-[#f59e0b33]",
