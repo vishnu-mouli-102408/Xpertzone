@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import { dark } from "@clerk/themes";
 import { cn } from "@repo/ui/lib/utils";
+import { Analytics } from "@vercel/analytics/next";
 
 import "@repo/ui/globals.css";
 
@@ -89,7 +90,10 @@ export default function RootLayout({
           <ClerkLoaded>
             <Suspense fallback={<LoadingSpinner mainClassName="h-screen" />}>
               <main className="relative flex flex-col">
-                <Providers>{children}</Providers>
+                <Providers>
+                  {children}
+                  <Analytics />
+                </Providers>
                 <Toaster
                   closeButton
                   position="bottom-center"
