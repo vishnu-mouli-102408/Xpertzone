@@ -49,6 +49,7 @@
     "react-easy-crop": "^5.4.1",
     "react-hook-form": "^7.55.0",
     "recharts": "^2.15.2",
+    "socket.io-client": "^4.8.1",
     "sonner": "^2.0.3",
     "superjson": "^2.2.2",
     "svix": "^1.63.1",

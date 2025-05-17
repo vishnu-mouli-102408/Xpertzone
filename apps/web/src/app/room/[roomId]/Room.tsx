@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ResultsNotFound from "@/src/components/global/results-not-found";
 import { useDbUser } from "@/src/hooks";
 import { useTRPC } from "@/src/trpc/react";
@@ -32,8 +32,9 @@ interface RoomProps {
   roomId: string;
 }
 
+// const SOCKET_SERVER_URL = "http://localhost:4001";
+
 const Room = ({ roomId }: RoomProps) => {
-  console.log("ROOM ID", roomId);
   const trpc = useTRPC();
 
   const { data, isPending } = useQuery(
@@ -52,6 +53,130 @@ const Room = ({ roomId }: RoomProps) => {
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const [localAudioTrack, setLocalAudioTrack] =
+    useState<MediaStreamTrack | null>(null);
+  const [localVideoTrack, setlocalVideoTrack] =
+    useState<MediaStreamTrack | null>(null);
+
+  //   const socketRef = useRef<Socket | null>(null);
+  //   const [sendingPc, setSendingPc] = useState<null | RTCPeerConnection>(null);
+  //   const [receivingPc, setReceivingPc] = useState<null | RTCPeerConnection>(
+  //     null
+  //   );
+
+  //   const [remoteVideoTrack, setRemoteVideoTrack] =
+  //     useState<MediaStreamTrack | null>(null);
+  //   const [remoteAudioTrack, setRemoteAudioTrack] =
+  //     useState<MediaStreamTrack | null>(null);
+
+  //   const [remoteMediaStream, setRemoteMediaStream] =
+  //     useState<MediaStream | null>(null);
+  //   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+
+  //   useEffect(() => {
+  //     if (!roomId) return;
+  //     const socket = io(SOCKET_SERVER_URL, {
+  //       transports: ["websocket"],
+  //       autoConnect: true,
+  //     });
+  //     socketRef.current = socket;
+
+  //     socket.on("connect", () => {
+  //       console.log("Socket.IO connected");
+  //       setIsConnected(true);
+  //       socket.emit("join-room", { roomId });
+  //     });
+
+  //     socket.on("disconnect", () => {
+  //       console.log("Socket.IO disconnected");
+  //       setIsConnected(false);
+  //     });
+
+  //     socket.on("connect_error", (err) => {
+  //       console.error("Socket.IO connection error", err);
+  //     });
+
+  //     socket.on("role", (data: { isInitiator: boolean }) => {
+  //       if (data.isInitiator) {
+  //         const pc = new RTCPeerConnection();
+  //         setSendingPc(pc);
+  //         setIsConnected(false);
+
+  //         if (localVideoTrack) {
+  //           console.error("added tack");
+  //           console.log(localVideoTrack);
+  //           pc.addTrack(localVideoTrack);
+  //         }
+  //         if (localAudioTrack) {
+  //           console.error("added tack");
+  //           console.log(localAudioTrack);
+  //           pc.addTrack(localAudioTrack);
+  //         }
+  //         pc.onicecandidate = (e) => {
+  //           console.log("receiving ice candidate locally");
+  //           if (e.candidate) {
+  //             socket.emit("ICE-CANDIDATE", {
+  //               candidate: e.candidate,
+  //               type: "sender",
+  //               roomId,
+  //             });
+  //           }
+  //         };
+  //         pc.onnegotiationneeded = async () => {
+  //           console.log("on negotiation neeeded, sending offer");
+  //           const sdp = await pc.createOffer();
+  //           void pc.setLocalDescription(sdp);
+  //           socket.emit("offer", {
+  //             sdp,
+  //             roomId,
+  //           });
+  //         };
+  //       }
+  //     });
+
+  //     socket.on("offer", async (offer: RTCSessionDescriptionInit) => {
+  //       if (!sendingPc) return;
+  //       await sendingPc.setRemoteDescription(offer);
+  //       const answer = await sendingPc.createAnswer();
+  //       await sendingPc.setLocalDescription(answer);
+  //       const stream = new MediaStream();
+  //       if (remoteVideoRef.current) {
+  //         remoteVideoRef.current.srcObject = stream;
+  //       }
+  //       setRemoteMediaStream(stream);
+  //       socket.emit("answer", {
+  //         sdp: answer,
+  //         roomId,
+  //       });
+  //     });
+  //   }, [localAudioTrack, localVideoTrack, roomId, sendingPc]);
+
+  useEffect(() => {
+    const getLocalStream = async () => {
+      const stream = await window.navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+      const audioTrack = stream.getAudioTracks()[0];
+      const videoTrack = stream.getVideoTracks()[0];
+
+      setLocalAudioTrack(audioTrack ?? null);
+      setlocalVideoTrack(videoTrack ?? null);
+    };
+
+    void getLocalStream();
+  }, []);
+
+  useEffect(() => {
+    if (localVideoRef.current) {
+      if (localVideoTrack) {
+        localVideoRef.current.srcObject = new MediaStream([localVideoTrack]);
+        void localVideoRef.current.play();
+      }
+    }
+  }, [localVideoRef, localVideoTrack]);
 
   useEffect(() => {
     if (data?.data?.startedAt) {
@@ -78,11 +203,7 @@ const Room = ({ roomId }: RoomProps) => {
           clearInterval(timer);
           setCallStarted(true);
           setShowPreCallDialog(false);
-
-          setTimeout(() => {
-            setIsConnected(true);
-            toast("Connected to the call");
-          }, 2000);
+          setIsConnected(true);
           return 0;
         }
         return prev - 1;
@@ -92,8 +213,6 @@ const Room = ({ roomId }: RoomProps) => {
     return () => clearInterval(timer);
   }, [timeRemaining]);
 
-  console.log("TIME REMAINING", timeRemaining);
-
   const calculateProgress = () => {
     if (!data?.data?.startedAt || totalDuration === 0) return 0;
 
@@ -101,11 +220,30 @@ const Room = ({ roomId }: RoomProps) => {
     return (elapsed / totalDuration) * 100;
   };
 
-  const toggleMic = () => setIsMicOn((prev) => !prev);
-  const toggleCamera = () => setIsCameraOn((prev) => !prev);
+  const toggleMic = () => {
+    try {
+      if (localAudioTrack) {
+        localAudioTrack.enabled = !isMicOn;
+        setIsMicOn((prev) => !prev);
+      }
+    } catch (error) {
+      console.error("Error toggling mic:", error);
+      toast.error("Failed to toggle mic");
+    }
+  };
 
-  console.log("DATA", data);
-  console.log("IS PENDING", isPending);
+  const toggleCamera = () => {
+    try {
+      console.log("toggleCamera", isCameraOn);
+      if (localVideoTrack) {
+        localVideoTrack.enabled = !isCameraOn;
+        setIsCameraOn((prev) => !prev);
+      }
+    } catch (error) {
+      console.error("Error toggling camera:", error);
+      toast.error("Failed to toggle camera");
+    }
+  };
 
   if (isPending) {
     return (
@@ -221,9 +359,16 @@ const Room = ({ roomId }: RoomProps) => {
             animate={{ opacity: 1, scale: 1 }}
             className="relative flex min-h-[240px] flex-1 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-gray-900 to-gray-800"
           >
-            {isCameraOn ? (
+            {localVideoTrack && isCameraOn ? (
+              <video
+                ref={localVideoRef}
+                className="absolute inset-0 h-full w-full object-cover"
+                autoPlay
+                muted
+                playsInline
+              />
+            ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                {/* Placeholder for local video */}
                 <div className="text-center">
                   <Avatar className="mx-auto mb-4 h-24 w-24 border-2 border-white/20">
                     <AvatarImage
@@ -241,15 +386,10 @@ const Room = ({ roomId }: RoomProps) => {
                         : (data?.data?.expert?.firstName?.[0] ?? "EX")}
                     </AvatarFallback>
                   </Avatar>
-                  <p className="text-sm text-gray-400">You</p>
+                  <p className="text-sm text-gray-400">
+                    {isCameraOn ? "You" : "Camera Off"}
+                  </p>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center">
-                <Avatar className="mx-auto mb-4 h-20 w-20 opacity-70">
-                  <AvatarFallback>YOU</AvatarFallback>
-                </Avatar>
-                <p className="text-sm text-gray-400">Camera Off</p>
               </div>
             )}
 
@@ -318,7 +458,7 @@ const Room = ({ roomId }: RoomProps) => {
           <Button
             disabled={!callStarted}
             onClick={toggleMic}
-            variant={isMicOn ? "outline" : "secondary"}
+            variant={isMicOn && localAudioTrack ? "outline" : "secondary"}
             size="icon"
             className="h-12 w-12 rounded-full"
           >
@@ -328,9 +468,9 @@ const Room = ({ roomId }: RoomProps) => {
           <Button
             disabled={!callStarted}
             onClick={toggleCamera}
-            variant={isCameraOn ? "outline" : "secondary"}
+            variant={isCameraOn && localVideoTrack ? "outline" : "secondary"}
             size="icon"
-            className="h-12 w-12 rounded-full"
+            className="h-12 w-12 cursor-pointer rounded-full"
           >
             {isCameraOn ? <Camera /> : <CameraOff />}
           </Button>
