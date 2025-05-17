@@ -421,6 +421,24 @@ export const callRouter = {
           where: {
             roomId,
           },
+          include: {
+            expert: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profilePic: true,
+              },
+            },
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profilePic: true,
+              },
+            },
+          },
         });
         if (!call) {
           return {

@@ -9,11 +9,20 @@ import {
   AvatarImage,
 } from "@repo/ui/components/avatar";
 import { Button } from "@repo/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@repo/ui/components/dialog";
+import { Progress } from "@repo/ui/components/progress";
 import { Spinner } from "@repo/ui/components/spinner";
 import { useQuery } from "@tanstack/react-query";
 import {
   Camera,
   CameraOff,
+  Clock,
   Mic,
   MicOff,
   PhoneOff,
@@ -22,6 +31,8 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
+
+import { formatTimeRemaining } from "../../utils";
 
 interface RoomProps {
   roomId: string;
@@ -37,19 +48,56 @@ const Room = ({ roomId }: RoomProps) => {
     })
   );
 
+  const [callStarted, setCallStarted] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [totalDuration, setTotalDuration] = useState(0);
+  const [showPreCallDialog, setShowPreCallDialog] = useState(true);
+
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Simulate connection established after 2 seconds
-    const timer = setTimeout(() => {
-      setIsConnected(true);
-      toast.info("Connected to the call");
-    }, 2000);
+    if (data?.data?.startedAt) {
+      const now = new Date();
+      const timeDiff = Math.max(
+        0,
+        Math.floor((data.data.startedAt.getTime() - now.getTime()) / 1000)
+      );
+      setTimeRemaining(timeDiff);
+      setTotalDuration(timeDiff);
+    }
+  }, [data]);
 
-    return () => clearTimeout(timer);
-  }, []);
+  useEffect(() => {
+    if (timeRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setCallStarted(true);
+          setShowPreCallDialog(false);
+
+          setTimeout(() => {
+            setIsConnected(true);
+            toast("Connected to the call");
+          }, 2000);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining]);
+
+  const calculateProgress = () => {
+    if (!data?.data?.startedAt || totalDuration === 0) return 0;
+
+    const elapsed = totalDuration - timeRemaining;
+    return (elapsed / totalDuration) * 100;
+  };
 
   const toggleMic = () => setIsMicOn((prev) => !prev);
   const toggleCamera = () => setIsCameraOn((prev) => !prev);
@@ -102,7 +150,60 @@ const Room = ({ roomId }: RoomProps) => {
       </header>
 
       {/* Main content */}
-      <main className="flex flex-1 flex-col gap-4 overflow-hidden p-4 md:flex-row">
+      <main
+        className={`flex flex-1 flex-col gap-4 overflow-hidden p-4 md:flex-row ${!callStarted ? "relative" : ""}`}
+      >
+        {!callStarted && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900/90 to-black/95"
+          >
+            <div className="mx-auto max-w-md space-y-6 p-6 text-center">
+              <h2 className="text-gradient text-2xl font-bold">
+                Call Starting Soon
+              </h2>
+
+              <div className="flex flex-col items-center gap-2">
+                <div className="text-5xl font-bold">
+                  {formatTimeRemaining(timeRemaining)}
+                </div>
+                <p className="text-gray-400">
+                  remaining until your call begins
+                </p>
+              </div>
+
+              <Progress
+                value={calculateProgress()}
+                className="mx-auto h-2 max-w-xs"
+              />
+
+              <div className="flex flex-col items-center gap-2">
+                <Avatar className="h-16 w-16 border-2 border-white/20">
+                  <AvatarImage
+                    src={
+                      data?.data?.expert?.profilePic ??
+                      "https://ui.shadcn.com/avatars/02.png"
+                    }
+                  />
+                  <AvatarFallback>
+                    {data?.data?.expert?.firstName?.[0] ?? "EX"}
+                  </AvatarFallback>
+                </Avatar>
+                <p className="text-gray-300">
+                  Expert will join when the call begins
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+                <p className="text-sm">
+                  You can test your audio and video settings while you wait
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Video containers */}
         <div className="flex flex-1 flex-col gap-4 md:flex-row">
           {/* Local video */}
@@ -116,8 +217,15 @@ const Room = ({ roomId }: RoomProps) => {
                 {/* Placeholder for local video */}
                 <div className="text-center">
                   <Avatar className="mx-auto mb-4 h-24 w-24 border-2 border-white/20">
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>YOU</AvatarFallback>
+                    <AvatarImage
+                      src={
+                        data?.data?.user?.profilePic ??
+                        "https://ui.shadcn.com/avatars/02.png"
+                      }
+                    />
+                    <AvatarFallback>
+                      {data?.data?.user?.firstName?.[0] ?? "YOU"}
+                    </AvatarFallback>
                   </Avatar>
                   <p className="text-sm text-gray-400">You</p>
                 </div>
@@ -159,8 +267,15 @@ const Room = ({ roomId }: RoomProps) => {
                 {/* Placeholder for remote video */}
                 <div className="text-center">
                   <Avatar className="mx-auto mb-4 h-24 w-24 border-2 border-white/20">
-                    <AvatarImage src="https://ui.shadcn.com/avatars/02.png" />
-                    <AvatarFallback>EX</AvatarFallback>
+                    <AvatarImage
+                      src={
+                        data?.data?.expert?.profilePic ??
+                        "https://ui.shadcn.com/avatars/02.png"
+                      }
+                    />
+                    <AvatarFallback>
+                      {data?.data?.expert?.firstName?.[0] ?? "EX"}
+                    </AvatarFallback>
                   </Avatar>
                   <p className="text-sm text-gray-400">Expert</p>
                 </div>
@@ -178,6 +293,7 @@ const Room = ({ roomId }: RoomProps) => {
       <footer className="border-t border-white/10 p-4">
         <div className="flex items-center justify-center gap-4">
           <Button
+            disabled={!callStarted}
             onClick={toggleMic}
             variant={isMicOn ? "outline" : "secondary"}
             size="icon"
@@ -187,6 +303,7 @@ const Room = ({ roomId }: RoomProps) => {
           </Button>
 
           <Button
+            disabled={!callStarted}
             onClick={toggleCamera}
             variant={isCameraOn ? "outline" : "secondary"}
             size="icon"
@@ -196,6 +313,7 @@ const Room = ({ roomId }: RoomProps) => {
           </Button>
 
           <Button
+            disabled={!callStarted}
             variant="destructive"
             size="icon"
             className="h-14 w-14 cursor-pointer rounded-full bg-red-500 transition-all duration-300 ease-in-out hover:bg-red-500/90"
@@ -204,6 +322,7 @@ const Room = ({ roomId }: RoomProps) => {
           </Button>
 
           <Button
+            disabled={!callStarted}
             variant="outline"
             size="icon"
             className="h-12 w-12 rounded-full"
@@ -212,6 +331,7 @@ const Room = ({ roomId }: RoomProps) => {
           </Button>
 
           <Button
+            disabled={!callStarted}
             variant="outline"
             size="icon"
             className="h-12 w-12 rounded-full"
@@ -220,6 +340,45 @@ const Room = ({ roomId }: RoomProps) => {
           </Button>
         </div>
       </footer>
+      <Dialog
+        open={showPreCallDialog && !callStarted}
+        onOpenChange={setShowPreCallDialog}
+      >
+        <DialogContent className="max-w-md border-white/10 bg-gray-900 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl font-bold">
+              Call Starts Soon
+            </DialogTitle>
+            <DialogDescription className="text-center text-gray-300">
+              Your session with the expert will begin shortly
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-6">
+            <div className="flex items-center justify-center gap-3">
+              <Clock className="h-10 w-10 text-blue-400" />
+              <div className="text-4xl font-bold text-white">
+                {formatTimeRemaining(timeRemaining)}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>Waiting</span>
+                <span>Call Starts</span>
+              </div>
+              <Progress value={calculateProgress()} className="h-2" />
+            </div>
+
+            <div className="rounded-lg bg-black/30 p-4 text-center">
+              <p className="text-gray-300">
+                Please ensure your camera and microphone are ready before the
+                call starts.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
