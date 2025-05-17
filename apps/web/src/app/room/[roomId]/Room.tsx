@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ResultsNotFound from "@/src/components/global/results-not-found";
+import { useDbUser } from "@/src/hooks";
 import { useTRPC } from "@/src/trpc/react";
 import {
   Avatar,
@@ -40,6 +41,8 @@ const Room = ({ roomId }: RoomProps) => {
       roomId,
     })
   );
+
+  const { data: userData } = useDbUser();
 
   const [callStarted, setCallStarted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
@@ -181,16 +184,23 @@ const Room = ({ roomId }: RoomProps) => {
                 <Avatar className="h-16 w-16 border-2 border-white/20">
                   <AvatarImage
                     src={
-                      data?.data?.expert?.profilePic ??
-                      "https://ui.shadcn.com/avatars/02.png"
+                      userData?.data?.role === "USER"
+                        ? (data?.data?.expert?.profilePic ??
+                          "https://ui.shadcn.com/avatars/02.png")
+                        : (userData?.data?.profilePic ??
+                          "https://ui.shadcn.com/avatars/02.png")
                     }
                   />
                   <AvatarFallback>
-                    {data?.data?.expert?.firstName?.[0] ?? "EX"}
+                    {userData?.data?.role === "USER"
+                      ? (data?.data?.expert?.firstName?.[0] ?? "EX")
+                      : (userData?.data?.firstName?.[0] ?? "YOU")}
                   </AvatarFallback>
                 </Avatar>
                 <p className="text-gray-300">
-                  Expert will join when the call begins
+                  {userData?.data?.role === "USER"
+                    ? "Expert will join when the call begins"
+                    : "User will join when the call begins"}
                 </p>
               </div>
 
@@ -218,12 +228,17 @@ const Room = ({ roomId }: RoomProps) => {
                   <Avatar className="mx-auto mb-4 h-24 w-24 border-2 border-white/20">
                     <AvatarImage
                       src={
-                        data?.data?.user?.profilePic ??
-                        "https://ui.shadcn.com/avatars/02.png"
+                        userData?.data?.role === "USER"
+                          ? (data?.data?.user?.profilePic ??
+                            "https://ui.shadcn.com/avatars/02.png")
+                          : (data?.data?.expert?.profilePic ??
+                            "https://ui.shadcn.com/avatars/02.png")
                       }
                     />
                     <AvatarFallback>
-                      {data?.data?.user?.firstName?.[0] ?? "YOU"}
+                      {userData?.data?.role === "USER"
+                        ? (data?.data?.user?.firstName?.[0] ?? "YOU")
+                        : (data?.data?.expert?.firstName?.[0] ?? "EX")}
                     </AvatarFallback>
                   </Avatar>
                   <p className="text-sm text-gray-400">You</p>
@@ -255,7 +270,9 @@ const Room = ({ roomId }: RoomProps) => {
                 <div className="animate-pulse text-center">
                   <p className="mb-2">Connecting...</p>
                   <p className="text-sm text-gray-400">
-                    Waiting for expert to join
+                    Waiting for{" "}
+                    {userData?.data?.role === "USER" ? "expert" : "user"} to
+                    join
                   </p>
                 </div>
               </div>
@@ -268,21 +285,28 @@ const Room = ({ roomId }: RoomProps) => {
                   <Avatar className="mx-auto mb-4 h-24 w-24 border-2 border-white/20">
                     <AvatarImage
                       src={
-                        data?.data?.expert?.profilePic ??
-                        "https://ui.shadcn.com/avatars/02.png"
+                        userData?.data?.role === "USER"
+                          ? (data?.data?.expert?.profilePic ??
+                            "https://ui.shadcn.com/avatars/02.png")
+                          : (data?.data?.user?.profilePic ??
+                            "https://ui.shadcn.com/avatars/02.png")
                       }
                     />
                     <AvatarFallback>
-                      {data?.data?.expert?.firstName?.[0] ?? "EX"}
+                      {userData?.data?.role === "USER"
+                        ? (data?.data?.expert?.firstName?.[0] ?? "EX")
+                        : (data?.data?.user?.firstName?.[0] ?? "YOU")}
                     </AvatarFallback>
                   </Avatar>
-                  <p className="text-sm text-gray-400">Expert</p>
+                  <p className="text-sm text-gray-400">
+                    {userData?.data?.role === "USER" ? "Expert" : "User"}
+                  </p>
                 </div>
               </div>
             )}
 
             <div className="absolute bottom-4 left-4 rounded-md bg-black/40 px-2 py-1 text-sm">
-              Expert (Remote)
+              {userData?.data?.role === "USER" ? "Expert" : "User"} (Remote)
             </div>
           </motion.div>
         </div>
