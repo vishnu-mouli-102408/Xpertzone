@@ -9,20 +9,12 @@ import {
   AvatarImage,
 } from "@repo/ui/components/avatar";
 import { Button } from "@repo/ui/components/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@repo/ui/components/dialog";
 import { Progress } from "@repo/ui/components/progress";
 import { Spinner } from "@repo/ui/components/spinner";
 import { useQuery } from "@tanstack/react-query";
 import {
   Camera,
   CameraOff,
-  Clock,
   Mic,
   MicOff,
   PhoneOff,
@@ -33,6 +25,7 @@ import { motion } from "motion/react";
 import { toast } from "sonner";
 
 import { formatTimeRemaining } from "../../utils";
+import PreCallDialog from "./pre-call-dialog";
 
 interface RoomProps {
   roomId: string;
@@ -70,7 +63,11 @@ const Room = ({ roomId }: RoomProps) => {
   }, [data]);
 
   useEffect(() => {
-    if (timeRemaining <= 0) return;
+    if (timeRemaining <= 0) {
+      setCallStarted(true);
+      setShowPreCallDialog(false);
+      return;
+    }
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
@@ -91,6 +88,8 @@ const Room = ({ roomId }: RoomProps) => {
 
     return () => clearInterval(timer);
   }, [timeRemaining]);
+
+  console.log("TIME REMAINING", timeRemaining);
 
   const calculateProgress = () => {
     if (!data?.data?.startedAt || totalDuration === 0) return 0;
@@ -340,45 +339,14 @@ const Room = ({ roomId }: RoomProps) => {
           </Button>
         </div>
       </footer>
-      <Dialog
-        open={showPreCallDialog && !callStarted}
-        onOpenChange={setShowPreCallDialog}
-      >
-        <DialogContent className="max-w-md border-white/10 bg-gray-900 text-white">
-          <DialogHeader>
-            <DialogTitle className="text-center text-xl font-bold">
-              Call Starts Soon
-            </DialogTitle>
-            <DialogDescription className="text-center text-gray-300">
-              Your session with the expert will begin shortly
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 py-6">
-            <div className="flex items-center justify-center gap-3">
-              <Clock className="h-10 w-10 text-blue-400" />
-              <div className="text-4xl font-bold text-white">
-                {formatTimeRemaining(timeRemaining)}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs text-gray-400">
-                <span>Waiting</span>
-                <span>Call Starts</span>
-              </div>
-              <Progress value={calculateProgress()} className="h-2" />
-            </div>
-
-            <div className="rounded-lg bg-black/30 p-4 text-center">
-              <p className="text-gray-300">
-                Please ensure your camera and microphone are ready before the
-                call starts.
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Pre-call dialog */}
+      <PreCallDialog
+        open={showPreCallDialog}
+        onClose={() => setShowPreCallDialog(false)}
+        progress={calculateProgress()}
+        timeRemaining={timeRemaining}
+        callStarted={callStarted}
+      />
     </div>
   );
 };
