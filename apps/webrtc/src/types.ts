@@ -1,26 +1,45 @@
+import { Socket } from "socket.io";
 import { z } from "zod";
 
 export const UserSchema = z.object({
-  socketId: z.string(),
-  isInitiator: z.boolean().default(false),
+  userId: z.string(),
+  socket: z.custom<Socket>((val) => val instanceof Socket, {
+    message: "Invalid socket instance",
+  }),
 });
 
 export type User = z.infer<typeof UserSchema>;
 
 export const RoomSchema = z.object({
   roomId: z.string(),
-  users: z.array(UserSchema).max(2), // Only 2 allowed
+  users: z.array(UserSchema).max(2),
 });
 
 export type Room = z.infer<typeof RoomSchema>;
 
 export const JoinRoomPayloadSchema = z.object({
   roomId: z.string(),
+  userId: z.string(),
 });
 
 export type JoinRoomPayload = z.infer<typeof JoinRoomPayloadSchema>;
 
-export const EventTypeSchema = z.enum(["OFFER", "ANSWER", "ICE_CANDIDATE"]);
+export const EventTypeSchema = z.enum([
+  "OFFER",
+  "ANSWER",
+  "ICE_CANDIDATE",
+  "READY",
+  "JOIN_ROOM",
+  "PEER_DISCONNECTED",
+  "PEER_CONNECTED",
+  "ROLE",
+  "INVALID_PAYLOAD",
+  "ROOM_FULL",
+  "USER_ALREADY_IN_ROOM",
+  "SEND_OFFER",
+  "CONNECTED",
+  "WAITING_FOR_MATCH",
+]);
 
 export type EventType = z.infer<typeof EventTypeSchema>;
 
@@ -29,6 +48,7 @@ export const EventSchema = z.object({
   payload: z.object({
     sdp: z.string().optional(),
     candidate: z.string().optional(),
+    type: z.enum(["SENDER", "RECEIVER"]).optional(),
   }),
 });
 

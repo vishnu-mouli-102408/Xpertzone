@@ -3,6 +3,8 @@ import { logger } from "@repo/common";
 import { Server, Socket } from "socket.io";
 
 import { roomManager } from "./managers/room-manager";
+import { UserManager } from "./managers/user-manager";
+import { EventTypeSchema } from "./types";
 
 const PORT = 4001;
 
@@ -16,13 +18,25 @@ function setupWebrtcSignallingServer(httpServer: http.Server) {
     },
   });
 
+  const userManager = new UserManager();
+  io.on("error", (err) => {
+    logger.error(err, "❌ Socket.io error");
+  });
   io.on("connection", (socket: Socket) => {
     console.log("a user connected");
+    userManager.addUser(socket);
     socket.on("disconnect", () => {
-      const roomId = socket.data.roomId;
-      roomManager.removeUser(socket.id);
-      if (roomId) {
-        socket.to(roomId).emit("peer-disconnected", { socketId: socket.id });
+      const userId = socket.data.userId;
+      console.log("userId in disconnect", userId);
+
+      roomManager.removeUser(userId);
+      userManager.removeUser(userId);
+      const user = userManager.getUser(userId);
+      if (user) {
+        user.socket.emit(EventTypeSchema.Enum.PEER_DISCONNECTED, {
+          socketId: socket.id,
+        });
+        user.socket.disconnect();
       }
     });
   });
