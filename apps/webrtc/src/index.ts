@@ -2,6 +2,8 @@ import http from "http";
 import { logger } from "@repo/common";
 import { Server, Socket } from "socket.io";
 
+import { roomManager } from "./managers/room-manager";
+
 const PORT = 4001;
 
 function setupWebrtcSignallingServer(httpServer: http.Server) {
@@ -17,7 +19,11 @@ function setupWebrtcSignallingServer(httpServer: http.Server) {
   io.on("connection", (socket: Socket) => {
     console.log("a user connected");
     socket.on("disconnect", () => {
-      console.log("user disconnected");
+      const roomId = socket.data.roomId;
+      roomManager.removeUser(socket.id);
+      if (roomId) {
+        socket.to(roomId).emit("peer-disconnected", { socketId: socket.id });
+      }
     });
   });
 
