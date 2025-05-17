@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ResultsNotFound from "@/src/components/global/results-not-found";
 import { useDbUser } from "@/src/hooks";
 import { useTRPC } from "@/src/trpc/react";
@@ -25,7 +25,7 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import { formatTimeRemaining } from "../../utils";
+import { formatTimeRemaining, getTimeDiff } from "../../utils";
 import PreCallDialog from "./pre-call-dialog";
 
 interface RoomProps {
@@ -42,6 +42,8 @@ const Room = ({ roomId }: RoomProps) => {
       roomId,
     })
   );
+
+  console.log("DATA", data);
 
   const { data: userData } = useDbUser();
 
@@ -154,44 +156,51 @@ const Room = ({ roomId }: RoomProps) => {
   //   }, [localAudioTrack, localVideoTrack, roomId, sendingPc]);
 
   useEffect(() => {
-    const getLocalStream = async () => {
-      const stream = await window.navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      const audioTrack = stream.getAudioTracks()[0];
-      const videoTrack = stream.getVideoTracks()[0];
-
-      setLocalAudioTrack(audioTrack ?? null);
-      setlocalVideoTrack(videoTrack ?? null);
-    };
-
-    void getLocalStream();
-  }, []);
-
-  useEffect(() => {
-    if (localVideoRef.current) {
+    if (localVideoRef.current && isCameraOn) {
       if (localVideoTrack) {
         localVideoRef.current.srcObject = new MediaStream([localVideoTrack]);
         void localVideoRef.current.play();
       }
     }
-  }, [localVideoRef, localVideoTrack]);
+  }, [localVideoRef, localVideoTrack, isCameraOn]);
+
+  const timeDiff = useMemo(() => {
+    if (!data?.data?.startedAt) return 0;
+    return getTimeDiff(data.data.startedAt);
+  }, [data?.data?.startedAt]);
 
   useEffect(() => {
-    if (data?.data?.startedAt) {
-      const now = new Date();
-      const timeDiff = Math.max(
-        0,
-        Math.floor((data.data.startedAt.getTime() - now.getTime()) / 1000)
-      );
-      setTimeRemaining(timeDiff);
-      setTotalDuration(timeDiff);
-    }
-  }, [data]);
+    if (!data?.data?.startedAt || timeDiff > 0) return;
+
+    const initializeMediaStream = async () => {
+      try {
+        const stream = await window.navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+
+        setLocalAudioTrack(stream.getAudioTracks()[0] ?? null);
+        setlocalVideoTrack(stream.getVideoTracks()[0] ?? null);
+      } catch (error) {
+        console.error("Failed to initialize media stream:", error);
+        toast.error("Failed to access camera and microphone");
+      }
+    };
+
+    void initializeMediaStream();
+  }, [timeDiff, data?.data?.startedAt]);
 
   useEffect(() => {
-    if (timeRemaining <= 0) {
+    if (!data?.data?.startedAt) return;
+
+    setTimeRemaining(timeDiff);
+    setTotalDuration(timeDiff);
+  }, [timeDiff, data?.data?.startedAt]);
+
+  useEffect(() => {
+    if (!data?.data?.startedAt) return;
+
+    if (timeDiff <= 0) {
       setCallStarted(true);
       setShowPreCallDialog(false);
       return;
@@ -211,7 +220,7 @@ const Room = ({ roomId }: RoomProps) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeRemaining]);
+  }, [timeDiff, data?.data?.startedAt]);
 
   const calculateProgress = () => {
     if (!data?.data?.startedAt || totalDuration === 0) return 0;
@@ -244,6 +253,9 @@ const Room = ({ roomId }: RoomProps) => {
       toast.error("Failed to toggle camera");
     }
   };
+
+  console.log("TIME REMAINING", timeRemaining);
+  console.log("CALL STARTED", callStarted);
 
   if (isPending) {
     return (

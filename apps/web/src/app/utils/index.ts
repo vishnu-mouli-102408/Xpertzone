@@ -5,3 +5,12 @@ export const formatTimeRemaining = (timeRemaining: number) => {
     .toString()
     .padStart(2, "0")}`;
 };
+
+export const getTimeDiff = (startedAt: Date) => {
+  const now = new Date();
+  const timeDiff = Math.max(
+    0,
+    Math.floor((startedAt.getTime() - now.getTime()) / 1000)
+  );
+  return timeDiff;
+};
