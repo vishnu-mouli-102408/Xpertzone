@@ -183,7 +183,7 @@ const Room = ({ roomId }: RoomProps) => {
     try {
       const offer = await peer.getOffer();
       console.log("NEGO OFFER", offer);
-      socket.emit(EventTypeSchema.Enum.ICE_CANDIDATE, { sdp: offer });
+      socket.emit(EventTypeSchema.Enum.NEGO_NEEDED, { sdp: offer });
     } catch (error) {
       console.error("Negotiation needed error:", error);
     }
@@ -261,6 +261,16 @@ const Room = ({ roomId }: RoomProps) => {
       if (!roomId || !userData) return;
       console.log("ADD ICE CANDIDATE", payload.candidate);
       try {
+        const peerConnection = peer.getPeer();
+        if (!peerConnection) return;
+
+        // Check if remote description is set
+        if (!peerConnection.remoteDescription) {
+          console.log("Remote description not set yet, queuing ICE candidate");
+          // You might want to queue the candidate here if needed
+          return;
+        }
+
         await peer.addIceCandidate(new RTCIceCandidate(payload.candidate));
       } catch (error) {
         console.error("Error adding ICE candidate:", error);
