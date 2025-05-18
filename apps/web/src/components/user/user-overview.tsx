@@ -81,28 +81,28 @@ const UserOverview = () => {
         (data?.data?.analytics.totalCalls.callPercentageChange ?? 0) >= 0
           ? "+"
           : ""
-      }${data?.data?.analytics.totalCalls.callPercentageChange ?? "N/A"}%`,
+      }${data?.data?.analytics.totalCalls.callPercentageChange?.toFixed(2) ?? "N/A"}%`,
       color: "bg-[#6366f133]",
     },
     {
       title: "Active Experts",
       value: data?.data?.analytics.activeExperts.totalActiveExperts ?? "0",
       icon: Users,
-      change: `${(data?.data?.analytics.activeExperts.expertPercentageChange ?? 0) >= 0 ? "+" : ""}${data?.data?.analytics.activeExperts.expertPercentageChange ?? "N/A"}%`,
+      change: `${(data?.data?.analytics.activeExperts.expertPercentageChange ?? 0) >= 0 ? "+" : ""}${data?.data?.analytics.activeExperts.expertPercentageChange?.toFixed(2) ?? "N/A"}%`,
       color: "bg-[#10b98133]",
     },
     {
       title: "Avg. Call Duration",
       value: `${data?.data?.analytics?.averageCallDuration?.avgCallDurationValue ?? "0"} min`,
       icon: Clock,
-      change: `${(data?.data?.analytics.averageCallDuration.callDurationPercentageChange ?? 0) >= 0 ? "+" : ""}${data?.data?.analytics.averageCallDuration.callDurationPercentageChange ?? "N/A"}%`,
+      change: `${(data?.data?.analytics.averageCallDuration.callDurationPercentageChange ?? 0) >= 0 ? "+" : ""}${data?.data?.analytics.averageCallDuration.callDurationPercentageChange?.toFixed(2) ?? "N/A"}%`,
       color: "bg-[#f59e0b33]",
     },
     {
       title: "Upcoming Calls",
       value: data?.data?.analytics.upcomingCalls.totalUpcomingCalls ?? "0",
       icon: Calendar,
-      change: `${(data?.data?.analytics.upcomingCalls.upcomingCallsPercentageChange ?? 0) >= 0 ? "+" : ""}${data?.data?.analytics.upcomingCalls.upcomingCallsPercentageChange ?? "N/A"}%`,
+      change: `${(data?.data?.analytics.upcomingCalls.upcomingCallsPercentageChange ?? 0) >= 0 ? "+" : ""}${data?.data?.analytics.upcomingCalls.upcomingCallsPercentageChange?.toFixed(2) ?? "N/A"}%`,
       color: "bg-[#f43f5e33]",
     },
   ];
