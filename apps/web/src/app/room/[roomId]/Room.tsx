@@ -99,6 +99,25 @@ const Room = ({ roomId }: RoomProps) => {
 
   const socket = getSocket();
 
+  const [iceCandidateQueue, setIceCandidateQueue] = useState<
+    RTCIceCandidateInit[]
+  >([]);
+
+  const processQueuedIceCandidates = useCallback(async () => {
+    const peerConnection = peer.getPeer();
+    if (!peerConnection?.remoteDescription) return;
+
+    try {
+      while (iceCandidateQueue.length > 0) {
+        const candidate = iceCandidateQueue[0];
+        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        setIceCandidateQueue((prev) => prev.slice(1));
+      }
+    } catch (error) {
+      console.error("Error processing queued ICE candidates:", error);
+    }
+  }, [iceCandidateQueue]);
+
   const handleSendOffer = useCallback(async () => {
     if (!roomId || !userData) return;
     console.log("SEND OFFER");
@@ -169,21 +188,45 @@ const Room = ({ roomId }: RoomProps) => {
       if (!roomId || !userData) return;
       console.log("ANSWER", answer);
       try {
+        const peerConnection = peer.getPeer();
+        if (!peerConnection) return;
+
+        // Check if we're in the correct state to set remote answer
+        if (peerConnection.signalingState !== "have-local-offer") {
+          console.log(
+            "Cannot set remote answer in current state:",
+            peerConnection.signalingState
+          );
+          return;
+        }
+
         setIsConnected(true);
-        await peer.setRemoteDescription(answer);
+        await peerConnection.setRemoteDescription(
+          new RTCSessionDescription(answer)
+        );
+        void processQueuedIceCandidates();
       } catch (error) {
         console.error("Error handling answer:", error);
         toast.error("Failed to establish connection");
       }
     },
-    [roomId, userData]
+    [roomId, userData, processQueuedIceCandidates]
   );
 
   const handleNegoNeeded = useCallback(async () => {
     try {
-      const offer = await peer.getOffer();
-      console.log("NEGO OFFER", offer);
-      socket.emit(EventTypeSchema.Enum.NEGO_NEEDED, { sdp: offer });
+      const peerConnection = peer.getPeer();
+      if (!peerConnection) return;
+
+      // Check if we're the offerer
+      const isOfferer = peerConnection.signalingState === "stable";
+
+      if (isOfferer) {
+        // Create and send offer
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        socket.emit(EventTypeSchema.Enum.NEGO_NEEDED, { sdp: offer });
+      }
     } catch (error) {
       console.error("Negotiation needed error:", error);
     }
@@ -218,8 +261,22 @@ const Room = ({ roomId }: RoomProps) => {
     async (offer: RTCSessionDescriptionInit) => {
       if (!roomId || !userData) return;
       console.log("NEGO NEED INCOMMING", offer);
-      const answer = await peer.getAnswer(offer);
-      socket.emit(EventTypeSchema.Enum.ANSWER, { sdp: answer });
+      try {
+        const peerConnection = peer.getPeer();
+        if (!peerConnection) return;
+
+        // Set the remote description first
+        await peerConnection.setRemoteDescription(
+          new RTCSessionDescription(offer)
+        );
+
+        // Create and send answer
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        socket.emit(EventTypeSchema.Enum.NEGO_DONE, { sdp: answer });
+      } catch (error) {
+        console.error("Error handling incoming negotiation:", error);
+      }
     },
     [roomId, socket, userData]
   );
@@ -228,9 +285,28 @@ const Room = ({ roomId }: RoomProps) => {
     async (answer: RTCSessionDescriptionInit) => {
       if (!roomId || !userData) return;
       console.log("NEGO DONE FINAL", answer);
-      await peer.setLocalDescription(answer);
+      try {
+        const peerConnection = peer.getPeer();
+        if (!peerConnection) return;
+
+        // Check if we're in the correct state to set remote answer
+        if (peerConnection.signalingState !== "have-local-offer") {
+          console.log(
+            "Cannot set remote answer in current state:",
+            peerConnection.signalingState
+          );
+          return;
+        }
+
+        await peerConnection.setRemoteDescription(
+          new RTCSessionDescription(answer)
+        );
+        void processQueuedIceCandidates();
+      } catch (error) {
+        console.error("Error handling negotiation done:", error);
+      }
     },
-    [roomId, userData]
+    [roomId, userData, processQueuedIceCandidates]
   );
 
   useEffect(() => {
@@ -267,11 +343,13 @@ const Room = ({ roomId }: RoomProps) => {
         // Check if remote description is set
         if (!peerConnection.remoteDescription) {
           console.log("Remote description not set yet, queuing ICE candidate");
-          // You might want to queue the candidate here if needed
+          setIceCandidateQueue((prev) => [...prev, payload.candidate]);
           return;
         }
 
-        await peer.addIceCandidate(new RTCIceCandidate(payload.candidate));
+        await peerConnection.addIceCandidate(
+          new RTCIceCandidate(payload.candidate)
+        );
       } catch (error) {
         console.error("Error adding ICE candidate:", error);
       }
@@ -289,6 +367,7 @@ const Room = ({ roomId }: RoomProps) => {
         const stream = event.streams[0];
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = stream;
+          void remoteVideoRef.current.play();
         }
 
         // Set remote tracks
@@ -396,6 +475,13 @@ const Room = ({ roomId }: RoomProps) => {
   }, [localVideoRef, localVideoTrack, isCameraOn]);
 
   useEffect(() => {
+    if (remoteVideoRef.current && remoteVideoTrack) {
+      remoteVideoRef.current.srcObject = new MediaStream([remoteVideoTrack]);
+      void remoteVideoRef.current.play();
+    }
+  }, [remoteVideoRef, remoteVideoTrack]);
+
+  useEffect(() => {
     if (!data?.data?.startedAt) return;
     setTimeRemaining(timeDiff);
     setTotalDuration(timeDiff);
@@ -457,6 +543,56 @@ const Room = ({ roomId }: RoomProps) => {
   console.log("TIME REMAINING", timeRemaining);
   console.log("CALL STARTED", callStarted);
   console.log("IS CONNECTED", isConnected);
+
+  useEffect(() => {
+    const peerConnection = peer.getPeer();
+    if (!peerConnection) return;
+
+    const handleRemoteDescriptionSet = () => {
+      if (peerConnection.remoteDescription) {
+        void processQueuedIceCandidates();
+      }
+    };
+
+    // Check if remote description is already set
+    if (peerConnection.remoteDescription) {
+      void processQueuedIceCandidates();
+    }
+
+    // Listen for remote description changes
+    peerConnection.addEventListener(
+      "signalingstatechange",
+      handleRemoteDescriptionSet
+    );
+
+    return () => {
+      peerConnection.removeEventListener(
+        "signalingstatechange",
+        handleRemoteDescriptionSet
+      );
+    };
+  }, [processQueuedIceCandidates]);
+
+  // Add this effect to monitor signaling state changes
+  useEffect(() => {
+    const peerConnection = peer.getPeer();
+    if (!peerConnection) return;
+
+    const handleSignalingStateChange = () => {
+      console.log("Signaling state changed:", peerConnection.signalingState);
+    };
+
+    peerConnection.addEventListener(
+      "signalingstatechange",
+      handleSignalingStateChange
+    );
+    return () => {
+      peerConnection.removeEventListener(
+        "signalingstatechange",
+        handleSignalingStateChange
+      );
+    };
+  }, []);
 
   if (isPending) {
     return (
