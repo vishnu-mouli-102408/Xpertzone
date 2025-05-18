@@ -30,14 +30,10 @@ function setupWebrtcSignallingServer(httpServer: http.Server) {
       console.log("userId in disconnect", userId);
 
       roomManager.removeUser(userId);
-      userManager.removeUser(userId);
-      const user = userManager.getUser(userId);
-      if (user) {
-        user.socket.emit(EventTypeSchema.Enum.PEER_DISCONNECTED, {
-          socketId: socket.id,
-        });
-        user.socket.disconnect();
-      }
+      socket.emit(EventTypeSchema.Enum.PEER_DISCONNECTED, {
+        socketId: socket.id,
+      });
+      socket.disconnect();
     });
   });
 

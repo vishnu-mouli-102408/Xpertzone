@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ResultsNotFound from "@/src/components/global/results-not-found";
 import { useDbUser } from "@/src/hooks";
+import { getSocket } from "@/src/hooks/use-socket";
 import { useTRPC } from "@/src/trpc/react";
 import {
   Avatar,
@@ -23,11 +24,11 @@ import {
   Settings,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { io, Socket } from "socket.io-client";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { formatTimeRemaining, getTimeDiff } from "../../utils";
+import peer from "./peer";
 import PreCallDialog from "./pre-call-dialog";
 
 interface RoomProps {
@@ -46,36 +47,22 @@ const EventTypeSchema = z.enum([
   "ROOM_FULL",
   "USER_ALREADY_IN_ROOM",
   "SEND_OFFER",
+  "NEGO_NEEDED",
+  "NEGO_DONE",
 ]);
-
-const SOCKET_SERVER_URL = "http://localhost:4001";
-
-const ICE_SERVERS = [
-  { urls: "stun:stun.l.google.com:19302" },
-  { urls: "stun:stun1.l.google.com:19302" },
-  { urls: "stun:stun2.l.google.com:19302" },
-  { urls: "stun:stun3.l.google.com:19302" },
-  { urls: "stun:stun4.l.google.com:19302" },
-  // Add TURN servers if you have them
-];
-
-const createPeerConnection = () => {
-  return new RTCPeerConnection({
-    iceServers: ICE_SERVERS,
-    iceTransportPolicy: "all",
-    bundlePolicy: "max-bundle",
-    rtcpMuxPolicy: "require",
-    iceCandidatePoolSize: 10,
-  });
-};
 
 const Room = ({ roomId }: RoomProps) => {
   const trpc = useTRPC();
 
   const { data, isPending } = useQuery(
-    trpc.calls.getCallById.queryOptions({
-      roomId,
-    })
+    trpc.calls.getCallById.queryOptions(
+      {
+        roomId,
+      },
+      {
+        refetchOnWindowFocus: false,
+      }
+    )
   );
 
   console.log("DATA", data);
@@ -97,52 +84,260 @@ const Room = ({ roomId }: RoomProps) => {
   const [localVideoTrack, setlocalVideoTrack] =
     useState<MediaStreamTrack | null>(null);
 
-  const socketRef = useRef<Socket | null>(null);
-
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const [remoteVideoTrack, setRemoteVideoTrack] =
     useState<MediaStreamTrack | null>(null);
-  const [remoteAudioTrack, setRemoteAudioTrack] =
+  const [_remoteAudioTrack, setRemoteAudioTrack] =
     useState<MediaStreamTrack | null>(null);
-
-  // const [remoteMediaStream, setRemoteMediaStream] =
-  //   useState<MediaStream | null>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
   const timeDiff = useMemo(() => {
     if (!data?.data?.startedAt) return 0;
     return getTimeDiff(data.data.startedAt);
   }, [data?.data?.startedAt]);
 
-  console.log("remoteVideoTrack", remoteVideoTrack);
-  console.log("remoteAudioTrack", remoteAudioTrack);
-
-  // Add cleanup refs
-  const cleanupRef = useRef<(() => void) | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 
-  // Cleanup function
-  const cleanup = useCallback(() => {
-    if (cleanupRef.current) {
-      cleanupRef.current();
-      cleanupRef.current = null;
-    }
+  const socket = getSocket();
 
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      mediaStreamRef.current = null;
-    }
+  const handleSendOffer = useCallback(async () => {
+    if (!roomId || !userData) return;
+    console.log("SEND OFFER");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+      mediaStreamRef.current = stream;
 
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
+      // Add tracks to peer connection
+      const peerConnection = peer.getPeer();
+      if (!peerConnection) return;
 
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current = null;
+      stream.getTracks().forEach((track) => {
+        peerConnection.addTrack(track, stream);
+      });
+
+      setLocalAudioTrack(stream.getAudioTracks()[0] ?? null);
+      setlocalVideoTrack(stream.getVideoTracks()[0] ?? null);
+
+      const offer = await peer.getOffer();
+      socket.emit(EventTypeSchema.Enum.OFFER, {
+        sdp: offer,
+      });
+    } catch (error) {
+      console.error("Error sending offer:", error);
+      toast.error("Failed to start call");
     }
+  }, [roomId, socket, userData]);
+
+  const handleOffer = useCallback(
+    async (offer: RTCSessionDescriptionInit) => {
+      if (!roomId || !userData) return;
+      console.log("OFFER", offer);
+      setIsConnected(true);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+        mediaStreamRef.current = stream;
+
+        // Add tracks to peer connection
+        const peerConnection = peer.getPeer();
+        if (!peerConnection) return;
+
+        stream.getTracks().forEach((track) => {
+          peerConnection.addTrack(track, stream);
+        });
+
+        setLocalAudioTrack(stream.getAudioTracks()[0] ?? null);
+        setlocalVideoTrack(stream.getVideoTracks()[0] ?? null);
+
+        await peer.setRemoteDescription(offer);
+        const answer = await peer.getAnswer(offer);
+        socket.emit(EventTypeSchema.Enum.ANSWER, { sdp: answer });
+      } catch (error) {
+        console.error("Error handling offer:", error);
+        toast.error("Failed to handle incoming call");
+      }
+    },
+    [roomId, socket, userData]
+  );
+
+  const handleAnswer = useCallback(
+    async (answer: RTCSessionDescriptionInit) => {
+      if (!roomId || !userData) return;
+      console.log("ANSWER", answer);
+      try {
+        setIsConnected(true);
+        await peer.setRemoteDescription(answer);
+      } catch (error) {
+        console.error("Error handling answer:", error);
+        toast.error("Failed to establish connection");
+      }
+    },
+    [roomId, userData]
+  );
+
+  const handleNegoNeeded = useCallback(async () => {
+    try {
+      const offer = await peer.getOffer();
+      console.log("NEGO OFFER", offer);
+      socket.emit(EventTypeSchema.Enum.ICE_CANDIDATE, { sdp: offer });
+    } catch (error) {
+      console.error("Negotiation needed error:", error);
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    const peerConnection = peer.getPeer();
+    console.log("PEER");
+    if (!peerConnection) return;
+    console.log("PEER CONNECTION", peerConnection);
+
+    const handleNegotiationNeeded = () => {
+      console.log("NEGO NEEDED");
+      handleNegoNeeded().catch((error) => {
+        console.error("Negotiation needed error:", error);
+      });
+    };
+
+    peerConnection.addEventListener(
+      "negotiationneeded",
+      handleNegotiationNeeded
+    );
+    return () => {
+      peerConnection.removeEventListener(
+        "negotiationneeded",
+        handleNegotiationNeeded
+      );
+    };
+  }, [handleNegoNeeded]);
+
+  const handleNegoNeedIncomming = useCallback(
+    async (offer: RTCSessionDescriptionInit) => {
+      if (!roomId || !userData) return;
+      console.log("NEGO NEED INCOMMING", offer);
+      const answer = await peer.getAnswer(offer);
+      socket.emit(EventTypeSchema.Enum.ANSWER, { sdp: answer });
+    },
+    [roomId, socket, userData]
+  );
+
+  const handleNegoDoneFinal = useCallback(
+    async (answer: RTCSessionDescriptionInit) => {
+      if (!roomId || !userData) return;
+      console.log("NEGO DONE FINAL", answer);
+      await peer.setLocalDescription(answer);
+    },
+    [roomId, userData]
+  );
+
+  useEffect(() => {
+    const peerConnection = peer.getPeer();
+    if (!peerConnection) return;
+
+    const handleIceCandidateNeeded = (event: RTCPeerConnectionIceEvent) => {
+      console.log("ICE CANDIDATE NEEDED", event.candidate);
+      if (!event.candidate) return;
+
+      // Send the complete ICE candidate object
+      socket.emit(EventTypeSchema.Enum.ICE_CANDIDATE, {
+        candidate: event.candidate,
+      });
+    };
+
+    peerConnection.addEventListener("icecandidate", handleIceCandidateNeeded);
+    return () => {
+      peerConnection.removeEventListener(
+        "icecandidate",
+        handleIceCandidateNeeded
+      );
+    };
+  }, [socket]);
+
+  const handleAddIceCandidate = useCallback(
+    async (payload: { candidate: RTCIceCandidateInit }) => {
+      if (!roomId || !userData) return;
+      console.log("ADD ICE CANDIDATE", payload.candidate);
+      try {
+        await peer.addIceCandidate(new RTCIceCandidate(payload.candidate));
+      } catch (error) {
+        console.error("Error adding ICE candidate:", error);
+      }
+    },
+    [roomId, userData]
+  );
+
+  useEffect(() => {
+    const peerConnection = peer.getPeer();
+    if (!peerConnection) return;
+
+    const handleTrackChange = (event: RTCTrackEvent) => {
+      console.log("TRACK CHANGE", event);
+      if (event.streams?.[0]) {
+        const stream = event.streams[0];
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = stream;
+        }
+
+        // Set remote tracks
+        const videoTrack = stream.getVideoTracks()[0];
+        const audioTrack = stream.getAudioTracks()[0];
+
+        if (videoTrack) {
+          setRemoteVideoTrack(videoTrack);
+        }
+        if (audioTrack) {
+          setRemoteAudioTrack(audioTrack);
+        }
+      }
+    };
+
+    peerConnection.addEventListener("track", handleTrackChange);
+    return () => {
+      peerConnection.removeEventListener("track", handleTrackChange);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!roomId || !userData) return;
+    socket.on(EventTypeSchema.Enum.SEND_OFFER, handleSendOffer);
+    socket.on(EventTypeSchema.Enum.OFFER, handleOffer);
+    socket.on(EventTypeSchema.Enum.ANSWER, handleAnswer);
+    socket.on(EventTypeSchema.Enum.NEGO_NEEDED, handleNegoNeedIncomming);
+    socket.on(EventTypeSchema.Enum.NEGO_DONE, handleNegoDoneFinal);
+    socket.on(EventTypeSchema.Enum.ICE_CANDIDATE, handleAddIceCandidate);
+    return () => {
+      socket.off(EventTypeSchema.Enum.SEND_OFFER, handleSendOffer);
+      socket.off(EventTypeSchema.Enum.OFFER, handleOffer);
+      socket.off(EventTypeSchema.Enum.ANSWER, handleAnswer);
+      socket.off(EventTypeSchema.Enum.NEGO_NEEDED, handleNegoNeedIncomming);
+      socket.off(EventTypeSchema.Enum.NEGO_DONE, handleNegoDoneFinal);
+      socket.off(EventTypeSchema.Enum.ICE_CANDIDATE, handleAddIceCandidate);
+    };
+  }, [
+    handleAnswer,
+    handleNegoDoneFinal,
+    handleNegoNeedIncomming,
+    handleOffer,
+    handleSendOffer,
+    roomId,
+    socket,
+    userData,
+    handleAddIceCandidate,
+  ]);
+
+  useEffect(() => {
+    if (!roomId || !userData) return;
+    socket.emit(EventTypeSchema.Enum.JOIN_ROOM, {
+      roomId,
+      userId: userData?.data?.id,
+    });
+  }, [roomId, socket, userData]);
+
+  console.log("LOCAL VIDEO TRACK", localVideoTrack);
+  console.log("REMOTE VIDEO TRACK", remoteVideoTrack);
 
   // Initialize media stream
   const initializeMediaStream = useCallback(async () => {
@@ -151,7 +346,6 @@ const Room = ({ roomId }: RoomProps) => {
         video: true,
         audio: true,
       });
-
       mediaStreamRef.current = stream;
       setLocalAudioTrack(stream.getAudioTracks()[0] ?? null);
       setlocalVideoTrack(stream.getVideoTracks()[0] ?? null);
@@ -160,308 +354,6 @@ const Room = ({ roomId }: RoomProps) => {
       toast.error("Failed to access camera and microphone");
     }
   }, []);
-
-  // Socket connection effect
-  useEffect(() => {
-    if (!roomId || !userData?.data?.id) return;
-    const socket = io(SOCKET_SERVER_URL, {
-      transports: ["websocket"],
-      autoConnect: true,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
-    socketRef.current = socket;
-
-    const handleSendOffer = async () => {
-      console.log("SEND OFFER");
-      try {
-        console.log("INSIDE SEND OFFER");
-        const pc = createPeerConnection();
-        console.log("2 INSIDE SEND OFFER");
-        peerConnectionRef.current = pc;
-
-        // Set up track handling for the peer
-        pc.ontrack = (event) => {
-          console.log("Track received:", event.track.kind);
-          if (event.track.kind === "video") {
-            setRemoteVideoTrack(event.track);
-            setIsConnected(true);
-            if (remoteVideoRef.current) {
-              const stream = new MediaStream();
-              stream.addTrack(event.track);
-              remoteVideoRef.current.srcObject = stream;
-              void remoteVideoRef.current.play().catch(console.error);
-            }
-          } else if (event.track.kind === "audio") {
-            setRemoteAudioTrack(event.track);
-            setIsConnected(true);
-          }
-        };
-
-        // Get local media stream
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true,
-        });
-        mediaStreamRef.current = stream;
-        setLocalAudioTrack(stream.getAudioTracks()[0] ?? null);
-        setlocalVideoTrack(stream.getVideoTracks()[0] ?? null);
-
-        // Add tracks to peer connection
-        stream.getTracks().forEach((track) => {
-          pc.addTrack(track, stream);
-        });
-
-        // Handle ICE candidates
-        pc.onicecandidate = (e) => {
-          console.log("ICE candidate:", e.candidate);
-          if (e.candidate) {
-            socket.emit(EventTypeSchema.Enum.ICE_CANDIDATE, {
-              candidate: e.candidate,
-            });
-          }
-        };
-
-        // Monitor connection state
-        pc.onconnectionstatechange = async () => {
-          console.log("Connection state changed:", pc.connectionState);
-          switch (pc.connectionState) {
-            case "connected":
-              setIsConnected(true);
-              break;
-            case "disconnected":
-            case "failed":
-              setIsConnected(false);
-              // Attempt to reconnect
-              if (pc.connectionState === "failed") {
-                console.log("Connection failed, attempting to reconnect...");
-                await handleReconnect();
-              }
-              break;
-            case "closed":
-              setIsConnected(false);
-              break;
-          }
-        };
-
-        // Monitor ICE connection state
-        pc.oniceconnectionstatechange = async () => {
-          console.log("ICE connection state:", pc.iceConnectionState);
-          if (pc.iceConnectionState === "failed") {
-            console.log("ICE connection failed, attempting to reconnect...");
-            await handleReconnect();
-          }
-        };
-
-        // Handle negotiation needed
-        pc.onnegotiationneeded = async () => {
-          try {
-            const offer = await pc.createOffer({
-              offerToReceiveAudio: true,
-              offerToReceiveVideo: true,
-            });
-            await pc.setLocalDescription(offer);
-            console.log("Sending offer");
-            socket.emit(EventTypeSchema.Enum.OFFER, { sdp: offer });
-          } catch (error) {
-            console.error("Error creating offer:", error);
-            toast.error("Failed to create connection offer");
-          }
-        };
-
-        // Create and send initial offer
-        const offer = await pc.createOffer({
-          offerToReceiveAudio: true,
-          offerToReceiveVideo: true,
-        });
-        await pc.setLocalDescription(offer);
-        socket.emit(EventTypeSchema.Enum.OFFER, { sdp: offer });
-      } catch (error) {
-        console.error("Error setting up peer connection:", error);
-        toast.error("Failed to establish connection");
-      }
-    };
-
-    // Add reconnection logic
-    const handleReconnect = async () => {
-      try {
-        if (peerConnectionRef.current) {
-          peerConnectionRef.current.close();
-          peerConnectionRef.current = null;
-        }
-        // Wait a bit before reconnecting
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        await handleSendOffer();
-      } catch (error) {
-        console.error("Error during reconnection:", error);
-      }
-    };
-
-    const handleConnect = () => {
-      console.log("Socket.IO connected");
-      setIsConnected(false);
-      socket.emit(EventTypeSchema.Enum.JOIN_ROOM, {
-        roomId,
-        userId: userData?.data?.id,
-      });
-    };
-    const handleDisconnect = () => {
-      console.log("Socket.IO disconnected");
-      setIsConnected(false);
-      cleanup();
-    };
-    const handleConnectError = (err: Error) => {
-      console.error("Socket.IO connection error", err);
-      toast.error("Failed to connect to the server");
-    };
-    const handleOffer = async (offer: RTCSessionDescriptionInit) => {
-      console.log("Received offer", offer);
-      try {
-        const pc = createPeerConnection();
-
-        // Set up track handling
-        pc.ontrack = (event) => {
-          console.log("Track received:", event.track.kind);
-          if (event.track.kind === "video") {
-            setRemoteVideoTrack(event.track);
-            setIsConnected(true);
-            if (remoteVideoRef.current) {
-              const stream = new MediaStream();
-              stream.addTrack(event.track);
-              remoteVideoRef.current.srcObject = stream;
-              void remoteVideoRef.current.play().catch(console.error);
-            }
-          } else if (event.track.kind === "audio") {
-            setRemoteAudioTrack(event.track);
-            setIsConnected(true);
-          }
-        };
-
-        // Add local tracks
-        if (mediaStreamRef.current) {
-          const stream = mediaStreamRef.current;
-          stream.getTracks().forEach((track) => {
-            pc.addTrack(track, stream);
-          });
-        }
-        pc.onicecandidate = (e) => {
-          if (e.candidate) {
-            socket.emit(EventTypeSchema.Enum.ICE_CANDIDATE, {
-              candidate: e.candidate,
-            });
-          }
-        };
-
-        // Monitor connection state
-        pc.onconnectionstatechange = async () => {
-          console.log("Connection state changed:", pc.connectionState);
-          switch (pc.connectionState) {
-            case "connected":
-              setIsConnected(true);
-              break;
-            case "disconnected":
-            case "failed":
-              setIsConnected(false);
-              if (pc.connectionState === "failed") {
-                await handleReconnect();
-              }
-              break;
-            case "closed":
-              setIsConnected(false);
-              break;
-          }
-        };
-
-        // Monitor ICE connection state
-        pc.oniceconnectionstatechange = async () => {
-          console.log("ICE connection state:", pc.iceConnectionState);
-          if (pc.iceConnectionState === "failed") {
-            await handleReconnect();
-          }
-        };
-
-        // Set remote description and create answer
-        await pc.setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await pc.createAnswer({
-          offerToReceiveAudio: true,
-          offerToReceiveVideo: true,
-        });
-        await pc.setLocalDescription(answer);
-
-        peerConnectionRef.current = pc;
-        socket.emit(EventTypeSchema.Enum.ANSWER, { sdp: answer });
-      } catch (error) {
-        console.error("Error handling offer:", error);
-        toast.error("Failed to establish connection");
-      }
-    };
-    const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
-      console.log("received answer", answer);
-      try {
-        if (peerConnectionRef.current) {
-          const pc = peerConnectionRef.current;
-          // Check if we're in the right state to set the remote description
-          if (pc.signalingState !== "have-local-offer") {
-            console.warn(
-              "Cannot set remote answer in current state:",
-              pc.signalingState
-            );
-            return;
-          }
-          // Set the remote description
-          await pc.setRemoteDescription(new RTCSessionDescription(answer));
-          console.log("Remote description set successfully");
-          setIsConnected(true);
-        }
-      } catch (error) {
-        console.error("Error handling answer:", error);
-        // If we get a state error, we might need to restart the connection
-        if (error instanceof Error && error.name === "InvalidStateError") {
-          console.log("Attempting to recover from invalid state...");
-          // You might want to implement reconnection logic here
-          toast.error("Connection error. Please try reconnecting.");
-        } else {
-          toast.error("Failed to establish connection");
-        }
-      }
-    };
-    const handleIceCandidate = async (data: {
-      candidate: RTCIceCandidateInit;
-    }) => {
-      console.log("Adding ICE candidate:", data.candidate);
-      try {
-        const pc = peerConnectionRef.current;
-        if (pc?.remoteDescription) {
-          await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-          console.log("ICE candidate added successfully");
-        } else {
-          console.warn("Cannot add ICE candidate - peer connection not ready");
-        }
-      } catch (error) {
-        console.error("Error adding ICE candidate:", error);
-      }
-    };
-    socket.on("connect", handleConnect);
-    socket.on("disconnect", handleDisconnect);
-    socket.on("connect_error", handleConnectError);
-    socket.on(EventTypeSchema.Enum.SEND_OFFER, handleSendOffer);
-    socket.on(EventTypeSchema.Enum.OFFER, handleOffer);
-    socket.on(EventTypeSchema.Enum.ANSWER, handleAnswer);
-    socket.on(EventTypeSchema.Enum.ICE_CANDIDATE, handleIceCandidate);
-    cleanupRef.current = () => {
-      socket.off("connect", handleConnect);
-      socket.off("disconnect", handleDisconnect);
-      socket.off("connect_error", handleConnectError);
-      socket.off(EventTypeSchema.Enum.SEND_OFFER, handleSendOffer);
-      socket.off(EventTypeSchema.Enum.OFFER, handleOffer);
-      socket.off(EventTypeSchema.Enum.ANSWER, handleAnswer);
-      socket.off(EventTypeSchema.Enum.ICE_CANDIDATE, handleIceCandidate);
-    };
-    return () => {
-      cleanup();
-    };
-  }, [roomId, userData?.data?.id, cleanup]);
 
   // Media stream initialization effect
   useEffect(() => {
@@ -555,24 +447,6 @@ const Room = ({ roomId }: RoomProps) => {
   console.log("TIME REMAINING", timeRemaining);
   console.log("CALL STARTED", callStarted);
   console.log("IS CONNECTED", isConnected);
-
-  useEffect(() => {
-    if (remoteVideoRef.current && remoteVideoTrack) {
-      console.log("Setting up remote video in useEffect");
-      const stream = new MediaStream();
-      stream.addTrack(remoteVideoTrack);
-      console.log("Stream tracks in useEffect:", stream.getTracks());
-      remoteVideoRef.current.srcObject = stream;
-      // Force play after a short delay to ensure everything is ready
-      setTimeout(() => {
-        if (remoteVideoRef.current) {
-          void remoteVideoRef.current.play().catch((error) => {
-            console.error("Error playing video in useEffect:", error);
-          });
-        }
-      }, 1000);
-    }
-  }, [remoteVideoTrack]);
 
   if (isPending) {
     return (

@@ -5,16 +5,10 @@ import {
   JoinRoomPayloadSchema,
   type Event,
   type JoinRoomPayload,
-  type User,
 } from "../types";
 import { roomManager } from "./room-manager";
 
 export class UserManager {
-  private users = new Map<string, User>();
-  constructor() {
-    this.users = new Map();
-  }
-
   addUser(socket: Socket) {
     console.log("INSIDE ADD USER");
 
@@ -32,12 +26,6 @@ export class UserManager {
       const { roomId, userId } = parsedPayload.data;
       console.log("PAYLOAD", parsedPayload.data);
 
-      const existingUser = this.getUser(userId);
-      if (existingUser) {
-        socket.emit(EventTypeSchema.Enum.USER_ALREADY_IN_ROOM);
-        return;
-      }
-
       const ifRoomExists = roomManager.getRoom(roomId);
       if (ifRoomExists.length >= 2) {
         socket.emit(EventTypeSchema.Enum.ROOM_FULL);
@@ -49,12 +37,6 @@ export class UserManager {
         socket.emit(EventTypeSchema.Enum.USER_ALREADY_IN_ROOM);
         return;
       }
-
-      // Save user in the users map
-      this.users.set(userId, {
-        userId,
-        socket,
-      });
 
       const user = roomManager.addUserToRoom(roomId, userId, socket);
       if (!user) {
@@ -68,7 +50,7 @@ export class UserManager {
       console.log(`User ${userId} joined room ${roomId}`);
 
       const usersInRoom = roomManager.getRoom(roomId);
-      console.log("USERS IN ROOM", usersInRoom.length);
+      console.log("USERS IN ROOM", usersInRoom.length, usersInRoom);
 
       // ✅ Only emit SEND_OFFER to the first user when 2 users are in the room
       if (usersInRoom.length === 2) {
@@ -82,14 +64,6 @@ export class UserManager {
     });
   }
 
-  getUser(userId: string): User | undefined {
-    return this.users.get(userId);
-  }
-
-  removeUser(userId: string) {
-    this.users.delete(userId);
-  }
-
   initHandlers(socket: Socket) {
     console.log("INIT HANDLERS");
 
@@ -97,6 +71,8 @@ export class UserManager {
       console.log("OFFER", payload);
       const roomId = socket.data.roomId;
       const targetUser = roomManager.getOtherUser(roomId, socket.data.userId);
+      console.log("TARGET USER IN OFFER", targetUser?.userId);
+
       if (targetUser) {
         targetUser.socket.emit(EventTypeSchema.Enum.OFFER, payload?.sdp);
       }
@@ -122,6 +98,24 @@ export class UserManager {
       const targetUser = roomManager.getOtherUser(roomId, socket.data.userId);
       if (targetUser) {
         targetUser.socket.emit(EventTypeSchema.Enum.ANSWER, payload?.sdp);
+      }
+    });
+
+    socket.on(EventTypeSchema.Enum.NEGO_NEEDED, (payload: Event["payload"]) => {
+      console.log("NEGO NEEDED", payload);
+      const roomId = socket.data.roomId;
+      const targetUser = roomManager.getOtherUser(roomId, socket.data.userId);
+      if (targetUser) {
+        targetUser.socket.emit(EventTypeSchema.Enum.NEGO_NEEDED, payload?.sdp);
+      }
+    });
+
+    socket.on(EventTypeSchema.Enum.NEGO_DONE, (payload: Event["payload"]) => {
+      console.log("NEGO DONE", payload);
+      const roomId = socket.data.roomId;
+      const targetUser = roomManager.getOtherUser(roomId, socket.data.userId);
+      if (targetUser) {
+        targetUser.socket.emit(EventTypeSchema.Enum.NEGO_DONE, payload?.sdp);
       }
     });
   }

@@ -39,6 +39,8 @@ export const EventTypeSchema = z.enum([
   "SEND_OFFER",
   "CONNECTED",
   "WAITING_FOR_MATCH",
+  "NEGO_NEEDED",
+  "NEGO_DONE",
 ]);
 
 export type EventType = z.infer<typeof EventTypeSchema>;

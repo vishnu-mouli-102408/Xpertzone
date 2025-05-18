@@ -6,5 +6,9 @@ import { useTRPC } from "../trpc/react";
 
 export const useDbUser = () => {
   const trpc = useTRPC();
-  return useQuery(trpc.auth.getUserDetails.queryOptions());
+  return useQuery(
+    trpc.auth.getUserDetails.queryOptions(undefined, {
+      refetchOnWindowFocus: false,
+    })
+  );
 };

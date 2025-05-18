@@ -6,6 +6,7 @@ class RoomManager {
   private rooms = new Map<string, User[]>();
   private userRooms = new Map<string, string>();
   addUserToRoom(roomId: string, userId: string, socket: Socket): User | null {
+    console.log("ADDING USER TO ROOM", roomId, userId, socket);
     // User already in a room
     if (this.userRooms.has(userId)) {
       const users = this.rooms.get(roomId) ?? [];
