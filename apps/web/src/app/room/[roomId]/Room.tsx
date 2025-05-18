@@ -97,29 +97,10 @@ const Room = ({ roomId }: RoomProps) => {
 
   const mediaStreamRef = useRef<MediaStream | null>(null);
 
-  const socket = getSocket();
-
-  const [iceCandidateQueue, setIceCandidateQueue] = useState<
-    RTCIceCandidateInit[]
-  >([]);
-
-  const processQueuedIceCandidates = useCallback(async () => {
-    const peerConnection = peer.getPeer();
-    if (!peerConnection?.remoteDescription) return;
-
-    try {
-      while (iceCandidateQueue.length > 0) {
-        const candidate = iceCandidateQueue[0];
-        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-        setIceCandidateQueue((prev) => prev.slice(1));
-      }
-    } catch (error) {
-      console.error("Error processing queued ICE candidates:", error);
-    }
-  }, [iceCandidateQueue]);
+  const socket = useMemo(() => getSocket(), []);
 
   const handleSendOffer = useCallback(async () => {
-    if (!roomId || !userData) return;
+    if (!socket) return;
     console.log("SEND OFFER");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -147,11 +128,11 @@ const Room = ({ roomId }: RoomProps) => {
       console.error("Error sending offer:", error);
       toast.error("Failed to start call");
     }
-  }, [roomId, socket, userData]);
+  }, [socket]);
 
   const handleOffer = useCallback(
     async (offer: RTCSessionDescriptionInit) => {
-      if (!roomId || !userData) return;
+      if (!socket) return;
       console.log("OFFER", offer);
       setIsConnected(true);
       try {
@@ -180,12 +161,11 @@ const Room = ({ roomId }: RoomProps) => {
         toast.error("Failed to handle incoming call");
       }
     },
-    [roomId, socket, userData]
+    [socket]
   );
 
   const handleAnswer = useCallback(
     async (answer: RTCSessionDescriptionInit) => {
-      if (!roomId || !userData) return;
       console.log("ANSWER", answer);
       try {
         const peerConnection = peer.getPeer();
@@ -204,16 +184,16 @@ const Room = ({ roomId }: RoomProps) => {
         await peerConnection.setRemoteDescription(
           new RTCSessionDescription(answer)
         );
-        void processQueuedIceCandidates();
       } catch (error) {
         console.error("Error handling answer:", error);
         toast.error("Failed to establish connection");
       }
     },
-    [roomId, userData, processQueuedIceCandidates]
+    []
   );
 
   const handleNegoNeeded = useCallback(async () => {
+    if (!socket) return;
     try {
       const peerConnection = peer.getPeer();
       if (!peerConnection) return;
@@ -259,7 +239,7 @@ const Room = ({ roomId }: RoomProps) => {
 
   const handleNegoNeedIncomming = useCallback(
     async (offer: RTCSessionDescriptionInit) => {
-      if (!roomId || !userData) return;
+      if (!socket) return;
       console.log("NEGO NEED INCOMMING", offer);
       try {
         const peerConnection = peer.getPeer();
@@ -278,12 +258,11 @@ const Room = ({ roomId }: RoomProps) => {
         console.error("Error handling incoming negotiation:", error);
       }
     },
-    [roomId, socket, userData]
+    [socket]
   );
 
   const handleNegoDoneFinal = useCallback(
     async (answer: RTCSessionDescriptionInit) => {
-      if (!roomId || !userData) return;
       console.log("NEGO DONE FINAL", answer);
       try {
         const peerConnection = peer.getPeer();
@@ -301,17 +280,16 @@ const Room = ({ roomId }: RoomProps) => {
         await peerConnection.setRemoteDescription(
           new RTCSessionDescription(answer)
         );
-        void processQueuedIceCandidates();
       } catch (error) {
         console.error("Error handling negotiation done:", error);
       }
     },
-    [roomId, userData, processQueuedIceCandidates]
+    []
   );
 
   useEffect(() => {
     const peerConnection = peer.getPeer();
-    if (!peerConnection) return;
+    if (!peerConnection || !socket) return;
 
     const handleIceCandidateNeeded = (event: RTCPeerConnectionIceEvent) => {
       console.log("ICE CANDIDATE NEEDED", event.candidate);
@@ -334,19 +312,10 @@ const Room = ({ roomId }: RoomProps) => {
 
   const handleAddIceCandidate = useCallback(
     async (payload: { candidate: RTCIceCandidateInit }) => {
-      if (!roomId || !userData) return;
       console.log("ADD ICE CANDIDATE", payload.candidate);
       try {
         const peerConnection = peer.getPeer();
         if (!peerConnection) return;
-
-        // Check if remote description is set
-        if (!peerConnection.remoteDescription) {
-          console.log("Remote description not set yet, queuing ICE candidate");
-          setIceCandidateQueue((prev) => [...prev, payload.candidate]);
-          return;
-        }
-
         await peerConnection.addIceCandidate(
           new RTCIceCandidate(payload.candidate)
         );
@@ -354,7 +323,7 @@ const Room = ({ roomId }: RoomProps) => {
         console.error("Error adding ICE candidate:", error);
       }
     },
-    [roomId, userData]
+    []
   );
 
   useEffect(() => {
@@ -390,7 +359,7 @@ const Room = ({ roomId }: RoomProps) => {
   }, []);
 
   useEffect(() => {
-    if (!roomId || !userData) return;
+    if (!socket) return;
     socket.on(EventTypeSchema.Enum.SEND_OFFER, handleSendOffer);
     socket.on(EventTypeSchema.Enum.OFFER, handleOffer);
     socket.on(EventTypeSchema.Enum.ANSWER, handleAnswer);
@@ -411,14 +380,12 @@ const Room = ({ roomId }: RoomProps) => {
     handleNegoNeedIncomming,
     handleOffer,
     handleSendOffer,
-    roomId,
     socket,
-    userData,
     handleAddIceCandidate,
   ]);
 
   useEffect(() => {
-    if (!roomId || !userData) return;
+    if (!roomId || !userData || !socket) return;
     socket.emit(EventTypeSchema.Enum.JOIN_ROOM, {
       roomId,
       userId: userData?.data?.id,
@@ -515,7 +482,7 @@ const Room = ({ roomId }: RoomProps) => {
     return (elapsed / totalDuration) * 100;
   };
 
-  const toggleMic = () => {
+  const toggleMic = useCallback(() => {
     try {
       if (localAudioTrack) {
         localAudioTrack.enabled = !isMicOn;
@@ -525,9 +492,9 @@ const Room = ({ roomId }: RoomProps) => {
       console.error("Error toggling mic:", error);
       toast.error("Failed to toggle mic");
     }
-  };
+  }, [localAudioTrack, isMicOn]);
 
-  const toggleCamera = () => {
+  const toggleCamera = useCallback(() => {
     try {
       console.log("toggleCamera", isCameraOn);
       if (localVideoTrack) {
@@ -538,61 +505,11 @@ const Room = ({ roomId }: RoomProps) => {
       console.error("Error toggling camera:", error);
       toast.error("Failed to toggle camera");
     }
-  };
+  }, [localVideoTrack, isCameraOn]);
 
   console.log("TIME REMAINING", timeRemaining);
   console.log("CALL STARTED", callStarted);
   console.log("IS CONNECTED", isConnected);
-
-  useEffect(() => {
-    const peerConnection = peer.getPeer();
-    if (!peerConnection) return;
-
-    const handleRemoteDescriptionSet = () => {
-      if (peerConnection.remoteDescription) {
-        void processQueuedIceCandidates();
-      }
-    };
-
-    // Check if remote description is already set
-    if (peerConnection.remoteDescription) {
-      void processQueuedIceCandidates();
-    }
-
-    // Listen for remote description changes
-    peerConnection.addEventListener(
-      "signalingstatechange",
-      handleRemoteDescriptionSet
-    );
-
-    return () => {
-      peerConnection.removeEventListener(
-        "signalingstatechange",
-        handleRemoteDescriptionSet
-      );
-    };
-  }, [processQueuedIceCandidates]);
-
-  // Add this effect to monitor signaling state changes
-  useEffect(() => {
-    const peerConnection = peer.getPeer();
-    if (!peerConnection) return;
-
-    const handleSignalingStateChange = () => {
-      console.log("Signaling state changed:", peerConnection.signalingState);
-    };
-
-    peerConnection.addEventListener(
-      "signalingstatechange",
-      handleSignalingStateChange
-    );
-    return () => {
-      peerConnection.removeEventListener(
-        "signalingstatechange",
-        handleSignalingStateChange
-      );
-    };
-  }, []);
 
   if (isPending) {
     return (
