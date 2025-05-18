@@ -204,6 +204,7 @@ const Room = ({ roomId }: RoomProps) => {
               const stream = new MediaStream();
               stream.addTrack(event.track);
               remoteVideoRef.current.srcObject = stream;
+              void remoteVideoRef.current.play().catch(console.error);
             }
           } else if (event.track.kind === "audio") {
             setRemoteAudioTrack(event.track);
@@ -248,23 +249,25 @@ const Room = ({ roomId }: RoomProps) => {
           }
         };
 
+        pc.onnegotiationneeded = async () => {
+          try {
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            console.log("sending offer");
+            socket.emit(EventTypeSchema.Enum.OFFER, { sdp: offer });
+          } catch (error) {
+            console.error("Error creating offer:", error);
+            toast.error("Failed to create connection offer");
+          }
+        };
         // Create and send offer immediately
-        try {
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          console.log("sending offer");
-          socket.emit(EventTypeSchema.Enum.OFFER, { sdp: offer });
-        } catch (error) {
-          console.error("Error creating offer:", error);
-          toast.error("Failed to create connection offer");
-        }
       } catch (error) {
         console.error("Error setting up peer connection:", error);
         toast.error("Failed to establish connection");
       }
     };
-    const handleOffer = async (offer: { sdp: RTCSessionDescriptionInit }) => {
-      console.log("received offer", offer.sdp);
+    const handleOffer = async (offer: RTCSessionDescriptionInit) => {
+      console.log("received offer", offer);
       try {
         console.log("setting up peer connection");
         const pc = new RTCPeerConnection({
@@ -276,15 +279,28 @@ const Room = ({ roomId }: RoomProps) => {
 
         // Set up track handling before setting remote description
         pc.ontrack = (event) => {
-          console.log("Track received on receiving peer:", event.track.kind);
+          console.log(
+            "Track received on receiving peer:",
+            event.track.kind,
+            event.streams
+          );
           if (event.track.kind === "video") {
             setRemoteVideoTrack(event.track);
             setIsConnected(true);
             if (remoteVideoRef.current) {
+              console.log("Setting up remote video element");
               const stream = new MediaStream();
               stream.addTrack(event.track);
+              console.log("Stream tracks:", stream.getTracks());
               remoteVideoRef.current.srcObject = stream;
-              void remoteVideoRef.current.play().catch(console.error);
+              // Force play after a short delay to ensure everything is ready
+              setTimeout(() => {
+                if (remoteVideoRef.current) {
+                  void remoteVideoRef.current.play().catch((error) => {
+                    console.error("Error playing video:", error);
+                  });
+                }
+              }, 1000);
             }
           } else if (event.track.kind === "audio") {
             setRemoteAudioTrack(event.track);
@@ -312,7 +328,7 @@ const Room = ({ roomId }: RoomProps) => {
           });
         }
 
-        await pc.setRemoteDescription(new RTCSessionDescription(offer.sdp));
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
 
@@ -332,7 +348,7 @@ const Room = ({ roomId }: RoomProps) => {
         toast.error("Failed to establish connection");
       }
     };
-    const handleAnswer = async (answer: { sdp: RTCSessionDescriptionInit }) => {
+    const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
       console.log("received answer", answer);
       try {
         if (peerConnectionRef.current.sendingPc) {
@@ -346,7 +362,7 @@ const Room = ({ roomId }: RoomProps) => {
             return;
           }
           // Set the remote description
-          await pc.setRemoteDescription(new RTCSessionDescription(answer.sdp));
+          await pc.setRemoteDescription(new RTCSessionDescription(answer));
           console.log("Remote description set successfully");
           setIsConnected(true);
         }
@@ -501,10 +517,19 @@ const Room = ({ roomId }: RoomProps) => {
 
   useEffect(() => {
     if (remoteVideoRef.current && remoteVideoTrack) {
+      console.log("Setting up remote video in useEffect");
       const stream = new MediaStream();
       stream.addTrack(remoteVideoTrack);
+      console.log("Stream tracks in useEffect:", stream.getTracks());
       remoteVideoRef.current.srcObject = stream;
-      void remoteVideoRef.current.play();
+      // Force play after a short delay to ensure everything is ready
+      setTimeout(() => {
+        if (remoteVideoRef.current) {
+          void remoteVideoRef.current.play().catch((error) => {
+            console.error("Error playing video in useEffect:", error);
+          });
+        }
+      }, 1000);
     }
   }, [remoteVideoTrack]);
 
@@ -687,8 +712,8 @@ const Room = ({ roomId }: RoomProps) => {
                   ref={remoteVideoRef}
                   className="absolute inset-0 h-full w-full object-cover"
                   autoPlay
-                  muted
                   playsInline
+                  muted={false}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">

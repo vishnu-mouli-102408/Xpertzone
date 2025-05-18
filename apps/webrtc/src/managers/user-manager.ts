@@ -74,6 +74,7 @@ export class UserManager {
       if (usersInRoom.length === 2) {
         const [user1, _user2] = usersInRoom;
         // Tell the first user to send offer
+        console.log("EMITTING SEND OFFER", user1?.userId);
         user1?.socket.emit(EventTypeSchema.Enum.SEND_OFFER);
       }
 
@@ -97,7 +98,7 @@ export class UserManager {
       const roomId = socket.data.roomId;
       const targetUser = roomManager.getOtherUser(roomId, socket.data.userId);
       if (targetUser) {
-        targetUser.socket.emit(EventTypeSchema.Enum.OFFER, payload);
+        targetUser.socket.emit(EventTypeSchema.Enum.OFFER, payload?.sdp);
       }
     });
 
@@ -120,7 +121,7 @@ export class UserManager {
       const roomId = socket.data.roomId;
       const targetUser = roomManager.getOtherUser(roomId, socket.data.userId);
       if (targetUser) {
-        targetUser.socket.emit(EventTypeSchema.Enum.ANSWER, payload);
+        targetUser.socket.emit(EventTypeSchema.Enum.ANSWER, payload?.sdp);
       }
     });
   }
