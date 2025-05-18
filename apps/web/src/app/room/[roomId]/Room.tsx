@@ -50,6 +50,25 @@ const EventTypeSchema = z.enum([
 
 const SOCKET_SERVER_URL = "http://localhost:4001";
 
+const ICE_SERVERS = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun2.l.google.com:19302" },
+  { urls: "stun:stun3.l.google.com:19302" },
+  { urls: "stun:stun4.l.google.com:19302" },
+  // Add TURN servers if you have them
+];
+
+const createPeerConnection = () => {
+  return new RTCPeerConnection({
+    iceServers: ICE_SERVERS,
+    iceTransportPolicy: "all",
+    bundlePolicy: "max-bundle",
+    rtcpMuxPolicy: "require",
+    iceCandidatePoolSize: 10,
+  });
+};
+
 const Room = ({ roomId }: RoomProps) => {
   const trpc = useTRPC();
 
@@ -100,13 +119,7 @@ const Room = ({ roomId }: RoomProps) => {
   // Add cleanup refs
   const cleanupRef = useRef<(() => void) | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const peerConnectionRef = useRef<{
-    sendingPc: RTCPeerConnection | null;
-    receivingPc: RTCPeerConnection | null;
-  }>({
-    sendingPc: null,
-    receivingPc: null,
-  });
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 
   // Cleanup function
   const cleanup = useCallback(() => {
@@ -120,14 +133,9 @@ const Room = ({ roomId }: RoomProps) => {
       mediaStreamRef.current = null;
     }
 
-    if (peerConnectionRef.current.sendingPc) {
-      peerConnectionRef.current.sendingPc.close();
-      peerConnectionRef.current.sendingPc = null;
-    }
-
-    if (peerConnectionRef.current.receivingPc) {
-      peerConnectionRef.current.receivingPc.close();
-      peerConnectionRef.current.receivingPc = null;
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
     }
 
     if (socketRef.current) {
@@ -164,39 +172,18 @@ const Room = ({ roomId }: RoomProps) => {
       reconnectionDelay: 1000,
     });
     socketRef.current = socket;
-    const handleConnect = () => {
-      console.log("Socket.IO connected");
-      setIsConnected(false);
-      socket.emit(EventTypeSchema.Enum.JOIN_ROOM, {
-        roomId,
-        userId: userData?.data?.id,
-      });
-    };
-    const handleDisconnect = () => {
-      console.log("Socket.IO disconnected");
-      setIsConnected(false);
-      cleanup();
-    };
-    const handleConnectError = (err: Error) => {
-      console.error("Socket.IO connection error", err);
-      toast.error("Failed to connect to the server");
-    };
+
     const handleSendOffer = async () => {
       console.log("SEND OFFER");
       try {
         console.log("INSIDE SEND OFFER");
-        const pc = new RTCPeerConnection({
-          iceServers: [
-            { urls: "stun:stun.l.google.com:19302" },
-            { urls: "stun:stun1.l.google.com:19302" },
-          ],
-        });
+        const pc = createPeerConnection();
         console.log("2 INSIDE SEND OFFER");
-        peerConnectionRef.current.sendingPc = pc;
+        peerConnectionRef.current = pc;
 
-        // Set up track handling for the sending peer
+        // Set up track handling for the peer
         pc.ontrack = (event) => {
-          console.log("Track received on sending peer:", event.track.kind);
+          console.log("Track received:", event.track.kind);
           if (event.track.kind === "video") {
             setRemoteVideoTrack(event.track);
             setIsConnected(true);
@@ -226,81 +213,124 @@ const Room = ({ roomId }: RoomProps) => {
           pc.addTrack(track, stream);
         });
 
+        // Handle ICE candidates
         pc.onicecandidate = (e) => {
-          console.log("3 INSIDE SEND OFFER ONICECANDIDATE");
+          console.log("ICE candidate:", e.candidate);
           if (e.candidate) {
-            console.log("sending ice candidate");
             socket.emit(EventTypeSchema.Enum.ICE_CANDIDATE, {
               candidate: e.candidate,
-              type: "SENDER",
             });
           }
         };
 
-        pc.onconnectionstatechange = () => {
-          console.log("Sending peer connection state:", pc.connectionState);
-          if (pc.connectionState === "connected") {
-            setIsConnected(true);
-          } else if (
-            pc.connectionState === "disconnected" ||
-            pc.connectionState === "failed"
-          ) {
-            setIsConnected(false);
+        // Monitor connection state
+        pc.onconnectionstatechange = async () => {
+          console.log("Connection state changed:", pc.connectionState);
+          switch (pc.connectionState) {
+            case "connected":
+              setIsConnected(true);
+              break;
+            case "disconnected":
+            case "failed":
+              setIsConnected(false);
+              // Attempt to reconnect
+              if (pc.connectionState === "failed") {
+                console.log("Connection failed, attempting to reconnect...");
+                await handleReconnect();
+              }
+              break;
+            case "closed":
+              setIsConnected(false);
+              break;
           }
         };
 
+        // Monitor ICE connection state
+        pc.oniceconnectionstatechange = async () => {
+          console.log("ICE connection state:", pc.iceConnectionState);
+          if (pc.iceConnectionState === "failed") {
+            console.log("ICE connection failed, attempting to reconnect...");
+            await handleReconnect();
+          }
+        };
+
+        // Handle negotiation needed
         pc.onnegotiationneeded = async () => {
           try {
-            const offer = await pc.createOffer();
+            const offer = await pc.createOffer({
+              offerToReceiveAudio: true,
+              offerToReceiveVideo: true,
+            });
             await pc.setLocalDescription(offer);
-            console.log("sending offer");
+            console.log("Sending offer");
             socket.emit(EventTypeSchema.Enum.OFFER, { sdp: offer });
           } catch (error) {
             console.error("Error creating offer:", error);
             toast.error("Failed to create connection offer");
           }
         };
-        // Create and send offer immediately
+
+        // Create and send initial offer
+        const offer = await pc.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true,
+        });
+        await pc.setLocalDescription(offer);
+        socket.emit(EventTypeSchema.Enum.OFFER, { sdp: offer });
       } catch (error) {
         console.error("Error setting up peer connection:", error);
         toast.error("Failed to establish connection");
       }
     };
-    const handleOffer = async (offer: RTCSessionDescriptionInit) => {
-      console.log("received offer", offer);
-      try {
-        console.log("setting up peer connection");
-        const pc = new RTCPeerConnection({
-          iceServers: [
-            { urls: "stun:stun.l.google.com:19302" },
-            { urls: "stun:stun1.l.google.com:19302" },
-          ],
-        });
 
-        // Set up track handling before setting remote description
+    // Add reconnection logic
+    const handleReconnect = async () => {
+      try {
+        if (peerConnectionRef.current) {
+          peerConnectionRef.current.close();
+          peerConnectionRef.current = null;
+        }
+        // Wait a bit before reconnecting
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await handleSendOffer();
+      } catch (error) {
+        console.error("Error during reconnection:", error);
+      }
+    };
+
+    const handleConnect = () => {
+      console.log("Socket.IO connected");
+      setIsConnected(false);
+      socket.emit(EventTypeSchema.Enum.JOIN_ROOM, {
+        roomId,
+        userId: userData?.data?.id,
+      });
+    };
+    const handleDisconnect = () => {
+      console.log("Socket.IO disconnected");
+      setIsConnected(false);
+      cleanup();
+    };
+    const handleConnectError = (err: Error) => {
+      console.error("Socket.IO connection error", err);
+      toast.error("Failed to connect to the server");
+    };
+    const handleOffer = async (offer: RTCSessionDescriptionInit) => {
+      console.log("Received offer", offer);
+      try {
+        const pc = createPeerConnection();
+
+        // Set up track handling
         pc.ontrack = (event) => {
-          console.log(
-            "Track received on receiving peer:",
-            event.track.kind,
-            event.streams
-          );
+          console.log("Track received:", event.track.kind);
           if (event.track.kind === "video") {
             setRemoteVideoTrack(event.track);
             setIsConnected(true);
             if (remoteVideoRef.current) {
-              console.log("Setting up remote video element");
               const stream = new MediaStream();
               stream.addTrack(event.track);
-              console.log("Stream tracks:", stream.getTracks());
               remoteVideoRef.current.srcObject = stream;
-              // Force play after a short delay to ensure everything is ready
-              setTimeout(() => {
-                if (remoteVideoRef.current) {
-                  void remoteVideoRef.current.play().catch((error) => {
-                    console.error("Error playing video:", error);
-                  });
-                }
-              }, 1000);
+              void remoteVideoRef.current.play().catch(console.error);
             }
           } else if (event.track.kind === "audio") {
             setRemoteAudioTrack(event.track);
@@ -308,40 +338,58 @@ const Room = ({ roomId }: RoomProps) => {
           }
         };
 
-        pc.onconnectionstatechange = () => {
-          console.log("Receiving peer connection state:", pc.connectionState);
-          if (pc.connectionState === "connected") {
-            setIsConnected(true);
-          } else if (
-            pc.connectionState === "disconnected" ||
-            pc.connectionState === "failed"
-          ) {
-            setIsConnected(false);
-          }
-        };
-
-        // Add local tracks before setting remote description
+        // Add local tracks
         if (mediaStreamRef.current) {
-          const mediaStream = mediaStreamRef.current;
-          mediaStream.getTracks().forEach((track) => {
-            pc.addTrack(track, mediaStream);
+          const stream = mediaStreamRef.current;
+          stream.getTracks().forEach((track) => {
+            pc.addTrack(track, stream);
           });
         }
-
-        await pc.setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-
-        peerConnectionRef.current.receivingPc = pc;
         pc.onicecandidate = (e) => {
           if (e.candidate) {
-            console.log("sending icecandidate");
             socket.emit(EventTypeSchema.Enum.ICE_CANDIDATE, {
               candidate: e.candidate,
-              type: "RECEIVER",
             });
           }
         };
+
+        // Monitor connection state
+        pc.onconnectionstatechange = async () => {
+          console.log("Connection state changed:", pc.connectionState);
+          switch (pc.connectionState) {
+            case "connected":
+              setIsConnected(true);
+              break;
+            case "disconnected":
+            case "failed":
+              setIsConnected(false);
+              if (pc.connectionState === "failed") {
+                await handleReconnect();
+              }
+              break;
+            case "closed":
+              setIsConnected(false);
+              break;
+          }
+        };
+
+        // Monitor ICE connection state
+        pc.oniceconnectionstatechange = async () => {
+          console.log("ICE connection state:", pc.iceConnectionState);
+          if (pc.iceConnectionState === "failed") {
+            await handleReconnect();
+          }
+        };
+
+        // Set remote description and create answer
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await pc.createAnswer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true,
+        });
+        await pc.setLocalDescription(answer);
+
+        peerConnectionRef.current = pc;
         socket.emit(EventTypeSchema.Enum.ANSWER, { sdp: answer });
       } catch (error) {
         console.error("Error handling offer:", error);
@@ -351,8 +399,8 @@ const Room = ({ roomId }: RoomProps) => {
     const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
       console.log("received answer", answer);
       try {
-        if (peerConnectionRef.current.sendingPc) {
-          const pc = peerConnectionRef.current.sendingPc;
+        if (peerConnectionRef.current) {
+          const pc = peerConnectionRef.current;
           // Check if we're in the right state to set the remote description
           if (pc.signalingState !== "have-local-offer") {
             console.warn(
@@ -380,20 +428,13 @@ const Room = ({ roomId }: RoomProps) => {
     };
     const handleIceCandidate = async (data: {
       candidate: RTCIceCandidateInit;
-      type: "SENDER" | "RECEIVER";
     }) => {
-      console.log("add ice candidate from remote", data);
+      console.log("Adding ICE candidate:", data.candidate);
       try {
-        const pc =
-          data.type === "SENDER"
-            ? peerConnectionRef.current.receivingPc
-            : peerConnectionRef.current.sendingPc;
-
+        const pc = peerConnectionRef.current;
         if (pc?.remoteDescription) {
           await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-          if (pc.connectionState === "connected") {
-            setIsConnected(true);
-          }
+          console.log("ICE candidate added successfully");
         } else {
           console.warn("Cannot add ICE candidate - peer connection not ready");
         }
@@ -713,7 +754,7 @@ const Room = ({ roomId }: RoomProps) => {
                   className="absolute inset-0 h-full w-full object-cover"
                   autoPlay
                   playsInline
-                  muted={false}
+                  muted
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
