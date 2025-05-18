@@ -13,7 +13,15 @@ import {
 } from "@repo/ui/components/select";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Calendar, Clock, Phone, TrendingUp, Users, Video } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Phone,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Video,
+} from "lucide-react";
 import { motion } from "motion/react";
 import {
   Area,
@@ -178,7 +186,11 @@ const UserOverview = () => {
                 <div
                   className={`mt-2 flex items-center ${item.change.startsWith("+") ? "text-green-400" : "text-red-400"}`}
                 >
-                  <TrendingUp className="mr-1 h-3.5 w-3.5" />
+                  {item?.change?.startsWith("+") ? (
+                    <TrendingUp className="mr-1 h-3.5 w-3.5" />
+                  ) : (
+                    <TrendingDown className="mr-1 h-3.5 w-3.5" />
+                  )}
                   <span className="text-xs">{item.change} from last week</span>
                 </div>
               </div>
