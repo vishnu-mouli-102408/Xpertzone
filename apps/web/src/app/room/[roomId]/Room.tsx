@@ -462,10 +462,15 @@ const Room = ({ roomId }: RoomProps) => {
 
   useEffect(() => {
     if (remoteVideoRef.current && remoteVideoTrack) {
-      remoteVideoRef.current.srcObject = new MediaStream([remoteVideoTrack]);
-      void remoteVideoRef.current.play();
+      if (isRemoteCameraOn) {
+        const stream = new MediaStream([remoteVideoTrack]);
+        remoteVideoRef.current.srcObject = stream;
+        void remoteVideoRef.current.play();
+      } else {
+        remoteVideoRef.current.srcObject = null;
+      }
     }
-  }, [remoteVideoRef, remoteVideoTrack]);
+  }, [remoteVideoRef, remoteVideoTrack, isRemoteCameraOn]);
 
   useEffect(() => {
     if (!data?.data?.startedAt) return;
@@ -534,6 +539,7 @@ const Room = ({ roomId }: RoomProps) => {
   console.log("TIME REMAINING", timeRemaining);
   console.log("CALL STARTED", callStarted);
   console.log("IS CONNECTED", isConnected);
+  console.log("IS REMOTE CAMERA ON", isRemoteCameraOn);
 
   if (isPending) {
     return (
