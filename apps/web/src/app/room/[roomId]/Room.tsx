@@ -347,6 +347,8 @@ const Room = ({ roomId }: RoomProps) => {
 
         if (videoTrack) {
           setRemoteVideoTrack(videoTrack);
+          // Set initial camera state based on track enabled status
+          setIsRemoteCameraOn(videoTrack.enabled);
         }
         if (audioTrack) {
           setRemoteAudioTrack(audioTrack);
@@ -359,6 +361,27 @@ const Room = ({ roomId }: RoomProps) => {
       peerConnection.removeEventListener("track", handleTrackChange);
     };
   }, []);
+
+  // Update remote video handling
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteVideoTrack) {
+      console.log(
+        "Setting remote video stream, isRemoteCameraOn:",
+        isRemoteCameraOn
+      );
+      if (isRemoteCameraOn) {
+        console.log("REMOTE VIDEO TRACK IS ON");
+        const stream = new MediaStream([remoteVideoTrack]);
+        remoteVideoRef.current.srcObject = stream;
+        void remoteVideoRef.current.play().catch((error) => {
+          console.error("Error playing remote video:", error);
+        });
+      } else {
+        console.log("REMOTE VIDEO TRACK IS OFF");
+        remoteVideoRef.current.srcObject = null;
+      }
+    }
+  }, [remoteVideoRef, remoteVideoTrack, isRemoteCameraOn]);
 
   const handleCameraStateChange = useCallback(
     (payload: { isCameraOn: boolean }) => {
@@ -459,18 +482,6 @@ const Room = ({ roomId }: RoomProps) => {
       }
     }
   }, [localVideoRef, localVideoTrack, isCameraOn]);
-
-  useEffect(() => {
-    if (remoteVideoRef.current && remoteVideoTrack) {
-      if (isRemoteCameraOn) {
-        const stream = new MediaStream([remoteVideoTrack]);
-        remoteVideoRef.current.srcObject = stream;
-        void remoteVideoRef.current.play();
-      } else {
-        remoteVideoRef.current.srcObject = null;
-      }
-    }
-  }, [remoteVideoRef, remoteVideoTrack, isRemoteCameraOn]);
 
   useEffect(() => {
     if (!data?.data?.startedAt) return;
