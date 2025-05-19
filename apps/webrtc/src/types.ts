@@ -41,6 +41,7 @@ export const EventTypeSchema = z.enum([
   "WAITING_FOR_MATCH",
   "NEGO_NEEDED",
   "NEGO_DONE",
+  "CAMERA_STATE_CHANGE",
 ]);
 
 export type EventType = z.infer<typeof EventTypeSchema>;

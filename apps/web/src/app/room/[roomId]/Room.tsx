@@ -49,6 +49,7 @@ const EventTypeSchema = z.enum([
   "SEND_OFFER",
   "NEGO_NEEDED",
   "NEGO_DONE",
+  "CAMERA_STATE_CHANGE",
 ]);
 
 const Room = ({ roomId }: RoomProps) => {
@@ -77,6 +78,7 @@ const Room = ({ roomId }: RoomProps) => {
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const [isRemoteCameraOn, setIsRemoteCameraOn] = useState(true);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const [localAudioTrack, setLocalAudioTrack] =
@@ -358,6 +360,14 @@ const Room = ({ roomId }: RoomProps) => {
     };
   }, []);
 
+  const handleCameraStateChange = useCallback(
+    (payload: { isCameraOn: boolean }) => {
+      console.log("CAMERA STATE CHANGE", payload);
+      setIsRemoteCameraOn(payload.isCameraOn);
+    },
+    []
+  );
+
   useEffect(() => {
     if (!socket) return;
     socket.on(EventTypeSchema.Enum.SEND_OFFER, handleSendOffer);
@@ -366,6 +376,10 @@ const Room = ({ roomId }: RoomProps) => {
     socket.on(EventTypeSchema.Enum.NEGO_NEEDED, handleNegoNeedIncomming);
     socket.on(EventTypeSchema.Enum.NEGO_DONE, handleNegoDoneFinal);
     socket.on(EventTypeSchema.Enum.ICE_CANDIDATE, handleAddIceCandidate);
+    socket.on(
+      EventTypeSchema.Enum.CAMERA_STATE_CHANGE,
+      handleCameraStateChange
+    );
     return () => {
       socket.off(EventTypeSchema.Enum.SEND_OFFER, handleSendOffer);
       socket.off(EventTypeSchema.Enum.OFFER, handleOffer);
@@ -373,6 +387,10 @@ const Room = ({ roomId }: RoomProps) => {
       socket.off(EventTypeSchema.Enum.NEGO_NEEDED, handleNegoNeedIncomming);
       socket.off(EventTypeSchema.Enum.NEGO_DONE, handleNegoDoneFinal);
       socket.off(EventTypeSchema.Enum.ICE_CANDIDATE, handleAddIceCandidate);
+      socket.off(
+        EventTypeSchema.Enum.CAMERA_STATE_CHANGE,
+        handleCameraStateChange
+      );
     };
   }, [
     handleAnswer,
@@ -382,6 +400,7 @@ const Room = ({ roomId }: RoomProps) => {
     handleSendOffer,
     socket,
     handleAddIceCandidate,
+    handleCameraStateChange,
   ]);
 
   useEffect(() => {
@@ -500,12 +519,17 @@ const Room = ({ roomId }: RoomProps) => {
       if (localVideoTrack) {
         localVideoTrack.enabled = !isCameraOn;
         setIsCameraOn((prev) => !prev);
+        if (socket) {
+          socket.emit(EventTypeSchema.Enum.CAMERA_STATE_CHANGE, {
+            isCameraOn: !isCameraOn,
+          });
+        }
       }
     } catch (error) {
       console.error("Error toggling camera:", error);
       toast.error("Failed to toggle camera");
     }
-  }, [localVideoTrack, isCameraOn]);
+  }, [localVideoTrack, isCameraOn, socket]);
 
   console.log("TIME REMAINING", timeRemaining);
   console.log("CALL STARTED", callStarted);
@@ -685,7 +709,7 @@ const Room = ({ roomId }: RoomProps) => {
             )}
 
             {isConnected &&
-              (remoteVideoTrack ? (
+              (remoteVideoTrack && isRemoteCameraOn ? (
                 <video
                   ref={remoteVideoRef}
                   className="absolute inset-0 h-full w-full object-cover"
@@ -695,7 +719,6 @@ const Room = ({ roomId }: RoomProps) => {
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  {/* Placeholder for remote video */}
                   <div className="text-center">
                     <Avatar className="mx-auto mb-4 h-24 w-24 border-2 border-white/20">
                       <AvatarImage
@@ -714,7 +737,11 @@ const Room = ({ roomId }: RoomProps) => {
                       </AvatarFallback>
                     </Avatar>
                     <p className="text-sm text-gray-400">
-                      {userData?.data?.role === "USER" ? "Expert" : "User"}
+                      {!isRemoteCameraOn
+                        ? "Camera Off"
+                        : userData?.data?.role === "USER"
+                          ? "Expert"
+                          : "User"}
                     </p>
                   </div>
                 </div>

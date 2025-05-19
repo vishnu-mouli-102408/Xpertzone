@@ -118,5 +118,22 @@ export class UserManager {
         targetUser.socket.emit(EventTypeSchema.Enum.NEGO_DONE, payload?.sdp);
       }
     });
+
+    // Add handler for camera state changes
+    socket.on(
+      EventTypeSchema.Enum.CAMERA_STATE_CHANGE,
+      (payload: { isCameraOn: boolean }) => {
+        console.log("CAMERA STATE CHANGE", payload);
+        const roomId = socket.data.roomId;
+        const targetUser = roomManager.getOtherUser(roomId, socket.data.userId);
+        console.log("TARGET USER IN CAMERA STATE CHANGE", targetUser?.userId);
+        if (targetUser) {
+          targetUser.socket.emit(
+            EventTypeSchema.Enum.CAMERA_STATE_CHANGE,
+            payload
+          );
+        }
+      }
+    );
   }
 }
