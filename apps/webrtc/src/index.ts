@@ -32,6 +32,7 @@ function setupWebrtcSignallingServer(httpServer: http.Server) {
       roomManager.removeUser(userId);
       socket.emit(EventTypeSchema.Enum.PEER_DISCONNECTED, {
         socketId: socket.id,
+        userId,
       });
       socket.disconnect();
     });
