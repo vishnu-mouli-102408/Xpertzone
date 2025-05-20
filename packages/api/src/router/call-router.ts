@@ -7,11 +7,23 @@ import {
   NOT_FOUND,
   OK,
 } from "@repo/common";
-import { CallStatus, CallType, db } from "@repo/db";
+import { CallStatus, CallType, db, type Plan } from "@repo/db";
 import { format } from "date-fns";
 import z from "zod";
 
 import { protectedProcedure } from "../trpc";
+
+// Helper function to get quota limits based on plan
+const getQuotaLimits = (plan: Plan) => {
+  switch (plan) {
+    case "FREE":
+      return 50;
+    case "PRO":
+      return 150;
+    default:
+      return 50;
+  }
+};
 
 export const callRouter = {
   scheduleCall: protectedProcedure
@@ -37,6 +49,47 @@ export const callRouter = {
           };
         }
 
+        // Get user's current plan and quota
+        const user = await db.user.findUnique({
+          where: { id: ctx.user.id },
+          include: {
+            Quota: {
+              where: {
+                year: new Date().getFullYear(),
+                month: new Date().getMonth() + 1,
+              },
+            },
+          },
+        });
+
+        if (!user) {
+          return {
+            message: "User not found",
+            success: false,
+            data: null,
+            code: NOT_FOUND,
+          };
+        }
+
+        // Get quota limits based on plan
+        const quotaLimit = getQuotaLimits(user.plan ?? "FREE");
+
+        // Get current quota usage
+        const currentQuota = user.Quota[0]?.count ?? 0;
+
+        console.log("currentQuota", currentQuota);
+        console.log("quotaLimit", quotaLimit);
+
+        // Check if user has exceeded their quota
+        if (currentQuota >= quotaLimit) {
+          return {
+            message: `You have reached your monthly call limit of ${quotaLimit} calls. Please upgrade your plan for more calls.`,
+            success: false,
+            data: null,
+            code: NOT_ACCEPTABLE,
+          };
+        }
+
         // Calculate one hour before and after the scheduled time
         const oneHourBefore = new Date(scheduledAt.getTime() - 60 * 60 * 1000);
         const oneHourAfter = new Date(scheduledAt.getTime() + 60 * 60 * 1000);
@@ -50,7 +103,7 @@ export const callRouter = {
               lte: oneHourAfter,
             },
             status: {
-              in: ["SCHEDULED", "ONGOING"], // Check both scheduled and ongoing calls
+              in: ["SCHEDULED", "ONGOING"],
             },
           },
         });
@@ -73,8 +126,30 @@ export const callRouter = {
             callType,
             roomId: crypto.randomUUID(),
             startedAt: scheduledAt,
-            endedAt: new Date(scheduledAt.getTime() + 60 * 60 * 1000), // set to one hour after scheduledAt
+            endedAt: new Date(scheduledAt.getTime() + 60 * 60 * 1000),
             status: "SCHEDULED",
+          },
+        });
+
+        // Update or create quota record
+        await db.quota.upsert({
+          where: {
+            userId_year_month: {
+              userId: ctx.user.id,
+              year: new Date().getFullYear(),
+              month: new Date().getMonth() + 1,
+            },
+          },
+          create: {
+            userId: ctx.user.id,
+            year: new Date().getFullYear(),
+            month: new Date().getMonth() + 1,
+            count: 1,
+          },
+          update: {
+            count: {
+              increment: 1,
+            },
           },
         });
 

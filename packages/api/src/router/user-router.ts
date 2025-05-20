@@ -882,9 +882,14 @@ export const userRouter = {
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
       const { user } = ctx;
-
       const data = await db.quota.upsert({
-        where: { userId: user.id, month: currentMonth, year: currentYear },
+        where: {
+          userId_year_month: {
+            userId: user.id,
+            year: currentYear,
+            month: currentMonth,
+          },
+        },
         update: { count: { increment: 1 } },
         create: {
           userId: user.id,

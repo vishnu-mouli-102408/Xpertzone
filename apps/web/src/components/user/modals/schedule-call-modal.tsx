@@ -130,6 +130,7 @@ const ScheduleCallModal = ({
         } else {
           toast.error("There was a problem.", {
             description:
+              data?.message ||
               "Seems like there was an issue on our end. Please try again later.",
             duration: 3000,
             position: "bottom-center",

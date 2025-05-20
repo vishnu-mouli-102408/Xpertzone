@@ -108,17 +108,16 @@ model User {
 
 model Quota{
   id         String   @id @default(uuid())
-  userId     String   @unique
+  userId     String
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   count Int @default(0)
   year	  Int
   month	  Int
   
-  
   updatedAt  DateTime @updatedAt
 
-
+  @@unique([userId, year, month])
   @@index([userId])
 }
 
