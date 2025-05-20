@@ -28,12 +28,16 @@ function setupWebrtcSignallingServer(httpServer: http.Server) {
     socket.on("disconnect", () => {
       const userId = socket.data.userId;
       console.log("userId in disconnect", userId);
+      const roomId = socket.data.roomId;
 
       roomManager.removeUser(userId);
-      socket.emit(EventTypeSchema.Enum.PEER_DISCONNECTED, {
-        socketId: socket.id,
-        userId,
-      });
+      const targetUser = roomManager.getOtherUser(roomId, userId);
+      if (targetUser) {
+        targetUser.socket.emit(EventTypeSchema.Enum.PEER_DISCONNECTED, {
+          socketId: socket.id,
+          userId,
+        });
+      }
       socket.disconnect();
     });
   });
