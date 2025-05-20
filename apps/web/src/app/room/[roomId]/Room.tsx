@@ -394,7 +394,7 @@ const Room = ({ roomId }: RoomProps) => {
   const handlePeerDisconnected = useCallback(() => {
     console.log("PEER DISCONNECTED");
     setIsConnected(false);
-    toast.error("Peer disconnected", {
+    toast.warning("Peer disconnected", {
       description: `${userData?.data?.firstName} has disconnected from the call`,
       duration: 5000,
       icon: <PhoneOff className="h-4 w-4" />,
@@ -404,7 +404,7 @@ const Room = ({ roomId }: RoomProps) => {
   }, [userData?.data?.firstName]);
 
   useEffect(() => {
-    if (!socket || !callStarted) return;
+    if (!socket) return;
     socket.on(EventTypeSchema.Enum.SEND_OFFER, handleSendOffer);
     socket.on(EventTypeSchema.Enum.OFFER, handleOffer);
     socket.on(EventTypeSchema.Enum.ANSWER, handleAnswer);
@@ -439,7 +439,6 @@ const Room = ({ roomId }: RoomProps) => {
     handleOffer,
     handleSendOffer,
     socket,
-    callStarted,
     handleAddIceCandidate,
     handleCameraStateChange,
     handlePeerDisconnected,
