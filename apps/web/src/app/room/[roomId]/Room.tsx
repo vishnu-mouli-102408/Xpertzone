@@ -113,7 +113,9 @@ const Room = ({ roomId }: RoomProps) => {
             position: "bottom-center",
             closeButton: true,
           });
-          await queryClient.invalidateQueries(trpc.calls.pathFilter());
+          await queryClient.invalidateQueries({
+            queryKey: trpc.calls.getCallById.queryKey({ roomId }),
+          });
           socket.disconnect();
         }
       },
