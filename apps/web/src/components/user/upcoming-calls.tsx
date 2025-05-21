@@ -81,6 +81,7 @@ const UpcomingCalls = () => {
           await queryClient.invalidateQueries({
             queryKey: trpc.calls.getAllUserCalls.queryKey({
               status: "UPCOMING",
+              limit: 10,
             }),
           });
           setIsConfirmCancelCallModalOpen(false);
