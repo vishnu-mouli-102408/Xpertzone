@@ -315,7 +315,10 @@ export const callRouter = {
               userId: ctx.user.id,
               ...(status === "UPCOMING"
                 ? {
-                    status: CallStatus.SCHEDULED,
+                    OR: [
+                      { status: CallStatus.SCHEDULED },
+                      { status: CallStatus.ONGOING },
+                    ],
                     endedAt: { gte: new Date() },
                   }
                 : {
@@ -335,7 +338,10 @@ export const callRouter = {
               userId: ctx.user.id,
               ...(status === "UPCOMING"
                 ? {
-                    status: CallStatus.SCHEDULED,
+                    OR: [
+                      { status: CallStatus.SCHEDULED },
+                      { status: CallStatus.ONGOING },
+                    ],
                     endedAt: { gte: new Date() },
                   }
                 : {
@@ -410,7 +416,10 @@ export const callRouter = {
               expertId: ctx.user.id,
               ...(status === "UPCOMING"
                 ? {
-                    status: CallStatus.SCHEDULED,
+                    OR: [
+                      { status: CallStatus.SCHEDULED },
+                      { status: CallStatus.ONGOING },
+                    ],
                     endedAt: { gte: new Date() },
                   }
                 : {
@@ -430,7 +439,10 @@ export const callRouter = {
               expertId: ctx.user.id,
               ...(status === "UPCOMING"
                 ? {
-                    status: CallStatus.SCHEDULED,
+                    OR: [
+                      { status: CallStatus.SCHEDULED },
+                      { status: CallStatus.ONGOING },
+                    ],
                     endedAt: { gte: new Date() },
                   }
                 : {

@@ -13,7 +13,7 @@ import {
 import { Button } from "@repo/ui/components/button";
 import { Progress } from "@repo/ui/components/progress";
 import { Spinner } from "@repo/ui/components/spinner";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Camera,
   CameraOff,
@@ -54,6 +54,7 @@ const EventTypeSchema = z.enum([
 
 const Room = ({ roomId }: RoomProps) => {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const { data, isPending } = useQuery(
     trpc.calls.getCallById.queryOptions(
@@ -100,6 +101,55 @@ const Room = ({ roomId }: RoomProps) => {
   const mediaStreamRef = useRef<MediaStream | null>(null);
 
   const socket = useMemo(() => getSocket(), []);
+
+  const { mutate: endCall, isPending: isUpdatingStatus } = useMutation(
+    trpc.calls.updateStatus.mutationOptions({
+      onSuccess: async (data) => {
+        if (data?.success) {
+          toast.success("Call ended successfully", {
+            description: "You can now start a new call",
+            duration: 5000,
+            icon: <PhoneOff className="h-4 w-4" />,
+            position: "bottom-center",
+            closeButton: true,
+          });
+          await queryClient.invalidateQueries(trpc.calls.pathFilter());
+          socket.disconnect();
+        }
+      },
+      onError: (error) => {
+        toast.error("Failed to end call", {
+          description: error?.message,
+          duration: 5000,
+          icon: <PhoneOff className="h-4 w-4" />,
+          position: "bottom-center",
+          closeButton: true,
+        });
+      },
+    })
+  );
+
+  const { mutate: startCall } = useMutation(
+    trpc.calls.updateStatus.mutationOptions({})
+  );
+
+  useEffect(() => {
+    if (callStarted && data?.data?.id) {
+      startCall({
+        callId: data?.data?.id,
+        status: "ONGOING",
+      });
+    }
+  }, [callStarted, data?.data?.id, startCall]);
+
+  const handleEndCall = useCallback(() => {
+    if (data?.data?.id) {
+      endCall({
+        callId: data?.data?.id,
+        status: "COMPLETED",
+      });
+    }
+  }, [data?.data?.id, endCall]);
 
   const handleSendOffer = useCallback(async () => {
     if (!socket) return;
@@ -815,10 +865,11 @@ const Room = ({ roomId }: RoomProps) => {
           <Button
             disabled={!callStarted}
             variant="destructive"
+            onClick={handleEndCall}
             size="icon"
             className="h-14 w-14 cursor-pointer rounded-full bg-red-500 transition-all duration-300 ease-in-out hover:bg-red-500/90"
           >
-            <PhoneOff />
+            {isUpdatingStatus ? <Spinner variant="circle" /> : <PhoneOff />}
           </Button>
 
           <Button
