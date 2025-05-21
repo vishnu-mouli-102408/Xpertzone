@@ -279,7 +279,12 @@ export const callRouter = {
         const { callId, status } = input;
         const call = await db.call.update({
           where: { id: callId },
-          data: { status },
+          data: {
+            status,
+            ...((status === "COMPLETED" || status === "CANCELED") && {
+              endedAt: new Date(),
+            }),
+          },
         });
         return {
           message: "Call status updated successfully",

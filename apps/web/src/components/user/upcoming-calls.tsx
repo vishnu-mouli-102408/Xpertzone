@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import env from "@/src/env";
 import { staggerContainer } from "@/src/lib/framer-animations";
@@ -10,22 +10,32 @@ import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { Card, CardContent } from "@repo/ui/components/card";
 import { Spinner } from "@repo/ui/components/spinner";
-import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseInfiniteQuery,
+} from "@tanstack/react-query";
 import type { inferRouterOutputs } from "@trpc/server";
 import { format } from "date-fns";
-import { Calendar, Clock, Copy, Video } from "lucide-react";
+import { Calendar, Clock, Copy, Video, VideoOff } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
 import ResultsNotFound from "../global/results-not-found";
+import ConfirmCancelCallModal from "./modals/confirm-cancel-call-modal";
 
 const UpcomingCalls = () => {
   const trpc = useTRPC();
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const queryClient = useQueryClient();
 
   type RouterOutput = inferRouterOutputs<AppRouter>;
   type CallData = NonNullable<RouterOutput["calls"]["getAllUserCalls"]["data"]>;
   type Call = CallData["calls"][number];
+
+  const [isConfirmCancelCallModalOpen, setIsConfirmCancelCallModalOpen] =
+    useState(false);
+  const [callId, setCallId] = useState<string | null>(null);
 
   const { data, status, error, fetchNextPage, isFetchingNextPage } =
     useSuspenseInfiniteQuery(
@@ -63,6 +73,42 @@ const UpcomingCalls = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, [fetchNextPage, isFetchingNextPage]);
+
+  const { mutate: updateStatus, isPending } = useMutation(
+    trpc.calls.updateStatus.mutationOptions({
+      onSuccess: async (data) => {
+        if (data?.success) {
+          await queryClient.invalidateQueries({
+            queryKey: trpc.calls.getAllUserCalls.queryKey({
+              status: "UPCOMING",
+            }),
+          });
+          setIsConfirmCancelCallModalOpen(false);
+          toast.success("Call cancelled successfully", {
+            icon: "🔗",
+            description: "Call has been cancelled",
+            duration: 2000,
+            position: "bottom-center",
+            closeButton: true,
+          });
+        }
+      },
+      onError: (error) => {
+        toast.error("Failed to cancel call", {
+          icon: "🔗",
+          description: error?.message ?? "Call has been cancelled",
+          duration: 2000,
+          position: "bottom-center",
+        });
+      },
+    })
+  );
+
+  const handleCancelCall = () => {
+    if (callId) {
+      updateStatus({ callId, status: "CANCELED" });
+    }
+  };
 
   console.log("DATA", data);
   console.log("STATUS", status);
@@ -185,6 +231,18 @@ const UpcomingCalls = () => {
                         <Video size={14} className="mr-1" />
                         Join Call
                       </Button>
+                      <Button
+                        size="sm"
+                        variant={"destructive"}
+                        className="flex-1 cursor-pointer border-none bg-red-500/70 text-white hover:bg-red-500/90"
+                        onClick={() => {
+                          setIsConfirmCancelCallModalOpen(true);
+                          setCallId(call.id);
+                        }}
+                      >
+                        <VideoOff size={14} className="mr-1" />
+                        Cancel Call
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -199,6 +257,15 @@ const UpcomingCalls = () => {
           </div>
         )}
       </div>
+
+      {isConfirmCancelCallModalOpen && (
+        <ConfirmCancelCallModal
+          isConfirmCancelCallModalOpen={isConfirmCancelCallModalOpen}
+          setIsConfirmCancelCallModalOpen={setIsConfirmCancelCallModalOpen}
+          onConfirm={handleCancelCall}
+          isLoading={isPending}
+        />
+      )}
     </motion.div>
   );
 };
