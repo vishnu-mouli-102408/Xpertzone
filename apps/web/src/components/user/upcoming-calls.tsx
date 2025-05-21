@@ -78,12 +78,8 @@ const UpcomingCalls = () => {
     trpc.calls.updateStatus.mutationOptions({
       onSuccess: async (data) => {
         if (data?.success) {
-          await queryClient.invalidateQueries({
-            queryKey: trpc.calls.getAllUserCalls.queryKey({
-              status: "UPCOMING",
-              limit: 10,
-            }),
-          });
+          await queryClient.invalidateQueries(trpc.calls.pathFilter());
+
           setIsConfirmCancelCallModalOpen(false);
           toast.success("Call cancelled successfully", {
             icon: "🔗",
