@@ -202,11 +202,6 @@ const Room = ({ roomId }: RoomProps) => {
       const peerConnection = peer.getPeer();
       if (!peerConnection) return;
 
-      // Clear any existing tracks
-      peerConnection.getSenders().forEach((sender) => {
-        peerConnection.removeTrack(sender);
-      });
-
       stream.getTracks().forEach((track) => {
         peerConnection.addTrack(track, stream);
       });
@@ -227,7 +222,6 @@ const Room = ({ roomId }: RoomProps) => {
   // Add new effect to handle media stream initialization when call starts
   useEffect(() => {
     if (!callStarted) return;
-
     const initializeMedia = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -238,11 +232,6 @@ const Room = ({ roomId }: RoomProps) => {
 
         const peerConnection = peer.getPeer();
         if (!peerConnection) return;
-
-        // Clear any existing tracks
-        peerConnection.getSenders().forEach((sender) => {
-          peerConnection.removeTrack(sender);
-        });
 
         stream.getTracks().forEach((track) => {
           peerConnection.addTrack(track, stream);
