@@ -261,7 +261,6 @@ const Room = ({ roomId }: RoomProps) => {
 
   const handleOffer = useCallback(
     async (offer: RTCSessionDescriptionInit) => {
-      if (!socket || !callStarted) return;
       console.log("OFFER", offer);
       setIsConnected(true);
       try {
@@ -273,7 +272,7 @@ const Room = ({ roomId }: RoomProps) => {
         toast.error("Failed to handle incoming call");
       }
     },
-    [socket, callStarted]
+    [socket]
   );
 
   const handleAnswer = useCallback(
