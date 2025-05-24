@@ -161,6 +161,33 @@ const Room = ({ roomId }: RoomProps) => {
     });
   }, [roomId, socket, userData]);
 
+  useEffect(() => {
+    if (!data?.data?.startedAt) return;
+    setTimeRemaining(timeDiff);
+    setTotalDuration(timeDiff);
+
+    if (timeDiff <= 0) {
+      setCallStarted(true);
+      setShowPreCallDialog(false);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setCallStarted(true);
+          setShowPreCallDialog(false);
+          setIsConnected(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeDiff, data?.data?.startedAt]);
+
   const handleSendOffer = useCallback(async () => {
     if (!socket || !callStarted) return;
     console.log("SEND OFFER");
@@ -174,6 +201,11 @@ const Room = ({ roomId }: RoomProps) => {
       // Add tracks to peer connection
       const peerConnection = peer.getPeer();
       if (!peerConnection) return;
+
+      // Clear any existing tracks
+      peerConnection.getSenders().forEach((sender) => {
+        peerConnection.removeTrack(sender);
+      });
 
       stream.getTracks().forEach((track) => {
         peerConnection.addTrack(track, stream);
@@ -192,11 +224,11 @@ const Room = ({ roomId }: RoomProps) => {
     }
   }, [socket, callStarted]);
 
-  const handleOffer = useCallback(
-    async (offer: RTCSessionDescriptionInit) => {
-      if (!socket || !callStarted) return;
-      console.log("OFFER", offer);
-      setIsConnected(true);
+  // Add new effect to handle media stream initialization when call starts
+  useEffect(() => {
+    if (!callStarted) return;
+
+    const initializeMedia = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
@@ -204,9 +236,13 @@ const Room = ({ roomId }: RoomProps) => {
         });
         mediaStreamRef.current = stream;
 
-        // Add tracks to peer connection
         const peerConnection = peer.getPeer();
         if (!peerConnection) return;
+
+        // Clear any existing tracks
+        peerConnection.getSenders().forEach((sender) => {
+          peerConnection.removeTrack(sender);
+        });
 
         stream.getTracks().forEach((track) => {
           peerConnection.addTrack(track, stream);
@@ -214,7 +250,21 @@ const Room = ({ roomId }: RoomProps) => {
 
         setLocalAudioTrack(stream.getAudioTracks()[0] ?? null);
         setlocalVideoTrack(stream.getVideoTracks()[0] ?? null);
+      } catch (error) {
+        console.error("Failed to initialize media:", error);
+        toast.error("Failed to access camera and microphone");
+      }
+    };
 
+    void initializeMedia();
+  }, [callStarted]);
+
+  const handleOffer = useCallback(
+    async (offer: RTCSessionDescriptionInit) => {
+      if (!socket || !callStarted) return;
+      console.log("OFFER", offer);
+      setIsConnected(true);
+      try {
         await peer.setRemoteDescription(offer);
         const answer = await peer.getAnswer(offer);
         socket.emit(EventTypeSchema.Enum.ANSWER, { sdp: answer });
@@ -552,33 +602,6 @@ const Room = ({ roomId }: RoomProps) => {
       }
     }
   }, [localVideoRef, localVideoTrack, isCameraOn]);
-
-  useEffect(() => {
-    if (!data?.data?.startedAt) return;
-    setTimeRemaining(timeDiff);
-    setTotalDuration(timeDiff);
-
-    if (timeDiff <= 0) {
-      setCallStarted(true);
-      setShowPreCallDialog(false);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setCallStarted(true);
-          setShowPreCallDialog(false);
-          setIsConnected(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeDiff, data?.data?.startedAt]);
 
   const calculateProgress = () => {
     if (!data?.data?.startedAt || totalDuration === 0) return 0;
