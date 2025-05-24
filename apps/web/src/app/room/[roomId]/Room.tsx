@@ -153,8 +153,16 @@ const Room = ({ roomId }: RoomProps) => {
     }
   }, [data?.data?.id, endCall]);
 
+  useEffect(() => {
+    if (!roomId || !userData || !socket) return;
+    socket.emit(EventTypeSchema.Enum.JOIN_ROOM, {
+      roomId,
+      userId: userData?.data?.id,
+    });
+  }, [roomId, socket, userData]);
+
   const handleSendOffer = useCallback(async () => {
-    if (!socket) return;
+    if (!socket || !callStarted) return;
     console.log("SEND OFFER");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -182,11 +190,11 @@ const Room = ({ roomId }: RoomProps) => {
       console.error("Error sending offer:", error);
       toast.error("Failed to start call");
     }
-  }, [socket]);
+  }, [socket, callStarted]);
 
   const handleOffer = useCallback(
     async (offer: RTCSessionDescriptionInit) => {
-      if (!socket) return;
+      if (!socket || !callStarted) return;
       console.log("OFFER", offer);
       setIsConnected(true);
       try {
@@ -215,7 +223,7 @@ const Room = ({ roomId }: RoomProps) => {
         toast.error("Failed to handle incoming call");
       }
     },
-    [socket]
+    [socket, callStarted]
   );
 
   const handleAnswer = useCallback(
@@ -495,14 +503,6 @@ const Room = ({ roomId }: RoomProps) => {
     handleCameraStateChange,
     handlePeerDisconnected,
   ]);
-
-  useEffect(() => {
-    if (!roomId || !userData || !socket) return;
-    socket.emit(EventTypeSchema.Enum.JOIN_ROOM, {
-      roomId,
-      userId: userData?.data?.id,
-    });
-  }, [roomId, socket, userData]);
 
   console.log("LOCAL VIDEO TRACK", localVideoTrack);
   console.log("REMOTE VIDEO TRACK", remoteVideoTrack);
