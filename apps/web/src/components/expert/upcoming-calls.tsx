@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import env from "@/src/env";
 import { staggerContainer } from "@/src/lib/framer-animations";
@@ -10,14 +10,19 @@ import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { Card, CardContent } from "@repo/ui/components/card";
 import { Spinner } from "@repo/ui/components/spinner";
-import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseInfiniteQuery,
+} from "@tanstack/react-query";
 import type { inferRouterOutputs } from "@trpc/server";
 import { format } from "date-fns";
-import { Calendar, Clock, Copy, Video } from "lucide-react";
+import { Calendar, Clock, Copy, Video, VideoOff } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
 import ResultsNotFound from "../global/results-not-found";
+import ConfirmCancelCallModal from "../user/modals/confirm-cancel-call-modal";
 
 const ExpertUpcomingCalls = () => {
   const trpc = useTRPC();
@@ -28,6 +33,43 @@ const ExpertUpcomingCalls = () => {
     RouterOutput["calls"]["getAllExpertCalls"]["data"]
   >;
   type Call = CallData["calls"][number];
+  const queryClient = useQueryClient();
+
+  const [isConfirmCancelCallModalOpen, setIsConfirmCancelCallModalOpen] =
+    useState(false);
+  const [callId, setCallId] = useState<string | null>(null);
+
+  const { mutate: updateStatus, isPending } = useMutation(
+    trpc.calls.updateStatus.mutationOptions({
+      onSuccess: async (data) => {
+        if (data?.success) {
+          await queryClient.invalidateQueries(trpc.calls.pathFilter());
+          setIsConfirmCancelCallModalOpen(false);
+          toast.success("Call cancelled successfully", {
+            icon: "🔗",
+            description: "Call has been cancelled",
+            duration: 2000,
+            position: "bottom-center",
+            closeButton: true,
+          });
+        }
+      },
+      onError: (error) => {
+        toast.error("Failed to cancel call", {
+          icon: "🔗",
+          description: error?.message ?? "Call has been cancelled",
+          duration: 2000,
+          position: "bottom-center",
+        });
+      },
+    })
+  );
+
+  const handleCancelCall = () => {
+    if (callId) {
+      updateStatus({ callId, status: "CANCELED" });
+    }
+  };
 
   const { data, status, error, fetchNextPage, isFetchingNextPage } =
     useSuspenseInfiniteQuery(
@@ -187,6 +229,18 @@ const ExpertUpcomingCalls = () => {
                         <Video size={14} className="mr-1" />
                         Join Call
                       </Button>
+                      <Button
+                        size="sm"
+                        variant={"destructive"}
+                        className="flex-1 cursor-pointer border-none bg-red-500/70 text-white hover:bg-red-500/90"
+                        onClick={() => {
+                          setIsConfirmCancelCallModalOpen(true);
+                          setCallId(call.id);
+                        }}
+                      >
+                        <VideoOff size={14} className="mr-1" />
+                        Cancel Call
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -201,6 +255,14 @@ const ExpertUpcomingCalls = () => {
           </div>
         )}
       </div>
+      {isConfirmCancelCallModalOpen && (
+        <ConfirmCancelCallModal
+          isConfirmCancelCallModalOpen={isConfirmCancelCallModalOpen}
+          setIsConfirmCancelCallModalOpen={setIsConfirmCancelCallModalOpen}
+          onConfirm={handleCancelCall}
+          isLoading={isPending}
+        />
+      )}
     </motion.div>
   );
 };
