@@ -154,7 +154,7 @@ const Room = ({ roomId }: RoomProps) => {
   }, [data?.data?.id, endCall]);
 
   const handleSendOffer = useCallback(async () => {
-    if (!socket) return;
+    if (!socket || !callStarted) return;
     console.log("SEND OFFER");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -182,7 +182,7 @@ const Room = ({ roomId }: RoomProps) => {
       console.error("Error sending offer:", error);
       toast.error("Failed to start call");
     }
-  }, [socket]);
+  }, [socket, callStarted]);
 
   const handleOffer = useCallback(
     async (offer: RTCSessionDescriptionInit) => {
