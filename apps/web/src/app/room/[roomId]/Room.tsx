@@ -153,43 +153,8 @@ const Room = ({ roomId }: RoomProps) => {
     }
   }, [data?.data?.id, endCall]);
 
-  useEffect(() => {
-    if (!roomId || !userData || !socket) return;
-    socket.emit(EventTypeSchema.Enum.JOIN_ROOM, {
-      roomId,
-      userId: userData?.data?.id,
-    });
-  }, [roomId, socket, userData]);
-
-  useEffect(() => {
-    if (!data?.data?.startedAt) return;
-    setTimeRemaining(timeDiff);
-    setTotalDuration(timeDiff);
-
-    if (timeDiff <= 0) {
-      setCallStarted(true);
-      setShowPreCallDialog(false);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setCallStarted(true);
-          setShowPreCallDialog(false);
-          setIsConnected(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeDiff, data?.data?.startedAt]);
-
   const handleSendOffer = useCallback(async () => {
-    if (!socket || !callStarted) return;
+    if (!socket) return;
     console.log("SEND OFFER");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -217,35 +182,7 @@ const Room = ({ roomId }: RoomProps) => {
       console.error("Error sending offer:", error);
       toast.error("Failed to start call");
     }
-  }, [socket, callStarted]);
-
-  // Add new effect to handle media stream initialization when call starts
-  useEffect(() => {
-    const initializeMedia = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true,
-        });
-        mediaStreamRef.current = stream;
-
-        const peerConnection = peer.getPeer();
-        if (!peerConnection) return;
-
-        stream.getTracks().forEach((track) => {
-          peerConnection.addTrack(track, stream);
-        });
-
-        setLocalAudioTrack(stream.getAudioTracks()[0] ?? null);
-        setlocalVideoTrack(stream.getVideoTracks()[0] ?? null);
-      } catch (error) {
-        console.error("Failed to initialize media:", error);
-        toast.error("Failed to access camera and microphone");
-      }
-    };
-
-    void initializeMedia();
-  }, []);
+  }, [socket]);
 
   const handleOffer = useCallback(
     async (offer: RTCSessionDescriptionInit) => {
@@ -559,6 +496,14 @@ const Room = ({ roomId }: RoomProps) => {
     handlePeerDisconnected,
   ]);
 
+  useEffect(() => {
+    if (!roomId || !userData || !socket) return;
+    socket.emit(EventTypeSchema.Enum.JOIN_ROOM, {
+      roomId,
+      userId: userData?.data?.id,
+    });
+  }, [roomId, socket, userData]);
+
   console.log("LOCAL VIDEO TRACK", localVideoTrack);
   console.log("REMOTE VIDEO TRACK", remoteVideoTrack);
 
@@ -607,6 +552,33 @@ const Room = ({ roomId }: RoomProps) => {
       }
     }
   }, [localVideoRef, localVideoTrack, isCameraOn]);
+
+  useEffect(() => {
+    if (!data?.data?.startedAt) return;
+    setTimeRemaining(timeDiff);
+    setTotalDuration(timeDiff);
+
+    if (timeDiff <= 0) {
+      setCallStarted(true);
+      setShowPreCallDialog(false);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setCallStarted(true);
+          setShowPreCallDialog(false);
+          setIsConnected(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeDiff, data?.data?.startedAt]);
 
   const calculateProgress = () => {
     if (!data?.data?.startedAt || totalDuration === 0) return 0;
