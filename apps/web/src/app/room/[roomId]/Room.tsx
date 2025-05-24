@@ -189,7 +189,7 @@ const Room = ({ roomId }: RoomProps) => {
   }, [timeDiff, data?.data?.startedAt]);
 
   const handleSendOffer = useCallback(async () => {
-    if (!socket) return;
+    if (!socket || !callStarted) return;
     console.log("SEND OFFER");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -217,7 +217,7 @@ const Room = ({ roomId }: RoomProps) => {
       console.error("Error sending offer:", error);
       toast.error("Failed to start call");
     }
-  }, [socket]);
+  }, [socket, callStarted]);
 
   // Add new effect to handle media stream initialization when call starts
   useEffect(() => {
@@ -249,9 +249,27 @@ const Room = ({ roomId }: RoomProps) => {
 
   const handleOffer = useCallback(
     async (offer: RTCSessionDescriptionInit) => {
+      if (!socket) return;
       console.log("OFFER", offer);
       setIsConnected(true);
       try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+        mediaStreamRef.current = stream;
+
+        // Add tracks to peer connection
+        const peerConnection = peer.getPeer();
+        if (!peerConnection) return;
+
+        stream.getTracks().forEach((track) => {
+          peerConnection.addTrack(track, stream);
+        });
+
+        setLocalAudioTrack(stream.getAudioTracks()[0] ?? null);
+        setlocalVideoTrack(stream.getVideoTracks()[0] ?? null);
+
         await peer.setRemoteDescription(offer);
         const answer = await peer.getAnswer(offer);
         socket.emit(EventTypeSchema.Enum.ANSWER, { sdp: answer });
