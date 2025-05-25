@@ -5,6 +5,12 @@ const nextConfig = {
   /* config options here */
   output: "standalone",
   transpilePackages: ["@repo/ui"],
+  experimental: {
+    ppr: true,
+    staleTimes: {
+      dynamic: 30, // 30 seconds
+    },
+  },
   webpack: (config, { isServer }) => {
     // This is a workaround to avoid this Prisma issue on Vercel
     // https://github.com/prisma/prisma/discussions/19499
