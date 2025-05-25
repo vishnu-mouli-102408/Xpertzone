@@ -5,8 +5,10 @@ const nextConfig = {
   /* config options here */
   output: "standalone",
   transpilePackages: ["@repo/ui"],
+  compiler: {
+    removeConsole: process.env.NODE_ENV !== "development",
+  },
   experimental: {
-    ppr: true,
     staleTimes: {
       dynamic: 30, // 30 seconds
     },
