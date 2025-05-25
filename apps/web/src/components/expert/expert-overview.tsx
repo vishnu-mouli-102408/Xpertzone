@@ -85,7 +85,11 @@ const ExpertOverview = () => {
       title: "Total Calls",
       value: data?.data?.analytics?.totalCalls?.totalCalls ?? "0",
       icon: Phone,
-      change: `${data?.data?.analytics?.totalCalls?.callPercentageChange || 0 >= 0 ? "+" : ""}${data?.data?.analytics?.totalCalls?.callPercentageChange?.toFixed(2) ?? "N/A"}%`,
+      change: `${
+        (data?.data?.analytics.totalCalls.callPercentageChange ?? 0) >= 0
+          ? "+"
+          : ""
+      }${data?.data?.analytics.totalCalls.callPercentageChange?.toFixed(2) ?? "N/A"}%`,
       color: "bg-[#6366f133]",
     },
     {
@@ -99,17 +103,19 @@ const ExpertOverview = () => {
       title: "Avg. Call Duration",
       value: `${data?.data?.analytics?.averageCallDuration?.avgCallDurationValue ?? "0"} min`,
       icon: Clock,
-      change: `${data?.data?.analytics?.averageCallDuration?.callDurationPercentageChange || 0 >= 0 ? "+" : ""}${data?.data?.analytics?.averageCallDuration?.callDurationPercentageChange?.toFixed(2) ?? "N/A"}%`,
+      change: `${(data?.data?.analytics.averageCallDuration.callDurationPercentageChange ?? 0) >= 0 ? "+" : ""}${data?.data?.analytics.averageCallDuration.callDurationPercentageChange?.toFixed(2) ?? "N/A"}%`,
       color: "bg-[#f59e0b33]",
     },
     {
       title: "Upcoming Calls",
       value: data?.data?.analytics?.upcomingCalls?.totalUpcomingCalls ?? "0",
       icon: Calendar,
-      change: `${data?.data?.analytics?.upcomingCalls?.upcomingCallsPercentageChange || 0 >= 0 ? "+" : ""}${data?.data?.analytics?.upcomingCalls?.upcomingCallsPercentageChange?.toFixed(2) ?? "N/A"}%`,
+      change: `${(data?.data?.analytics.upcomingCalls.upcomingCallsPercentageChange ?? 0) >= 0 ? "+" : ""}${data?.data?.analytics.upcomingCalls.upcomingCallsPercentageChange?.toFixed(2) ?? "N/A"}%`,
       color: "bg-[#f43f5e33]",
     },
   ];
+
+  console.log("Data", data);
 
   if (isPending) {
     return <OverviewSkeleton />;

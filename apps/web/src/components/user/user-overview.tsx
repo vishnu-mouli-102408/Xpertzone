@@ -115,6 +115,8 @@ const UserOverview = () => {
     },
   ];
 
+  console.log("DATA", data);
+
   return (
     <motion.div
       variants={staggerContainer}
