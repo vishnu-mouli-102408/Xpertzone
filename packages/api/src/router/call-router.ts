@@ -25,6 +25,8 @@ const getQuotaLimits = (plan: Plan) => {
   }
 };
 
+const redis = getRedisClient();
+
 export const callRouter = {
   scheduleCall: protectedProcedure
     .input(
@@ -36,7 +38,6 @@ export const callRouter = {
     )
     .mutation(async ({ input, ctx }) => {
       try {
-        const redis = getRedisClient();
         const { expertId, callType, scheduledAt } = input;
 
         // Check if the scheduled time is in the future
@@ -274,7 +275,7 @@ export const callRouter = {
         status: z.nativeEnum(CallStatus),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const { callId, status } = input;
         const call = await db.call.update({
@@ -286,6 +287,32 @@ export const callRouter = {
             }),
           },
         });
+
+        if (status === "CANCELED") {
+          const expert = await db.user.findUnique({
+            where: {
+              id: ctx.user.role === "EXPERT" ? call.userId : call.expertId,
+            },
+          });
+          await redis.lpush(
+            EMAIL_QUEUE_NAME,
+            JSON.stringify({
+              userName: `${ctx.user.role === "EXPERT" ? expert?.firstName : ctx.user.firstName} ${ctx.user.role === "EXPERT" ? expert?.lastName : ctx.user.lastName}`,
+              expertName: `${ctx.user.role === "EXPERT" ? ctx.user.firstName : expert?.firstName} ${ctx.user.role === "EXPERT" ? ctx.user.lastName : expert?.lastName}`,
+              date: format(call?.startedAt ?? new Date(), "dd MMMM yyyy"), // 11 May 2025
+              time: format(call?.startedAt ?? new Date(), "HH:mm"), // 10:00 AM
+              duration: "One hour",
+              callLink: `${process.env.NEXT_PUBLIC_APP_URL}/room/${call.roomId}`,
+              userEmail:
+                ctx.user.role === "EXPERT" ? expert?.email : ctx.user.email,
+              expertEmail:
+                ctx.user.role === "EXPERT" ? ctx.user.email : expert?.email,
+              subject: "Call Cancelled",
+              type: "cancel-call",
+            })
+          );
+        }
+
         return {
           message: "Call status updated successfully",
           success: true,

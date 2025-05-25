@@ -1,5 +1,6 @@
 import { EMAIL_QUEUE_NAME, logger } from "@repo/common";
 import { sendMail } from "@repo/email";
+import CancelCallEmail from "@repo/email/templates/cancel-call";
 import ScheduleCallExpert from "@repo/email/templates/schedule-call-expert";
 import ScheduleCallEmail from "@repo/email/templates/schedule-call-user";
 import WelcomeEmail from "@repo/email/templates/welcome";
@@ -78,6 +79,38 @@ export async function startEmailWorker(redis: Redis) {
               success = true;
               logger.info(
                 "[EmailWorker-ScheduleCall] Job processed successfully"
+              );
+            }
+            if (type === "cancel-call") {
+              await Promise.all([
+                sendMail({
+                  email: userEmail,
+                  subject,
+                  react: CancelCallEmail({
+                    userName,
+                    expertName,
+                    date,
+                    time,
+                    duration: "One hour",
+                    isExpert: false,
+                  }),
+                }),
+                sendMail({
+                  email: expertEmail,
+                  subject,
+                  react: CancelCallEmail({
+                    userName,
+                    expertName,
+                    date,
+                    time,
+                    duration: "One hour",
+                    isExpert: true,
+                  }),
+                }),
+              ]);
+              success = true;
+              logger.info(
+                "[EmailWorker-CancelCall] Job processed successfully"
               );
             }
           } catch (err) {
