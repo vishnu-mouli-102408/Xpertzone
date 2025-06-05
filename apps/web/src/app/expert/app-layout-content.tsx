@@ -8,14 +8,7 @@ import { UserButton } from "@clerk/nextjs";
 import { Button } from "@repo/ui/components/button";
 import { Spinner } from "@repo/ui/components/spinner";
 import { useIsMobile } from "@repo/ui/hooks";
-import {
-  BarChart3,
-  Bell,
-  Menu,
-  MessageSquare,
-  Settings,
-  Video,
-} from "lucide-react";
+import { BarChart3, Menu, MessageSquare, Settings, Video } from "lucide-react";
 import { motion } from "motion/react";
 
 export interface AppLayoutProps {
@@ -85,14 +78,6 @@ export const AppLayoutContent: FC<AppLayoutProps> = ({ children }) => {
             </motion.button>
           </div>
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative cursor-pointer text-gray-400 transition-all duration-300 ease-in-out hover:scale-[1.05] hover:text-white"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500"></span>
-            </Button>
             <UserButton />
           </div>
         </div>
@@ -114,18 +99,8 @@ export const AppLayoutContent: FC<AppLayoutProps> = ({ children }) => {
               </Button>
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative cursor-pointer text-gray-400 transition-all duration-300 ease-in-out hover:scale-[1.05] hover:text-white"
-              >
-                <Bell className="h-5 w-5" />
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500"></span>
-              </Button>
               <div className="flex items-center space-x-3">
-                {/* <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center overflow-hidden"> */}
                 <UserButton />
-                {/* </div> */}
                 {isPending ? (
                   <span className="hidden text-sm font-medium text-white md:inline">
                     <Spinner variant="ring" />

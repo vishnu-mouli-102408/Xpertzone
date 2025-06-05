@@ -4,7 +4,6 @@ import { useEffect, useState, type FC, type ReactNode } from "react";
 import { SearchModal } from "@/src/components";
 import Sidebar from "@/src/components/sidebar/sidebar";
 import { useSidebar } from "@/src/components/sidebar/sidebar-context";
-import { NotificationPopover } from "@/src/components/ui/notification-popover";
 import { useDbUser } from "@/src/hooks";
 import { UserButton } from "@clerk/nextjs";
 import { Button } from "@repo/ui/components/button";
@@ -12,7 +11,6 @@ import { Spinner } from "@repo/ui/components/spinner";
 import { useIsMobile } from "@repo/ui/hooks";
 import {
   BarChart3,
-  Bell,
   Command,
   CreditCard,
   Menu,
@@ -133,14 +131,6 @@ export const AppLayoutContent: FC<AppLayoutProps> = ({ children }) => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative cursor-pointer text-gray-400 transition-all duration-300 ease-in-out hover:scale-[1.05] hover:text-white"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500"></span>
-            </Button>
             <UserButton />
           </div>
         </div>
@@ -175,19 +165,8 @@ export const AppLayoutContent: FC<AppLayoutProps> = ({ children }) => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              {/* <Button
-                variant="ghost"
-                size="icon"
-                className="relative text-gray-400 cursor-pointer hover:scale-[1.05] transition-all duration-300 ease-in-out hover:text-white"
-              >
-                <Bell className="h-5 w-5 " />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </Button> */}
-              <NotificationPopover />
               <div className="flex items-center space-x-3">
-                {/* <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center overflow-hidden"> */}
                 <UserButton />
-                {/* </div> */}
                 {isPending ? (
                   <span className="hidden text-sm font-medium text-white md:inline">
                     <Spinner variant="ring" />
