@@ -45,6 +45,36 @@ services:
       redis:
         condition: service_healthy
     command: ["pnpm", "run", "start"]
+  ws:
+    build:
+      context: .
+      dockerfile: apps/ws/Dockerfile
+    container_name: ws-xpertzone
+    working_dir: /app/apps/ws
+    restart: always
+    env_file:
+      - apps/ws/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["pnpm", "run", "start"]
+  webrtc:
+    build:
+      context: .
+      dockerfile: apps/webrtc/Dockerfile
+    container_name: webrtc-xpertzone
+    working_dir: /app/apps/webrtc
+    restart: always
+    env_file:
+      - apps/webrtc/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["pnpm", "run", "start"]
 
   db:
     image: postgres:alpine
