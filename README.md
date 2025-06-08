@@ -1,84 +1,75 @@
-# Turborepo starter
+# XpertZone
 
-This Turborepo starter is maintained by the Turborepo core team.
+A modern monorepo project built with Next.js, TypeScript, and Turborepo.
 
-## Using this example
+## Project Structure
 
-Run the following command:
+### Apps
 
-```sh
-npx create-turbo@latest
-```
+- `web`: Main Next.js web application
+- `webrtc`: WebRTC implementation for real-time communication
+- `ws`: WebSocket server for real-time features
+- `worker`: Background job processing
 
-## What's inside?
+### Shared Packages
 
-This Turborepo includes the following packages/apps:
+- `ui`: Shared React component library
+- `api`: API utilities and types
+- `db`: Database configurations and models
+- `email`: Email service integration
+- `common`: Shared utilities and constants
+- `cache`: Caching layer implementation
+- `rate-limit`: Rate limiting functionality
 
-### Apps and Packages
+### Development Tools
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- `eslint-config`: Shared ESLint configuration
+- `prettier-config`: Shared Prettier configuration
+- `typescript-config`: Shared TypeScript configuration
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## Getting Started
 
-### Utilities
+### Prerequisites
 
-This Turborepo has some additional tools already setup for you:
+- Node.js (v18 or higher)
+- pnpm (v8 or higher)
+- Docker (for local development)
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+### Installation
 
-### Build
+```bash
+# Install dependencies
+pnpm install
 
-To build all apps and packages, run the following command:
+# Start development servers
+pnpm dev
 
-```
-cd my-turborepo
+# Build all packages and apps
 pnpm build
 ```
 
-### Develop
+### Docker Setup
 
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm dev
+```bash
+# Start all services using Docker Compose
+docker-compose up -d
 ```
 
-### Remote Caching
+## Development
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+- `pnpm dev`: Start all applications in development mode
+- `pnpm build`: Build all packages and applications
+- `pnpm lint`: Run ESLint across all packages
+- `pnpm format`: Format code using Prettier
 
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+## Tech Stack
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+- **Frontend**: Next.js, React, TypeScript
+- **Backend**: Node.js, WebSocket, WebRTC
+- **Database**: (Check docker-compose.yml for specific database)
+- **Tools**: Turborepo, pnpm, Docker
+- **Code Quality**: ESLint, Prettier, Husky
 
-```
-cd my-turborepo
-npx turbo login
-```
+## License
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+MIT
