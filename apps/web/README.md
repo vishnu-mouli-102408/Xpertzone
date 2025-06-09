@@ -1,24 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# XpertZone Web Application
 
-## Getting Started
+This is a modern web application built with Next.js 15, TypeScript, and a robust tech stack for optimal performance and developer experience.
 
-First, run the development server:
+## 🚀 Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Authentication**: Clerk
+- **State Management**:
+  - Zustand for client-side state
+  - TanStack Query for server state
+- **API Layer**: tRPC
+- **Styling**: Tailwind CSS
+- **UI Components**: Custom components with shadcn/ui
+- **Form Handling**: React Hook Form with Zod validation
+- **Real-time Features**: Socket.IO
+- **Analytics**: Vercel Analytics
+- **Image Management**: Cloudinary
+- **Date Handling**: date-fns
+- **Notifications**: Sonner
+- **Charts**: Recharts
+
+## 📁 Project Structure
+
+```
+src/
+├── app/          # Next.js app router pages and layouts
+├── components/   # Reusable React components
+├── hooks/        # Custom React hooks
+├── lib/          # Utility functions and configurations
+├── store/        # Zustand store configurations
+├── trpc/         # tRPC router and client setup
+├── types/        # TypeScript type definitions
+└── constants/    # Application constants
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js (Latest LTS version recommended)
+- pnpm (Package manager)
+- Docker (for local development)
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+pnpm install
+```
+
+3. Set up environment variables:
+
+```bash
+cp .env.example .env
+```
+
+4. Start the development server:
+
+```bash
+pnpm dev
+```
+
+The application will be available at [http://localhost:3000](http://localhost:3000)
+
+## 🔧 Available Scripts
+
+- `pnpm dev` - Start development server with Turbopack
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run ESLint
+- `pnpm lint:fix` - Fix ESLint issues
+- `pnpm format` - Format code with Prettier
+- `pnpm check-types` - Check TypeScript types
+- `pnpm clean` - Clean build artifacts
+
+## 🏗️ Development
+
+### Code Style
+
+- ESLint for code linting
+- Prettier for code formatting
+- TypeScript for type safety
+
+### Best Practices
+
+1. Follow the TypeScript strict mode guidelines
+2. Use proper type definitions for all components and functions
+3. Implement proper error handling
+4. Write clean and maintainable code
+5. Follow the established project structure
+
+## 🔐 Environment Variables
+
+Required environment variables:
+
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
+- `NEXT_PUBLIC_CLERK_SIGN_IN_URL`
+- `NEXT_PUBLIC_CLERK_SIGN_UP_URL`
+- `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`
+- `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`
+
+## 📦 Dependencies
+
+The project uses workspace dependencies from the monorepo:
+
+- `@repo/api`
+- `@repo/cache`
+- `@repo/common`
+- `@repo/db`
+- `@repo/email`
+- `@repo/rate-limit`
+- `@repo/ui`
+
+## 🚢 Deployment
+
+The application is configured for deployment on Vercel. The deployment process is automated through the Vercel platform.
+
+## 📝 License
+
+This project is proprietary and confidential.
 
 ## Learn More
 
